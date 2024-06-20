@@ -21,16 +21,7 @@ typedef struct PackageHeader {
     unsigned char reserved[24];
 } PackageHeader;
 
-#define INDEX_HAS_RESOURCETYPE  0b00000001
-#define INDEX_HAS_RESOURCEGROUP 0b00000010
-#define INDEX_HAS_INSTANCEHI    0b00000100
-#define INDEX_HAS_INSTANCELO    0b00001000
-#define INDEX_HAS_CHUNKOFFSET   0b00010000
-#define INDEX_HAS_FILESIZE      0b00100000
-#define INDEX_HAS_MEMSIZE       0b01000000
-#define INDEX_HAS_COMPRESSED    0b10000000
-
-typedef struct IndexEntry4 {
+typedef struct IndexEntry {
     uint32_t type;
     uint32_t group;
     uint32_t instance;
@@ -39,19 +30,17 @@ typedef struct IndexEntry4 {
     uint32_t memSize;
     uint16_t compressed;
     uint16_t unknown;
-} IndexEntry4;
+} IndexEntry;
 
-typedef struct IndexData4 {
+typedef struct IndexData {
     uint32_t null;
-    IndexEntry4 *entries;
-} IndexData4;
+    IndexEntry *entries;
+} IndexData;
 
 typedef struct Index {
     uint32_t indexType;
     
-    union {
-        IndexData4 type4;
-    } data;
+    IndexData data;
 } Index;
 
 void LoadPackageFile(unsigned char *data)
@@ -73,32 +62,85 @@ void LoadPackageFile(unsigned char *data)
     printf("\nIndex information:\n");
     printf("Index Type: %d\n", index->indexType);
 
-    switch (index->indexType)
+    IndexData indexData = index->data;
+
+    uint32_t indexTypeId = 0xCAFEBABE;
+    if ((index->indexType & (1 << 0)) == 1 << 0)
     {
-        case 4:
-        {
-            IndexData4 indexData = index->data.type4;
-            data += sizeof(uint32_t); // indexType
-            data += sizeof(uint32_t); // null
+        indexTypeId = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+    }
 
-            for (int i = 0; i < header.indexEntryCount; i++)
-            {
-                IndexEntry4 *entry = (IndexEntry4*)data;
-                printf("\nEntry %d:\n", i);
-                printf("Type: %u\n", entry->type);
-                printf("Group: %u\n", entry->group);
-                printf("Instance: %u\n", entry->instance);
-                printf("Chunk Offset: %u\n", entry->chunkOffset);
-                printf("Disk Size: %u\n", entry->diskSize);
-                printf("Mem Size: %u\n", entry->memSize);
-                printf("Compressed? %s\n", entry->compressed == 0xFFFF?"yes":"no");
+    uint32_t indexGroupContainer = 0xCAFEBABE;
+    if ((index->indexType & (1 << 1)) == 1 << 1)
+    {
+        indexGroupContainer = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+    }
 
-                data += sizeof(IndexEntry4);
-            }
-        } break;
-        default:
+    uint32_t indexUnknown = 0xCAFEBABE;
+    if ((index->indexType & (1 << 2)) == 1 << 2)
+    {
+        indexUnknown = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+    }
+
+    for (int i = 0; i < header.indexEntryCount; i++)
+    {
+        IndexEntry *entry = (IndexEntry*)data;
+
+        if ((index->indexType & (1 << 0)) == 1 << 0)
         {
-            printf("Unknown index type %d.\n", index->indexType);
-        } break;
+            entry->type = indexTypeId;
+        }
+        else
+        {
+            entry->type = *(uint32_t*)data;
+            data += sizeof(uint32_t);
+        }
+
+        if ((index->indexType & (1 << 1)) == 1 << 1)
+        {
+            entry->group = indexGroupContainer;
+        }
+        else
+        {
+            entry->group = *(uint32_t*)data;
+            data += sizeof(uint32_t);
+        }
+
+        if ((index->indexType & (1 << 2)) == 1 << 2)
+        {
+            uint32_t unk = indexUnknown;
+        }
+        else
+        {
+            uint32_t unk = *(uint32_t*)data;
+            data += sizeof(uint32_t);
+        }
+
+        entry->instance = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+
+        entry->diskSize = (*(uint32_t*)data) & ~0x80000000;
+        data += sizeof(uint32_t);
+
+        entry->memSize = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+
+        entry->compressed = *(uint16_t*)data;
+        data += sizeof(uint16_t);
+
+        entry->unknown = *(uint16_t*)data;
+        data += sizeof(uint16_t);
+
+        printf("\nEntry %d:\n", i);
+        printf("Type: %#X\n", entry->type);
+        printf("Group: %u\n", entry->group);
+        printf("Instance: %u\n", entry->instance);
+        printf("Chunk Offset: %u\n", entry->chunkOffset);
+        printf("Disk Size: %u\n", entry->diskSize);
+        printf("Mem Size: %u\n", entry->memSize);
+        printf("Compressed? %s\n", entry->compressed == 0xFFFF?"yes":"no");
     }
 }
