@@ -80,7 +80,7 @@ void LoadPackageFile(FILE *f)
 
     IndexData indexData = index.data;
 
-    readuint(&indexData.null, f);
+    //readuint(&indexData.null, f);
 
     uint32_t indexTypeId = 0xCAFEBABE;
     if ((index.indexType & (1 << 0)) == 1 << 0)
@@ -135,6 +135,9 @@ void LoadPackageFile(FILE *f)
         }
 
         readuint(&entry.instance, f);
+
+        readuint(&entry.chunkOffset, f);
+
         readuint(&entry.diskSize, f);
         entry.diskSize &= ~0x80000000;
         readuint(&entry.memSize, f);
@@ -151,5 +154,36 @@ void LoadPackageFile(FILE *f)
         printf("Compressed? %s\n", entry.compressed == 0xFFFF?"yes":"no");
 
         entries[i] = entry;
+    }
+
+    printf("\nData Cycle.\n");
+
+    for (int i = 0; i < header.indexEntryCount; i++)
+    {
+        IndexEntry entry = entries[i];
+
+        printf("\nEntry %d:\n", i);
+
+        if (fseek(f, entry.chunkOffset, SEEK_SET) == -1)
+        {
+            perror("Unexpected error occurred");
+        }
+
+        unsigned char *data = malloc(entry.diskSize);
+
+        fread(data, 1, entry.diskSize, f);
+
+        if (feof(f))
+        {
+            printf("Unexpected end of file.\n");
+        }
+        
+        for (int i = 0; i < entry.diskSize; i++)
+        {
+            printf("%#x ", data[i]);
+        }
+        puts("");
+
+        free(data);
     }
 }
