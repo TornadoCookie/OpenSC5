@@ -3,23 +3,24 @@
 #include <stdlib.h>
 
 typedef struct PackageHeader {
-    char magic[4];
-    uint32_t majorVersion;
-    uint32_t minorVersion;
-    uint32_t unknown[3];
-    uint32_t dateCreated;
-    uint32_t dateModified;
-    uint32_t indexMajorVersion;
-    uint32_t indexEntryCount;
-    uint32_t firstIndexEntryOffset;
-    uint32_t indexSize;
-    uint32_t holeEntryCount;
-    uint32_t holeOffset;
-    uint32_t holeSize; 
-    uint32_t indexMinorVersion;
-    uint32_t indexOffset;
-    uint32_t unknown2;
-    unsigned char reserved[24];
+    char magic[4];              //00
+    uint32_t majorVersion;      //04
+    uint32_t minorVersion;      //08
+    uint32_t unknown[3];        //0C
+    uint32_t dateCreated;       //18
+    uint32_t dateModified;      //1C
+    uint32_t indexMajorVersion; //20
+    uint32_t indexEntryCount;   //24
+    uint32_t firstIndexEntryOffset; //28
+    uint32_t indexSize;         //2C
+    uint32_t holeEntryCount;    //30
+    uint32_t holeOffset;        //34
+    uint32_t holeSize;          //38
+    uint32_t indexMinorVersion; //3C
+    uint32_t indexOffset;       //40
+    uint32_t unknown2;          //44
+    unsigned char reserved[24]; //48
+                                //5C
 } PackageHeader;
 
 typedef struct IndexEntry {
@@ -35,7 +36,6 @@ typedef struct IndexEntry {
 
 typedef struct IndexData {
     uint32_t null;
-    IndexEntry *entries;
 } IndexData;
 
 typedef struct Index {
@@ -43,6 +43,17 @@ typedef struct Index {
     
     IndexData data;
 } Index;
+
+static void readuint(uint32_t *ret, FILE *f)
+{
+    fread(ret, sizeof(uint32_t), 1, f);
+
+    if (feof(f))
+    {
+        printf("Unexpected end of file: %lu.\n", ftell(f));
+        exit(EXIT_FAILURE);
+    }
+}
 
 void LoadPackageFile(FILE *f)
 {
@@ -60,38 +71,40 @@ void LoadPackageFile(FILE *f)
     printf("Index Offset: %d\n", header.indexOffset);
 
     fseek(f, header.indexOffset, SEEK_SET);
-    Index index;
+    Index index = { 0 };
 
-    fread(&index, sizeof(Index), 1, f);
+    readuint(&index.indexType, f);
 
     printf("\nIndex information:\n");
     printf("Index Type: %d\n", index.indexType);
 
     IndexData indexData = index.data;
 
+    readuint(&indexData.null, f);
+
     uint32_t indexTypeId = 0xCAFEBABE;
     if ((index.indexType & (1 << 0)) == 1 << 0)
     {
-        fread(&indexTypeId, sizeof(uint32_t), 1, f);
+        readuint(&indexTypeId, f);
     }
 
     uint32_t indexGroupContainer = 0xCAFEBABE;
     if ((index.indexType & (1 << 1)) == 1 << 1)
     {
-        fread(&indexGroupContainer, sizeof(uint32_t), 1, f);
+        readuint(&indexGroupContainer, f);
     }
 
     uint32_t indexUnknown = 0xCAFEBABE;
     if ((index.indexType & (1 << 2)) == 1 << 2)
     {
-        fread(&indexUnknown, sizeof(uint32_t), 1, f);
+        readuint(&indexUnknown, f);
     }
 
     IndexEntry *entries = malloc(sizeof(IndexEntry) * header.indexEntryCount);
 
     for (int i = 0; i < header.indexEntryCount; i++)
     {
-        IndexEntry entry;
+        IndexEntry entry = { 0 };
 
         if ((index.indexType & (1 << 0)) == 1 << 0)
         {
@@ -99,7 +112,7 @@ void LoadPackageFile(FILE *f)
         }
         else
         {
-            fread(&entry.type, sizeof(uint32_t), 1, f);
+            readuint(&entry.type, f);
         }
 
         if ((index.indexType & (1 << 1)) == 1 << 1)
@@ -108,7 +121,7 @@ void LoadPackageFile(FILE *f)
         }
         else
         {
-            fread(&entry.group, sizeof(uint32_t), 1, f);
+            readuint(&entry.group, f);
         }
 
         if ((index.indexType & (1 << 2)) == 1 << 2)
@@ -118,12 +131,13 @@ void LoadPackageFile(FILE *f)
         else
         {
             uint32_t unk;
-            fread(&unk, sizeof(uint32_t), 1, f);
+            readuint(&unk, f);
         }
 
-        fread(&entry.instance, sizeof(uint32_t), 1, f);
-        fread(&entry.diskSize, sizeof(uint32_t), 1, f);
-        fread(&entry.memSize, sizeof(uint32_t), 1, f);
+        readuint(&entry.instance, f);
+        readuint(&entry.diskSize, f);
+        entry.diskSize &= ~0x80000000;
+        readuint(&entry.memSize, f);
         fread(&entry.compressed, sizeof(uint16_t), 1, f);
         fread(&entry.unknown, sizeof(uint16_t), 1, f);
 
@@ -135,10 +149,6 @@ void LoadPackageFile(FILE *f)
         printf("Disk Size: %u\n", entry.diskSize);
         printf("Mem Size: %u\n", entry.memSize);
         printf("Compressed? %s\n", entry.compressed == 0xFFFF?"yes":"no");
-
-        //unsigned char *entryData = data + entry->chunkOffset;
-        printf("Data:\n");
-        //printf("%#x %#x %#x\n", entryData[0], entryData[1], entryData[2]);
 
         entries[i] = entry;
     }
