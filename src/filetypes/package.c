@@ -1,5 +1,6 @@
 #include "filetypes/package.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct PackageHeader {
     char magic[4];
@@ -43,9 +44,10 @@ typedef struct Index {
     IndexData data;
 } Index;
 
-void LoadPackageFile(unsigned char *data)
+void LoadPackageFile(FILE *f)
 {
-    PackageHeader header = *(PackageHeader*)data;
+    PackageHeader header;
+    fread(&header, sizeof(PackageHeader), 1, f);
 
     printf("Header:\n");
     printf("Magic: %.4s\n", header.magic);
@@ -57,90 +59,87 @@ void LoadPackageFile(unsigned char *data)
     printf("Index Minor Version: %d\n", header.indexMinorVersion);
     printf("Index Offset: %d\n", header.indexOffset);
 
-    Index *index = (Index*)(data + header.indexOffset);
+    fseek(f, header.indexOffset, SEEK_SET);
+    Index index;
+
+    fread(&index, sizeof(Index), 1, f);
 
     printf("\nIndex information:\n");
-    printf("Index Type: %d\n", index->indexType);
+    printf("Index Type: %d\n", index.indexType);
 
-    IndexData indexData = index->data;
+    IndexData indexData = index.data;
 
     uint32_t indexTypeId = 0xCAFEBABE;
-    if ((index->indexType & (1 << 0)) == 1 << 0)
+    if ((index.indexType & (1 << 0)) == 1 << 0)
     {
-        indexTypeId = *(uint32_t*)data;
-        data += sizeof(uint32_t);
+        fread(&indexTypeId, sizeof(uint32_t), 1, f);
     }
 
     uint32_t indexGroupContainer = 0xCAFEBABE;
-    if ((index->indexType & (1 << 1)) == 1 << 1)
+    if ((index.indexType & (1 << 1)) == 1 << 1)
     {
-        indexGroupContainer = *(uint32_t*)data;
-        data += sizeof(uint32_t);
+        fread(&indexGroupContainer, sizeof(uint32_t), 1, f);
     }
 
     uint32_t indexUnknown = 0xCAFEBABE;
-    if ((index->indexType & (1 << 2)) == 1 << 2)
+    if ((index.indexType & (1 << 2)) == 1 << 2)
     {
-        indexUnknown = *(uint32_t*)data;
-        data += sizeof(uint32_t);
+        fread(&indexUnknown, sizeof(uint32_t), 1, f);
     }
+
+    IndexEntry *entries = malloc(sizeof(IndexEntry) * header.indexEntryCount);
 
     for (int i = 0; i < header.indexEntryCount; i++)
     {
-        IndexEntry *entry = (IndexEntry*)data;
+        IndexEntry entry;
 
-        if ((index->indexType & (1 << 0)) == 1 << 0)
+        if ((index.indexType & (1 << 0)) == 1 << 0)
         {
-            entry->type = indexTypeId;
+            entry.type = indexTypeId;
         }
         else
         {
-            entry->type = *(uint32_t*)data;
-            data += sizeof(uint32_t);
+            fread(&entry.type, sizeof(uint32_t), 1, f);
         }
 
-        if ((index->indexType & (1 << 1)) == 1 << 1)
+        if ((index.indexType & (1 << 1)) == 1 << 1)
         {
-            entry->group = indexGroupContainer;
+            entry.group = indexGroupContainer;
         }
         else
         {
-            entry->group = *(uint32_t*)data;
-            data += sizeof(uint32_t);
+            fread(&entry.group, sizeof(uint32_t), 1, f);
         }
 
-        if ((index->indexType & (1 << 2)) == 1 << 2)
+        if ((index.indexType & (1 << 2)) == 1 << 2)
         {
             uint32_t unk = indexUnknown;
         }
         else
         {
-            uint32_t unk = *(uint32_t*)data;
-            data += sizeof(uint32_t);
+            uint32_t unk;
+            fread(&unk, sizeof(uint32_t), 1, f);
         }
 
-        entry->instance = *(uint32_t*)data;
-        data += sizeof(uint32_t);
-
-        entry->diskSize = (*(uint32_t*)data) & ~0x80000000;
-        data += sizeof(uint32_t);
-
-        entry->memSize = *(uint32_t*)data;
-        data += sizeof(uint32_t);
-
-        entry->compressed = *(uint16_t*)data;
-        data += sizeof(uint16_t);
-
-        entry->unknown = *(uint16_t*)data;
-        data += sizeof(uint16_t);
+        fread(&entry.instance, sizeof(uint32_t), 1, f);
+        fread(&entry.diskSize, sizeof(uint32_t), 1, f);
+        fread(&entry.memSize, sizeof(uint32_t), 1, f);
+        fread(&entry.compressed, sizeof(uint16_t), 1, f);
+        fread(&entry.unknown, sizeof(uint16_t), 1, f);
 
         printf("\nEntry %d:\n", i);
-        printf("Type: %#X\n", entry->type);
-        printf("Group: %u\n", entry->group);
-        printf("Instance: %u\n", entry->instance);
-        printf("Chunk Offset: %u\n", entry->chunkOffset);
-        printf("Disk Size: %u\n", entry->diskSize);
-        printf("Mem Size: %u\n", entry->memSize);
-        printf("Compressed? %s\n", entry->compressed == 0xFFFF?"yes":"no");
+        printf("Type: %#X\n", entry.type);
+        printf("Group: %u\n", entry.group);
+        printf("Instance: %u\n", entry.instance);
+        printf("Chunk Offset: %u\n", entry.chunkOffset);
+        printf("Disk Size: %u\n", entry.diskSize);
+        printf("Mem Size: %u\n", entry.memSize);
+        printf("Compressed? %s\n", entry.compressed == 0xFFFF?"yes":"no");
+
+        //unsigned char *entryData = data + entry->chunkOffset;
+        printf("Data:\n");
+        //printf("%#x %#x %#x\n", entryData[0], entryData[1], entryData[2]);
+
+        entries[i] = entry;
     }
 }

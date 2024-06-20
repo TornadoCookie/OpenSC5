@@ -3,6 +3,6 @@
 
 #include <stdio.h>
 
-void LoadPackageFile(unsigned char *data);
+void LoadPackageFile(FILE *f);
 
 #endif

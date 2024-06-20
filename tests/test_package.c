@@ -4,8 +4,11 @@
 
 int main(int argc, char **argv)
 {
-    int dataSize;
-    LoadPackageFile(LoadFileData(argv[1], &dataSize));
+    FILE *f = fopen(argv[1], "rb");
+
+    LoadPackageFile(f);
+
+    fclose(f);
 
     return 0;
 }
