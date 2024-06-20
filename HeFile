@@ -4,9 +4,9 @@ UseRaylib
 
 ExtraCFlag -lcurl
 
-#Program test_package
-#Source ../tests/test_package.c
-#Source filetypes/package.c
+Program test_package
+Source ../tests/test_package.c
+Source filetypes/package.c
 
 Program test_update
 Source ../tests/test_update.c

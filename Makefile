@@ -38,7 +38,7 @@ CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
 endif
 
-PROGRAMS=test_update
+PROGRAMS=test_package test_update
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -58,10 +58,17 @@ LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 
+test_package_SOURCES+=src/../tests/test_package.c
+test_package_SOURCES+=src/filetypes/package.c
+
+$(DISTDIR)/test_package$(EXEC_EXTENSION): $(test_package_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 test_update_SOURCES+=src/../tests/test_update.c
 
 $(DISTDIR)/test_update$(EXEC_EXTENSION): $(test_update_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 clean:
+	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
