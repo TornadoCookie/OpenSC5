@@ -14,36 +14,37 @@ typedef struct CRCBinHeader {
     uint32_t always16_be;
 } CRCBinHeader;
 
-typedef struct CRCBinFile {
-    CRCBinHeader header;
-    char **strEntries;
-} CRCBinFile;
-
 #define checkequals(thing, val) if (thing.always_##val != 0x##val) {printf("Info: "#thing".always_" #val " is instead %#x.\n", thing.always_##val);}
 
-void LoadCRCBinFile(FILE *f)
+CRCBinObject LoadCRCBinFile(FILE *f)
 {
-    CRCBinFile file = { 0 };
+    CRCBinHeader header = { 0 };
+    CRCBinObject obj = { 0 };
 
-    fread(&file.header, sizeof(CRCBinHeader), 1, f);
+    fread(&header, sizeof(CRCBinHeader), 1, f);
 
-    file.header.always4_be = htobe32(file.header.always4_be);
-    file.header.always16_be = htobe32(file.header.always16_be);
-    file.header.entryCount = htobe32(file.header.entryCount);
-    file.header.fileId = htobe32(file.header.fileId);
+    header.always4_be = htobe32(header.always4_be);
+    header.always16_be = htobe32(header.always16_be);
+    header.entryCount = htobe32(header.entryCount);
+    header.fileId = htobe32(header.fileId);
 
-    printf("Always 4: %d\n", file.header.always4_be);
-    checkequals(file.header, dac0f709);
-    checkequals(file.header, 00800a00);
-    printf("File Id: %d\n", file.header.fileId);
-    checkequals(file.header, b03d420e);
-    checkequals(file.header, 9c801200);
-    printf("Entry Count: %d\n", file.header.entryCount);
-    printf("Always 16: %d\n", file.header.always16_be);
+    printf("Always 4: %d\n", header.always4_be);
+    checkequals(header, dac0f709);
+    checkequals(header, 00800a00);
+    printf("File Id: %d\n", header.fileId);
+    checkequals(header, b03d420e);
+    checkequals(header, 9c801200);
+    printf("Entry Count: %d\n", header.entryCount);
+    printf("Always 16: %d\n", header.always16_be);
 
-    file.strEntries = malloc(sizeof(char*) * file.header.entryCount);
+    obj.entryCount = header.entryCount;
+    obj.fileId = header.fileId;
 
-    for (int i = 0; i < file.header.entryCount; i++)
+    obj.data1 = malloc(sizeof(char*) * header.entryCount);
+    obj.data2 = malloc(sizeof(uint32_t) * header.entryCount);
+    obj.data3 = malloc(sizeof(uint32_t) * header.entryCount);
+
+    for (int i = 0; i < header.entryCount; i++)
     {
         printf("\nEntry %d:\n", i);
         uint32_t length;
@@ -51,7 +52,7 @@ void LoadCRCBinFile(FILE *f)
         if (feof(f))
         {
             printf("Unexpected end of file.\n");
-            return;
+            return (CRCBinObject){0};
         }
         length = htobe32(length);
         printf("Length: %d\n", length);
@@ -61,7 +62,7 @@ void LoadCRCBinFile(FILE *f)
 
         printf("%s\n", str);
 
-        file.strEntries[i] = str;
+        obj.data1[i] = str;
     }
 
     struct {
@@ -85,6 +86,7 @@ void LoadCRCBinFile(FILE *f)
         uint32_t data;
         fread(&data, sizeof(uint32_t), 1, f);
         printf("Entry %d: %#x\n", i, data);
+        obj.data2[i] = data;
     }
 
     struct {
@@ -108,5 +110,8 @@ void LoadCRCBinFile(FILE *f)
         uint32_t data;
         fread(&data, sizeof(uint32_t), 1, f);
         printf("Entry %d: %#x\n", i, data);
+        obj.data3[i] = data;
     }
+
+    return obj;
 }
