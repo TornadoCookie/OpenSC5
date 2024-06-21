@@ -207,6 +207,18 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Value: %u\n", value);
                         } break;
+                        case 0x12: // string8 type
+                        {
+                            uint32_t length = htobe32(*(uint32_t*)data);
+                            data += sizeof(uint32_t);
+
+                            char *str = malloc(length + 1);
+                            memcpy(str, data, length);
+                            str[length] = 0;
+                            data += length;
+
+                            printf("Value: %s\n", str);
+                        } break;
                         default:
                         {
                             printf("Unrecognized variable type.\n");
