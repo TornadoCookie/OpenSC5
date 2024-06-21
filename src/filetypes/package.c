@@ -107,20 +107,32 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 printf("Type: %#x\n", type);
                 printf("Specifier: %#x\n", specifier);
 
-                uint32_t arrayNumber = 1;
-                uint32_t arraySize = 0;
+                int32_t arrayNumber = 1;
+                int32_t arraySize = 0;
                 bool isArray = false;
 
-                if (((specifier & 0x30) != 0) && ((specifier & 0x40) == 0))
+                if ((specifier & 0x30) == 0)
+                {
+                    isArray = false;
+                }
+                else if ((specifier & 0x40) == 0)
                 {
                     isArray = true;
-                    arrayNumber = htobe32(*(uint32_t*)data);
-                    data += sizeof(uint32_t);
-                    arraySize = htobe32(*(uint32_t*)data);
-                    data += sizeof(uint32_t);
+                    arrayNumber = htobe32(*(int32_t*)data);
+                    data += sizeof(int32_t);
+
+                    arraySize = htobe32(*(int32_t*)data);
+                    data += sizeof(int32_t);
+                    
+                    arraySize &= ~0x9C000000;
 
                     printf("Array nmemb: %d\n", arrayNumber);
-                    printf("Array item size: %u\n", arraySize);
+                    printf("Array item size: %d\n", arraySize);
+                }
+                else
+                {
+                    printf("Invalid specifier.\n");
+                    return false;
                 }
 
                 for (int j = 0; j < arrayNumber; j++)
@@ -138,7 +150,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             if (!isArray)
                             {
-                                data += sizeof(uint32_t);
+                                //data += sizeof(uint32_t);
                             }
 
                             printf("File: %#x\n", file);
@@ -311,7 +323,12 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         retCursor += numPlainText;
         data += numPlainText;
 
-        memcpy(retCursor, retCursor - copyOffset - 1, numToCopy);
+        if (retCursor - copyOffset < ret)
+        {
+            printf("Invalid copyOffset. Ret=%p, retCursor - copyOffset = %p.\n", ret, retCursor - copyOffset - 1);
+        }
+
+        memcpy(retCursor, retCursor - copyOffset, numToCopy);
         retCursor += numToCopy;
 
         if (byte0 >= 0xFC & byte0 <= 0xFF) break;
@@ -413,8 +430,8 @@ void LoadPackageFile(FILE *f)
 
         printf("\nEntry %d:\n", i);
         printf("Type: %#X\n", entry.type);
-        printf("Group: %u\n", entry.group);
-        printf("Instance: %u\n", entry.instance);
+        printf("Group: %#X\n", entry.group);
+        printf("Instance: %#X\n", entry.instance);
         printf("Chunk Offset: %u\n", entry.chunkOffset);
         printf("Disk Size: %u\n", entry.diskSize);
         printf("Mem Size: %u\n", entry.memSize);
@@ -450,7 +467,7 @@ void LoadPackageFile(FILE *f)
             unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
             if (uncompressed)
             {
-                int toPrint = 10;
+                int toPrint = entry.memSize;
                 if (!ProcessPackageData(uncompressed, entry.memSize, entry.type)) toPrint = entry.memSize;
                 for (int i = 0; i < toPrint; i++)
                 {
@@ -462,7 +479,7 @@ void LoadPackageFile(FILE *f)
         }
         else
         {
-            int toPrint = 10;
+            int toPrint = entry.diskSize;
             if (!ProcessPackageData(data, entry.diskSize, entry.type)) toPrint = entry.diskSize;
             for (int i = 0; i < toPrint; i++)
             {
