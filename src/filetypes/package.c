@@ -1,6 +1,7 @@
 #include "filetypes/package.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -32,6 +33,8 @@ typedef struct IndexEntry {
     uint32_t memSize;
     uint16_t compressed;
     uint16_t unknown;
+    
+    bool isCompressed;
 } IndexEntry;
 
 typedef struct IndexData {
@@ -52,6 +55,47 @@ static void readuint(uint32_t *ret, FILE *f)
     {
         printf("Unexpected end of file: %lu.\n", ftell(f));
         exit(EXIT_FAILURE);
+    }
+}
+
+static uint32_t little2big(uint32_t le)
+{
+    return __builtin_bswap32(le);
+}
+
+static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
+{
+    switch (dataType)
+    {
+        case 0x00B1B104: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
+        {
+            uint32_t variableCount = little2big(*(uint32_t*)data);
+
+            data += sizeof(uint32_t);
+
+            printf("Properties Info:\n");
+            printf("Variable count: %d\n", variableCount);
+            
+            for (int i = 0; i < variableCount; i++)
+            {
+                printf("\nVariable %d:\n", i);
+
+                uint32_t identifier = little2big(*(uint32_t*)data);
+                data += sizeof(uint32_t);
+                uint16_t type = little2big(*(uint16_t*)data);
+                data += sizeof(uint16_t);
+                uint16_t specifier = little2big(*(uint16_t*)data);
+                data += sizeof(uint16_t);
+
+                printf("Identifier: %#x\n", identifier);
+                printf("Type: %#x\n", type);
+                printf("Specifier: %#x\n", specifier);
+            }
+        } break;
+        default:
+        {
+            printf("Unknown data type %#X.\n", dataType);
+        } break;
     }
 }
 
@@ -144,6 +188,8 @@ void LoadPackageFile(FILE *f)
         fread(&entry.compressed, sizeof(uint16_t), 1, f);
         fread(&entry.unknown, sizeof(uint16_t), 1, f);
 
+        entry.isCompressed = (entry.compressed == 0xFFFF);
+
         printf("\nEntry %d:\n", i);
         printf("Type: %#X\n", entry.type);
         printf("Group: %u\n", entry.group);
@@ -151,7 +197,7 @@ void LoadPackageFile(FILE *f)
         printf("Chunk Offset: %u\n", entry.chunkOffset);
         printf("Disk Size: %u\n", entry.diskSize);
         printf("Mem Size: %u\n", entry.memSize);
-        printf("Compressed? %s\n", entry.compressed == 0xFFFF?"yes":"no");
+        printf("Compressed? %s\n", entry.isCompressed?"yes":"no");
 
         entries[i] = entry;
     }
@@ -176,6 +222,11 @@ void LoadPackageFile(FILE *f)
         if (feof(f))
         {
             printf("Unexpected end of file.\n");
+        }
+
+        if (!entry.isCompressed)
+        {
+            ProcessPackageData(data, entry.diskSize, entry.type);
         }
         
         for (int i = 0; i < entry.diskSize; i++)
