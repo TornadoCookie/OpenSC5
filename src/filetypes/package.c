@@ -180,6 +180,26 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Value: {%f, %f, %f}\n", r, g, b);
                         } break;
+                        case 0x13: // string type
+                        {
+                            uint32_t length = htobe32(*(uint32_t*)data);
+                            data += sizeof(uint32_t);
+
+                            printf("Length %d\n", length);
+
+                            char *str = malloc(length + 1);
+
+                            for (int i = 0; i < length; i++)
+                            {
+                                str[i] = data[i*2+1];
+                            }
+
+                            data += length * 2;
+
+                            str[length] = 0;
+
+                            printf("Value: %s\n", str);
+                        } break;
                         default:
                         {
                             printf("Unrecognized variable type.\n");
