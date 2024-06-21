@@ -60,7 +60,26 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
-static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
+typedef struct RasterFileHeader {
+    uint32_t type;
+    uint32_t width;
+    uint32_t height;
+    uint32_t mipmapct;
+    uint32_t pixelwidth;
+    uint32_t pixelformat;
+} RasterFileHeader;
+
+typedef struct RasterFileImage {
+    uint32_t blocksize;
+    char *data;
+} RasterFileImage;
+
+typedef struct RasterFile {
+    RasterFileHeader header;
+    RasterFileImage *images;
+} RasterFile;
+
+static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
 {
     switch (dataType)
     {
@@ -152,11 +171,48 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                         default:
                         {
                             printf("Unrecognized variable type.\n");
-                            return;
+                            return false;
                         } break;
                     }
                 }
             }
+        } break;
+        case 0x2F4E681C: // Raster file https://simswiki.info/wiki.php?title=Spore:2F4E681C
+        {
+            printf("Raster info:\n");
+            RasterFile file = { 0 };
+
+            memcpy(&file.header, data, sizeof(RasterFileHeader));
+            data += sizeof(RasterFileHeader);
+
+            file.header.type = htobe32(file.header.type);
+            file.header.width = htobe32(file.header.width);
+            file.header.height = htobe32(file.header.height);
+            file.header.mipmapct = htobe32(file.header.mipmapct);
+            file.header.pixelwidth = htobe32(file.header.pixelwidth);
+            file.header.pixelformat = htobe32(file.header.pixelformat);
+
+            printf("Type: %d\n", file.header.type);
+            printf("Width: %d\n", file.header.width);
+            printf("Height: %d\n", file.header.height);
+            printf("Mipmap Count: %d\n", file.header.mipmapct);
+            printf("PixelWidth: %d\n", file.header.pixelwidth);
+            printf("PixelFormat: %#x\n", file.header.pixelformat);
+
+            return false;
+
+            file.images = malloc(sizeof(RasterFileImage) * file.header.mipmapct);
+
+            for (int i = 0; i < file.header.mipmapct; i++)
+            {
+                RasterFileImage img = { 0 };
+
+                img.blocksize = *(uint32_t*)data;
+                data += sizeof(uint32_t);
+
+                printf("Image %d: Blocksize %d\n", i, img.blocksize);
+            }
+            
         } break;
         default:
         {
@@ -387,8 +443,9 @@ void LoadPackageFile(FILE *f)
             unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
             if (uncompressed)
             {
-                ProcessPackageData(uncompressed, entry.memSize, entry.type);
-                for (int i = 0; i < entry.memSize; i++)
+                int toPrint = 10;
+                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type)) toPrint = entry.memSize;
+                for (int i = 0; i < toPrint; i++)
                 {
                     printf("%#x ", uncompressed[i]);
                 }
@@ -398,8 +455,9 @@ void LoadPackageFile(FILE *f)
         }
         else
         {
-            ProcessPackageData(data, entry.diskSize, entry.type);
-            for (int i = 0; i < entry.diskSize; i++)
+            int toPrint = 10;
+            if (!ProcessPackageData(data, entry.diskSize, entry.type)) toPrint = entry.diskSize;
+            for (int i = 0; i < toPrint; i++)
             {
                 printf("%#x ", data[i]);
             }
