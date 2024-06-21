@@ -101,7 +101,7 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 uint32_t arraySize = 0;
                 bool isArray = false;
 
-                if (specifier == 0x9C)
+                if (((specifier & 0x30)) && ((specifier & 0x40) == 0))
                 {
                     isArray = true;
                     arrayNumber = little2big32(*(uint32_t*)data);
@@ -113,31 +113,34 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                     printf("Array size: %d\n", arraySize);
                 }
 
-                switch (type)
+                for (int j = 0; j < arrayNumber; j++)
                 {
-                    case 0x20: // key type
+                    switch (type)
                     {
-                        uint32_t file = *(uint32_t*)data;
-                        data += sizeof(uint32_t);
-                        uint32_t type = *(uint32_t*)data;
-                        data += sizeof(uint32_t);
-                        uint32_t group = *(uint32_t*)data;
-                        data += sizeof(uint32_t);
-
-                        if (!isArray)
+                        case 0x20: // key type
                         {
+                            uint32_t file = *(uint32_t*)data;
                             data += sizeof(uint32_t);
-                        }
+                            uint32_t type = *(uint32_t*)data;
+                            data += sizeof(uint32_t);
+                            uint32_t group = *(uint32_t*)data;
+                            data += sizeof(uint32_t);
 
-                        printf("File: %#x\n", file);
-                        printf("Type: %#x\n", type);
-                        printf("Group: %#x\n", group);
-                    } break;
-                    default:
-                    {
-                        printf("Unrecognized variable type.\n");
-                        return;
-                    } break;
+                            if (!isArray)
+                            {
+                                data += sizeof(uint32_t);
+                            }
+
+                            printf("File: %#x\n", file);
+                            printf("Type: %#x\n", type);
+                            printf("Group: %#x\n", group);
+                        } break;
+                        default:
+                        {
+                            printf("Unrecognized variable type.\n");
+                            return;
+                        } break;
+                    }
                 }
             }
         } break;
