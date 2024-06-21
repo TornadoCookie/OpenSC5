@@ -135,6 +135,29 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             printf("Type: %#x\n", type);
                             printf("Group: %#x\n", group);
                         } break;
+                        case 9: // int32 type
+                        {
+                            int32_t value = little2big32(*(int32_t*)data);
+                            data += sizeof(int32_t);
+
+                            printf("Value: %#x\n", value);
+                        } break;
+                        case 0x32: // colorRGB type
+                        {
+                            float r = *(float*)data;
+                            data += sizeof(float);
+                            float g = *(float*)data;
+                            data += sizeof(float);
+                            float b = *(float*)data;
+                            data += sizeof(float);
+
+                            if (!isArray)
+                            {
+                                data += sizeof(uint32_t);
+                            }
+
+                            printf("Value: {%f, %f, %f}\n", r, g, b);
+                        } break;
                         default:
                         {
                             printf("Unrecognized variable type.\n");
