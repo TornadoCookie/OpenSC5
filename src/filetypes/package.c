@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -97,6 +98,85 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             printf("Unknown data type %#X.\n", dataType);
         } break;
     }
+}
+
+static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize)
+{
+    unsigned char *ret = malloc(outDataSize);
+    unsigned char *initData = data;
+
+    uint8_t compressionType = data[0];
+    uint32_t uncompressedSize;
+
+    printf("Compression Type: %#x\n", compressionType);
+
+    if (compressionType != 0x10)
+    {
+        printf("Unrecognized compression type.\n");
+        free(ret);
+        return NULL;
+    }
+
+    memcpy(&uncompressedSize, data + 2, 3);
+    printf("Uncompressed Size: %d\n", uncompressedSize);
+
+    data += 5;
+
+    unsigned char *retCursor = ret;
+
+    while (initData - data <= dataSize)
+    {
+        uint8_t byte0 = *data;
+        data++;
+        int numPlainText = 0;
+        int numToCopy = 0;
+        int copyOffset = 0;
+        printf("Control character: %#x\n", byte0);
+        if (byte0 >= 0xE0 && byte0 <= 0xFB)
+        {
+            numPlainText = ((byte0 & 0x1F) << 2) + 4;
+        }
+        else if (byte0 >= 0x00 && byte0 <= 0x7F)
+        {
+            uint8_t byte1 = *data;
+            data++;
+            numPlainText = byte0 & 0x03;
+            numToCopy = ((byte0 & 0x1C) >> 2) + 3;
+            copyOffset = ((byte0 & 0x60) << 3) + byte1 + 1;
+        }
+        else if (byte0 >= 0x80 && byte0 <= 0xBF)
+        {
+            uint8_t byte1 = *data;
+            data++;
+            uint8_t byte2 = *data;
+            data++;
+
+            numPlainText = ((byte1 & 0xC0) >> 6) & 0x03;
+            numToCopy = (byte0 & 0x3F) + 4;
+            copyOffset = ((byte1 & 0x3F) << 8) + byte2 + 1;
+        }
+        else if (byte0 >= 0xFC & byte0 <= 0xFF)
+        {
+            numPlainText = byte0 & 0x03;
+            numToCopy = 0; 
+        }
+        else
+        {
+            printf("Unrecognized control character.\n");
+            return NULL;
+        }
+
+        memcpy(retCursor, data, numPlainText);
+        retCursor += numPlainText;
+        data += numPlainText;
+
+        memcpy(retCursor, retCursor - copyOffset - 1, numToCopy);
+        retCursor += numToCopy;
+
+        if (byte0 >= 0xFC & byte0 <= 0xFF) break;
+    }
+
+    return ret;
 }
 
 void LoadPackageFile(FILE *f)
@@ -224,7 +304,15 @@ void LoadPackageFile(FILE *f)
             printf("Unexpected end of file.\n");
         }
 
-        if (!entry.isCompressed)
+        if (entry.isCompressed)
+        {
+            unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
+            if (uncompressed)
+            {
+                ProcessPackageData(uncompressed, entry.memSize, entry.type);
+            }
+        }
+        else
         {
             ProcessPackageData(data, entry.diskSize, entry.type);
         }
