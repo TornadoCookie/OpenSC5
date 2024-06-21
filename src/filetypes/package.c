@@ -214,11 +214,18 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             
         } break;
+        case 0xA98EAF0: // JSON file.
+        {
+            printf("JSON:\n");
+            printf("%s\n", data+3);
+        } break;
         default:
         {
             printf("Unknown data type %#X.\n", dataType);
         } break;
     }
+
+    return true;
 }
 
 static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize)
