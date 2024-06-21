@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <endian.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -59,23 +60,13 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
-static uint32_t little2big32(uint32_t le)
-{
-    return __builtin_bswap32(le);
-}
-
-static uint16_t little2big16(uint16_t le)
-{
-    return __builtin_bswap16(le);
-}
-
 static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
 {
     switch (dataType)
     {
         case 0x00B1B104: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
         {
-            uint32_t variableCount = little2big32(*(uint32_t*)data);
+            uint32_t variableCount = htobe32(*(uint32_t*)data);
 
             data += sizeof(uint32_t);
 
@@ -86,11 +77,11 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             {
                 printf("\nVariable %d:\n", i);
 
-                uint32_t identifier = little2big32(*(uint32_t*)data);
+                uint32_t identifier = htobe32(*(uint32_t*)data);
                 data += sizeof(uint32_t);
-                uint16_t type = little2big16(*(uint16_t*)data);
+                uint16_t type = htobe16(*(uint16_t*)data);
                 data += sizeof(uint16_t);
-                uint16_t specifier = little2big16(*(uint16_t*)data);
+                uint16_t specifier = htobe16(*(uint16_t*)data);
                 data += sizeof(uint16_t);
 
                 printf("Identifier: %#x\n", identifier);
@@ -104,9 +95,9 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 if (((specifier & 0x30) != 0) && ((specifier & 0x40) == 0))
                 {
                     isArray = true;
-                    arrayNumber = little2big32(*(uint32_t*)data);
+                    arrayNumber = htobe32(*(uint32_t*)data);
                     data += sizeof(uint32_t);
-                    arraySize = little2big32(*(uint32_t*)data);
+                    arraySize = htobe32(*(uint32_t*)data);
                     data += sizeof(uint32_t);
 
                     printf("Array nmemb: %d\n", arrayNumber);
@@ -137,7 +128,7 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                         } break;
                         case 9: // int32 type
                         {
-                            int32_t value = little2big32(*(int32_t*)data);
+                            int32_t value = htobe32(*(int32_t*)data);
                             data += sizeof(int32_t);
 
                             printf("Value: %#x\n", value);
