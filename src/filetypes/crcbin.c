@@ -1,6 +1,7 @@
 #include "filetypes/crcbin.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <endian.h>
 
 typedef struct CRCBinHeader {
     uint32_t always4_be;
@@ -24,6 +25,10 @@ void LoadCRCBinFile(FILE *f)
 
     fread(&file.header, sizeof(CRCBinHeader), 1, f);
 
+    file.header.always4_be = htobe32(file.header.always4_be);
+    file.header.always16_be = htobe32(file.header.always16_be);
+    file.header.entryCount = htobe32(file.header.entryCount);
+
     printf("Always 4: %d\n", file.header.always4_be);
     printf("Always 09fcc0da: %#x\n", file.header.always_09fcc0da);
     printf("Always 000a8000: %#x\n", file.header.always_000a8000);
@@ -40,6 +45,8 @@ void LoadCRCBinFile(FILE *f)
         printf("\nEntry %d:\n", i);
         uint32_t length;
         fread(&length, sizeof(uint32_t), 1, f);
+        length = htobe32(length);
+        printf("Length: %d\n", length);
         char *str = malloc(length + 1);
         fread(str, 1, length, f);
         str[length] = 0;
