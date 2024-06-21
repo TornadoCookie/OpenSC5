@@ -59,9 +59,14 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
-static uint32_t little2big(uint32_t le)
+static uint32_t little2big32(uint32_t le)
 {
     return __builtin_bswap32(le);
+}
+
+static uint16_t little2big16(uint16_t le)
+{
+    return __builtin_bswap16(le);
 }
 
 static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
@@ -70,7 +75,7 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
     {
         case 0x00B1B104: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
         {
-            uint32_t variableCount = little2big(*(uint32_t*)data);
+            uint32_t variableCount = little2big32(*(uint32_t*)data);
 
             data += sizeof(uint32_t);
 
@@ -81,16 +86,59 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             {
                 printf("\nVariable %d:\n", i);
 
-                uint32_t identifier = little2big(*(uint32_t*)data);
+                uint32_t identifier = little2big32(*(uint32_t*)data);
                 data += sizeof(uint32_t);
-                uint16_t type = little2big(*(uint16_t*)data);
+                uint16_t type = little2big16(*(uint16_t*)data);
                 data += sizeof(uint16_t);
-                uint16_t specifier = little2big(*(uint16_t*)data);
+                uint16_t specifier = little2big16(*(uint16_t*)data);
                 data += sizeof(uint16_t);
 
                 printf("Identifier: %#x\n", identifier);
                 printf("Type: %#x\n", type);
                 printf("Specifier: %#x\n", specifier);
+
+                uint32_t arrayNumber = 1;
+                uint32_t arraySize = 0;
+                bool isArray = false;
+
+                if (specifier == 0x9C)
+                {
+                    isArray = true;
+                    arrayNumber = little2big32(*(uint32_t*)data);
+                    data += sizeof(uint32_t);
+                    arraySize = little2big32(*(uint32_t*)data);
+                    data += sizeof(uint32_t);
+
+                    printf("Array nmemb: %d\n", arrayNumber);
+                    printf("Array size: %d\n", arraySize);
+                }
+
+                switch (type)
+                {
+                    case 0x20: // key type
+                    {
+                        uint32_t file = *(uint32_t*)data;
+                        data += sizeof(uint32_t);
+                        uint32_t type = *(uint32_t*)data;
+                        data += sizeof(uint32_t);
+                        uint32_t group = *(uint32_t*)data;
+                        data += sizeof(uint32_t);
+
+                        if (!isArray)
+                        {
+                            data += sizeof(uint32_t);
+                        }
+
+                        printf("File: %#x\n", file);
+                        printf("Type: %#x\n", type);
+                        printf("Group: %#x\n", group);
+                    } break;
+                    default:
+                    {
+                        printf("Unrecognized variable type.\n");
+                        return;
+                    } break;
+                }
             }
         } break;
         default:
@@ -118,7 +166,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
     }
 
     memcpy(&uncompressedSize, data + 2, 3);
-    printf("Uncompressed Size: %d\n", uncompressedSize);
+    //printf("Uncompressed Size: %d\n", uncompressedSize);
 
     data += 5;
 
@@ -131,7 +179,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         int numPlainText = 0;
         int numToCopy = 0;
         int copyOffset = 0;
-        printf("Control character: %#x\n", byte0);
+        //printf("Control character: %#x\n", byte0);
         if (byte0 >= 0xE0 && byte0 <= 0xFB)
         {
             numPlainText = ((byte0 & 0x1F) << 2) + 4;
@@ -160,9 +208,22 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
             numPlainText = byte0 & 0x03;
             numToCopy = 0; 
         }
+        else if (byte0 >= 0xC0 && byte0 <= 0xDF)
+        {
+            uint8_t byte1 = *data;
+            data++;
+            uint8_t byte2 = *data;
+            data++;
+            uint8_t byte3 = *data;
+            data++;
+
+            numPlainText = byte0 & 0x03;
+            numToCopy = ((byte0 & 0x0C) << 6) + byte3 + 5;
+            copyOffset = ((byte0 & 0x10) << 12) + (byte1 << 8) + byte2 + 1;
+        }
         else
         {
-            printf("Unrecognized control character.\n");
+            printf("Unrecognized control character %#x.\n", byte0);
             return NULL;
         }
 
@@ -310,18 +371,23 @@ void LoadPackageFile(FILE *f)
             if (uncompressed)
             {
                 ProcessPackageData(uncompressed, entry.memSize, entry.type);
+                for (int i = 0; i < entry.memSize; i++)
+                {
+                    printf("%#x ", uncompressed[i]);
+                }
+                puts("");
+                free(uncompressed);
             }
         }
         else
         {
             ProcessPackageData(data, entry.diskSize, entry.type);
+            for (int i = 0; i < entry.diskSize; i++)
+            {
+                printf("%#x ", data[i]);
+            }
+            puts("");
         }
-        
-        for (int i = 0; i < entry.diskSize; i++)
-        {
-            printf("%#x ", data[i]);
-        }
-        puts("");
 
         free(data);
     }
