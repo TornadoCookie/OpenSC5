@@ -7,7 +7,7 @@ typedef struct CRCBinHeader {
     uint32_t always4_be;
     uint32_t always_dac0f709;
     uint32_t always_00800a00;
-    uint32_t unk1; // 1335f58d if it is the first item in the CRC
+    uint32_t fileId;
     uint32_t always_b03d420e;
     uint32_t always_9c801200;
     uint32_t entryCount;
@@ -30,11 +30,12 @@ void LoadCRCBinFile(FILE *f)
     file.header.always4_be = htobe32(file.header.always4_be);
     file.header.always16_be = htobe32(file.header.always16_be);
     file.header.entryCount = htobe32(file.header.entryCount);
+    file.header.fileId = htobe32(file.header.fileId);
 
     printf("Always 4: %d\n", file.header.always4_be);
     checkequals(file.header, dac0f709);
     checkequals(file.header, 00800a00);
-    printf("Unknown 1: %#x\n", file.header.unk1);
+    printf("File Id: %d\n", file.header.fileId);
     checkequals(file.header, b03d420e);
     checkequals(file.header, 9c801200);
     printf("Entry Count: %d\n", file.header.entryCount);
@@ -47,6 +48,11 @@ void LoadCRCBinFile(FILE *f)
         printf("\nEntry %d:\n", i);
         uint32_t length;
         fread(&length, sizeof(uint32_t), 1, f);
+        if (feof(f))
+        {
+            printf("Unexpected end of file.\n");
+            return;
+        }
         length = htobe32(length);
         printf("Length: %d\n", length);
         char *str = malloc(length + 1);
@@ -59,7 +65,7 @@ void LoadCRCBinFile(FILE *f)
     }
 
     struct {
-        uint32_t always_b13d4203;
+        uint32_t always_b13d420e;
         uint32_t always_9c800a00;
         uint32_t entryCount2;
         uint32_t always4_be;
@@ -69,7 +75,7 @@ void LoadCRCBinFile(FILE *f)
 
     printf("\nData 2:\n");
 
-    checkequals(data2, b13d4203);
+    checkequals(data2, b13d420e);
     checkequals(data2, 9c800a00);
 
     data2.entryCount2 = htobe32(data2.entryCount2);

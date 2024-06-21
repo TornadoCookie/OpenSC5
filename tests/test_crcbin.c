@@ -1,14 +1,24 @@
 #include "filetypes/crcbin.h"
 #include <stdio.h>
 #include <raylib.h>
+#include <string.h>
 
 int main(int argc, char **argv)
 {
-    FILE *f = fopen(argv[1], "rb");
+    FilePathList files = LoadDirectoryFiles(argv[1]);
 
-    LoadCRCBinFile(f);
+    for (int i = 0; i < files.count; i++)
+    {
+        if (!IsFileExtension(files.paths[i], ".bin")) continue;
+        if (strstr(files.paths[i], "Validate")) continue;
+        printf("\nFile %s:\n", files.paths[i]);
 
-    fclose(f);
+        FILE *f = fopen(files.paths[i], "rb");
+
+        LoadCRCBinFile(f);
+
+        fclose(f);   
+    }
 
     return 0;
 }
