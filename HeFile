@@ -10,3 +10,7 @@ Source filetypes/package.c
 
 Program test_update
 Source ../tests/test_update.c
+
+Program test_crcbin
+Source ../tests/test_crcbin.c
+Source filetypes/crcbin.c

@@ -101,7 +101,7 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 uint32_t arraySize = 0;
                 bool isArray = false;
 
-                if (((specifier & 0x30)) && ((specifier & 0x40) == 0))
+                if (((specifier & 0x30) != 0) && ((specifier & 0x40) == 0))
                 {
                     isArray = true;
                     arrayNumber = little2big32(*(uint32_t*)data);
@@ -110,7 +110,7 @@ static void ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                     data += sizeof(uint32_t);
 
                     printf("Array nmemb: %d\n", arrayNumber);
-                    printf("Array size: %d\n", arraySize);
+                    printf("Array item size: %u\n", arraySize);
                 }
 
                 for (int j = 0; j < arrayNumber; j++)

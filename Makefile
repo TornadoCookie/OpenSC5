@@ -38,7 +38,7 @@ CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
 endif
 
-PROGRAMS=test_package test_update
+PROGRAMS=test_package test_update test_crcbin
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -69,6 +69,13 @@ test_update_SOURCES+=src/../tests/test_update.c
 $(DISTDIR)/test_update$(EXEC_EXTENSION): $(test_update_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_crcbin_SOURCES+=src/../tests/test_crcbin.c
+test_crcbin_SOURCES+=src/filetypes/crcbin.c
+
+$(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 clean:
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
