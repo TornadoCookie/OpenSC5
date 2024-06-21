@@ -59,17 +59,21 @@ void LoadCRCBinFile(FILE *f)
     }
 
     struct {
-        uint32_t always_0e423db1;
-        uint32_t _000a809c;
+        uint32_t always_b13d4203;
+        uint32_t always_9c800a00;
         uint32_t entryCount2;
         uint32_t always4_be;
     } data2;
 
     fread(&data2, sizeof(data2), 1, f);
 
+    printf("\nData 2:\n");
+
+    checkequals(data2, b13d4203);
+    checkequals(data2, 9c800a00);
+
     data2.entryCount2 = htobe32(data2.entryCount2);
 
-    printf("\nData 2:\n");
     for (int i = 0; i < data2.entryCount2; i++)
     {
         uint32_t data;
@@ -78,17 +82,21 @@ void LoadCRCBinFile(FILE *f)
     }
 
     struct {
-        uint32_t always_0ec1eb33;
-        uint32_t _000a809c;
+        uint32_t always_33ebc10e;
+        uint32_t always_9c800a00;
         uint32_t entryCount3;
         uint32_t always4_be;
     } data3;
 
     fread(&data3, sizeof(data3), 1, f);
 
+    printf("\nData 3:\n");
+
+    checkequals(data3, 33ebc10e);
+    checkequals(data3, 9c800a00);
+
     data3.entryCount3 = htobe32(data3.entryCount3);
 
-    printf("\nData 3:\n");
     for (int i = 0; i < data3.entryCount3; i++)
     {
         uint32_t data;
