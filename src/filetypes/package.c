@@ -142,6 +142,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
     {
         case 0x00B1B104: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
         {
+            unsigned char *initData = data;
             uint32_t variableCount = htobe32(*(uint32_t*)data);
             PropData propData;
 
@@ -155,6 +156,12 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             
             for (int i = 0; i < variableCount; i++)
             {
+                if (data - initData > dataSize)
+                {
+                    printf("{Corruption Detected.}\n");
+                    return false;
+                }
+
                 printf("\nVariable %d:\n", i);
 
                 uint32_t identifier = htobe32(*(uint32_t*)data);
@@ -204,6 +211,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                 for (int j = 0; j < arrayNumber; j++)
                 {
+                    if (data - initData > dataSize)
+                    {
+                        printf("{Corruption Detected.}\n");
+                        return false;
+                    }
                     switch (type)
                     {
                         case 0x20: // key type
@@ -486,12 +498,6 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 memcpy(&rule, data, sizeof(RulesFileRule));
                 data += sizeof(RulesFileRule);
 
-                if (data - initData > dataSize)
-                {
-                    printf("Invalid data.\n");
-                    return false;
-                }
-
                 rule.startOffset = htobe32(rule.startOffset);
                 //rule.endOffset = htobe32(rule.endOffset);
                 //rule.extraCount = htobe32(rule.extraCount);
@@ -508,6 +514,12 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 }
 
                 data += rule.extraCount * sizeof(RulesFileRuleExtra);
+
+                if (data - initData > dataSize)
+                {
+                    printf("Invalid data.\n");
+                    return false;
+                }
             }
 
             data += sizeof(uint32_t);
@@ -823,7 +835,7 @@ Package LoadPackageFile(FILE *f)
             if (uncompressed)
             {
                 int toPrint = entry.memSize;
-                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i]))) toPrint = entry.memSize;
+                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i]))) pkg.entries[i].corrupted = true;
                 for (int i = 0; i < toPrint; i++)
                 {
                     printf("%#x ", uncompressed[i]);
@@ -835,7 +847,7 @@ Package LoadPackageFile(FILE *f)
         else
         {
             int toPrint = entry.diskSize;
-            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i]))) toPrint = entry.diskSize;
+            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i]))) pkg.entries[i].corrupted = true;
             for (int i = 0; i < toPrint; i++)
             {
                 printf("%#x ", data[i]);

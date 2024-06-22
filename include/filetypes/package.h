@@ -64,6 +64,7 @@ typedef struct PackageEntry {
     unsigned int type;
     unsigned int group;
     unsigned int instance;
+    bool corrupted;
 
     union {
         PropData propData;
