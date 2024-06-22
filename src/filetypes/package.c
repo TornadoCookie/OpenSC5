@@ -79,6 +79,35 @@ typedef struct RasterFile {
     RasterFileImage *images;
 } RasterFile;
 
+typedef struct RulesFileHeader {
+    uint32_t unknown1;
+    uint32_t unknown2;
+    uint32_t unknown3;
+    uint8_t unknown4:8;
+    uint32_t ruleCount;
+} RulesFileHeader;
+
+typedef struct RulesFileRuleExtra {
+    char unknown[12];
+} RulesFileRuleExtra;
+
+typedef struct RulesFileRule {
+    uint32_t ruleName;
+    char unknown1[32];
+    uint32_t startOffset;
+    char unknown2[12];
+    uint32_t endOffset;
+    char unknown3[92];
+    uint32_t extraCount;
+    char unknown4[8];
+} RulesFileRule;
+
+typedef struct RulesFile {
+    RulesFileHeader header;
+    RulesFileRule *rules;
+    RulesFileRuleExtra **extras;
+} RulesFile;
+
 static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
 {
     switch (dataType)
@@ -268,7 +297,45 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case 0xA98EAF0: // JSON file.
         {
             printf("JSON:\n");
-            printf("%s\n", data+3);
+            printf("%s\n", data);
+        } break;
+        case 0x8068AEB: // Binary rules file. https://community.simtropolis.com/forums/topic/55521-binary-rules-file-format/
+        {
+            RulesFile file = { 0 };
+
+            printf("Rules info:\n");
+
+            // C isn't letting us misalign our memory like this, unknown4 is being treated like it's 4 bytes long.
+            // That is why we can't just memcpy like that.
+            data += sizeof(uint32_t); // unknown1
+            data += sizeof(uint32_t); // unknown2
+            data += sizeof(uint32_t); // unknown3
+            data ++;                  // unknown4
+
+            file.header.ruleCount = *(uint32_t*)data;
+            data += sizeof(uint32_t);
+
+            file.header.ruleCount = htobe32(file.header.ruleCount);
+
+            printf("Rule count: %#x\n", file.header.ruleCount);
+
+            //file.rules = malloc(file.header.ruleCount * sizeof(RulesFileRule));
+
+            for (int i = 0; i < file.header.ruleCount; i++)
+            {
+                RulesFileRule rule = { 0 };
+
+                memcpy(&rule, data, sizeof(RulesFileRule));
+                data += sizeof(RulesFileRule);
+
+                printf("\nRule %d:\n", i);
+                printf("Name: %#x\n", rule.ruleName);
+                printf("Start Offset: %d\n", rule.startOffset);
+                printf("End Offset: %d\n", rule.endOffset);
+                printf("Extra count: %d\n", rule.extraCount);
+
+                data += rule.extraCount * sizeof(RulesFileRuleExtra);
+            }
         } break;
         default:
         {
