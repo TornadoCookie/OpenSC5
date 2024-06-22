@@ -161,6 +161,36 @@ int main()
 
                 switch (entry.type)
                 {
+                    case PKGENTRY_PROP:
+                    {
+                        PropData propData = entry.data.propData;
+                        GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties");
+
+                        DrawListRow((Rectangle) {
+                            GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                            GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                        }, (ListRow) {
+                            3, (float[3]){0.333, 0.333, 0.333},
+                            (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
+                        }, false, false);
+
+                        for (int i = 0; i < propData.variableCount; i++)
+                        {
+                            PropVariable var = propData.variables[i];
+                            ListRow row = { 0 };
+
+                            row.elementCount = 3;
+                            row.elementWidth = (float[3]){0.333, 0.333, 0.333};
+                            row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
+
+                            DrawListRow((Rectangle){
+                                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2),
+                                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
+                            }, row, false, true);
+                        }
+
+                        GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
+                    } break;
                     default:
                     {
                         DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
