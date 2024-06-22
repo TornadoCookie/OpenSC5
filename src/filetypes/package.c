@@ -306,6 +306,38 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Value: %s\n", val?"true":"false");
                         } break;
+                        case 0x22: // texts type
+                        {
+                            if (!isArray)
+                            {
+                                arrayNumber = *(uint32_t*)data;
+                                data += sizeof(uint32_t);
+                                arraySize = *(uint32_t*)data;
+                                data += sizeof(uint32_t);
+                            }
+
+                            uint32_t arrSize = arraySize - 8;
+
+                            uint32_t textsFileSpec = *(uint32_t*)data;
+                            data += sizeof(uint32_t);
+                            uint32_t textsIdentifier = *(uint32_t*)data;
+                            data += sizeof(uint32_t);
+
+                            printf("Texts file spec: %#x\n", textsFileSpec);
+                            printf("Texts Identifier: %#x\n", textsIdentifier);
+/*
+                            char *str = malloc(arrSize + 1);
+
+                            for (int i = 0; i < arrSize /2; i++)
+                            {
+                                str[i] = data[i*2+1];
+                            }
+                            str[arrSize] = 0;
+
+                            printf("Value: %s\n", str);
+                            data += arrSize;*/
+
+                        } break;
                         default:
                         {
                             printf("Unrecognized variable type.\n");
