@@ -199,6 +199,8 @@ int main()
     bool hasLoadedPkg = false;
 
     int selectedPkgEntry = -1;
+    Rectangle pkgEntryListView = {0};
+    Vector2 pkgEntryListScroll = {0};
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor");
@@ -237,14 +239,9 @@ int main()
 
         if (hasLoadedPkg)
         {
-            GuiPanel((Rectangle){0, 0, GetScreenWidth()/2, GetScreenHeight()}, "Entries");
-            DrawListRow((Rectangle) {
-                0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-            }, (ListRow) {
-                3, (float[3]){0.333, 0.333, 0.333},
-                (const char *[3]){"TYPE", "INSTANCE", "GROUP"}
-            }, false, false);
+            GuiScrollPanel((Rectangle){0, 0, GetScreenWidth()/2, GetScreenHeight()}, "Entries", (Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(loadedPkg.entryCount+1)}, &pkgEntryListScroll, &pkgEntryListView);
+
+            BeginScissorMode(pkgEntryListView.x, pkgEntryListView.y, pkgEntryListView.width, pkgEntryListView.height);
 
             for (int i = 0; i < loadedPkg.entryCount; i++)
             {
@@ -256,7 +253,7 @@ int main()
                 row.elementText = (const char*[3]){TextFormat("%#X (%s)", entry.type, PackageEntryTypeToString(entry.type)), TextFormat("%#X", entry.instance), TextFormat("%#X", entry.group)};
 
                 bool shouldToggleSelect = DrawListRow((Rectangle) {
-                    0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT * (i+2),
+                    0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT * (i+2) + pkgEntryListScroll.y,
                     GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
                 }, row, i == selectedPkgEntry, true);
 
@@ -269,6 +266,16 @@ int main()
                 }
 
             }
+
+            EndScissorMode();
+
+            DrawListRow((Rectangle) {
+                0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+            }, (ListRow) {
+                3, (float[3]){0.333, 0.333, 0.333},
+                (const char *[3]){"TYPE", "INSTANCE", "GROUP"}
+            }, false, false);
 
             if (IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN))
             {
