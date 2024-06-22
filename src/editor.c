@@ -43,7 +43,7 @@ static bool DrawListRow(Rectangle bounds, ListRow row, bool selected, bool canSe
             bounds.width * row.elementWidth[i],
             bounds.height
         };
-        GuiDrawRectangle(buttonBounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), GetColor(GuiGetStyle(TEXTBOX, BORDER + GuiGetState()*3)), selected?GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)):BLANK);
+        GuiDrawRectangle(buttonBounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), GetColor(GuiGetStyle(TEXTBOX, BORDER + GuiGetState()*3)), selected?GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)):RAYWHITE);
         GuiLabel(buttonBounds, row.elementText[i]);
         xOff += bounds.width * row.elementWidth[i];
     }
@@ -89,7 +89,11 @@ static const char *PropValToString(PropVariable var, int i)
     }
 }
 
-static void DrawPackageEntry(PackageEntry entry, int selectedPropVal)
+static int selectedPropVal;
+static Rectangle propView;
+static Vector2 propScroll;
+
+static void DrawPackageEntry(PackageEntry entry)
 {
     switch (entry.type)
     {
@@ -98,27 +102,23 @@ static void DrawPackageEntry(PackageEntry entry, int selectedPropVal)
             PropData propData = entry.data.propData;
             GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties");
 
-            DrawListRow((Rectangle) {
-                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-            }, (ListRow) {
-                3, (float[3]){0.333, 0.333, 0.333},
-                (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
-            }, false, false);
+            GuiScrollPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties", (Rectangle){GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2,GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(propData.variableCount+1)}, &propScroll, &propView);
+
+            BeginScissorMode(propView.x, propView.y, propView.width, propView.height);
 
             for (int i = 0; i < propData.variableCount; i++)
             {
                 PropVariable var = propData.variables[i];
                 ListRow row = { 0 };
 
-            row.elementCount = 3;
-            row.elementWidth = (float[3]){0.333, 0.333, 0.333};
-            row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
+                row.elementCount = 3;
+                row.elementWidth = (float[3]){0.333, 0.333, 0.333};
+                row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
 
-            bool shouldToggleSelect = DrawListRow((Rectangle){
-                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2),
-                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
-            }, row, i == selectedPropVal, true);
+                bool shouldToggleSelect = DrawListRow((Rectangle){
+                    GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2)+propScroll.y,
+                    GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
+                }, row, i == selectedPropVal, true);
 
                 if (shouldToggleSelect)
                 {
@@ -126,6 +126,16 @@ static void DrawPackageEntry(PackageEntry entry, int selectedPropVal)
                     else selectedPropVal = -1;
                 }
             }
+
+            EndScissorMode();
+
+            DrawListRow((Rectangle) {
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+            }, (ListRow) {
+                3, (float[3]){0.333, 0.333, 0.333},
+                (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
+            }, false, false);
 
             GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
 
@@ -169,7 +179,6 @@ int main()
     bool hasLoadedPkg = false;
 
     int selectedPkgEntry = -1;
-    int selectedPropVal = -1;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor");
@@ -234,6 +243,7 @@ int main()
                 if (shouldToggleSelect)
                 {
                     selectedPropVal = -1;
+                    propView = (Rectangle){0};
                     if (i != selectedPkgEntry) selectedPkgEntry = i;
                     else selectedPkgEntry = -1;
                 }
@@ -244,12 +254,14 @@ int main()
             {
                 selectedPkgEntry++;
                 selectedPropVal = -1;
+                propView = (Rectangle){0};
             }
 
             if ((IsKeyPressed(KEY_UP) || IsKeyPressedRepeat(KEY_UP)) && selectedPkgEntry != 0)
             {
                 selectedPkgEntry--;
                 selectedPropVal = -1;
+                propView = (Rectangle){0};
             }
 
             if (selectedPkgEntry != -1)
@@ -264,7 +276,7 @@ int main()
                 }
                 else
                 {
-                    DrawPackageEntry(entry, selectedPropVal);
+                    DrawPackageEntry(entry);
                 }
                 
             }
