@@ -141,6 +141,19 @@ int main()
                 }
 
             }
+
+            if (selectedPkgEntry != -1)
+            {
+                PackageEntry entry = loadedPkg.entries[selectedPkgEntry];
+
+                switch (entry.type)
+                {
+                    default:
+                    {
+                        DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
+                    } break;
+                }
+            }
         }
         else
         {
