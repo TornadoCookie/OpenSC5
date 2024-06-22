@@ -475,10 +475,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             //data += unknown4count;
 
             data += sizeof(uint32_t);
+            //data += sizeof(uint32_t);
+            uint32_t codeLength = htobe32(*(uint32_t*)data);
             data += sizeof(uint32_t);
-            uint32_t unknown5unknown2 = htobe32(*(uint32_t*)data);
-            printf("unknown5unknown2: %d\n", unknown5unknown2);
-            data += unknown5unknown2;
+            printf("codeLength: %d\n", codeLength);
 
             printf("offset: %#lx\n", data - initData);
             
