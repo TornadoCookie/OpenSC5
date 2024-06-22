@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include "filetypes/package.h"
+#include <raymath.h>
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -142,8 +143,20 @@ int main()
 
             }
 
+            if (IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN))
+            {
+                selectedPkgEntry++;
+            }
+
+            if ((IsKeyPressed(KEY_UP) || IsKeyPressedRepeat(KEY_UP)) && selectedPkgEntry != 0)
+            {
+                selectedPkgEntry--;
+            }
+
             if (selectedPkgEntry != -1)
             {
+                selectedPkgEntry = Clamp(selectedPkgEntry, 0, loadedPkg.entryCount-1);
+
                 PackageEntry entry = loadedPkg.entries[selectedPkgEntry];
 
                 switch (entry.type)
