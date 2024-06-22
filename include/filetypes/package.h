@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <raylib.h>
 
 #define PROPVAR_BOOL   0x01
 #define PROPVAR_INT32  0x09

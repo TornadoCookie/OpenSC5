@@ -486,6 +486,12 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 memcpy(&rule, data, sizeof(RulesFileRule));
                 data += sizeof(RulesFileRule);
 
+                if (data - initData > dataSize)
+                {
+                    printf("Invalid data.\n");
+                    return false;
+                }
+
                 rule.startOffset = htobe32(rule.startOffset);
                 //rule.endOffset = htobe32(rule.endOffset);
                 //rule.extraCount = htobe32(rule.extraCount);
@@ -496,7 +502,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 printf("End Offset: %d\n", rule.endOffset);
                 printf("Extra count: %d\n", rule.extraCount);
 
-                if (rule.extraCount == 0xffff || rule.extraCount > 1000)
+                if (rule.extraCount == 0xffff)
                 {
                     rule.extraCount = 0;
                 }
@@ -816,7 +822,7 @@ Package LoadPackageFile(FILE *f)
             if (uncompressed)
             {
                 int toPrint = entry.memSize;
-                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &pkg.entries[i])) toPrint = entry.memSize;
+                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i]))) toPrint = entry.memSize;
                 for (int i = 0; i < toPrint; i++)
                 {
                     printf("%#x ", uncompressed[i]);
@@ -828,7 +834,7 @@ Package LoadPackageFile(FILE *f)
         else
         {
             int toPrint = entry.diskSize;
-            if (!ProcessPackageData(data, entry.diskSize, entry.type, &pkg.entries[i])) toPrint = entry.diskSize;
+            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i]))) toPrint = entry.diskSize;
             for (int i = 0; i < toPrint; i++)
             {
                 printf("%#x ", data[i]);
@@ -838,4 +844,6 @@ Package LoadPackageFile(FILE *f)
 
         free(data);
     }
+
+    return pkg;
 }
