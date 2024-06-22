@@ -363,6 +363,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
             printf("Rules info:\n");
 
+            unsigned char *initData = data;
+
             // C isn't letting us misalign our memory like this, unknown4 is being treated like it's 4 bytes long.
             // That is why we can't just memcpy like that.
             data += sizeof(uint32_t); // unknown1
@@ -398,11 +400,56 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                 if (rule.extraCount == -65536)
                 {
-                    continue;
+                    rule.extraCount = 0;
                 }
 
                 data += rule.extraCount * sizeof(RulesFileRuleExtra);
             }
+
+            data += sizeof(uint32_t);
+            uint32_t unknown1count = *(uint32_t*)data;
+            printf("unknown1count: %d\n", unknown1count);
+            data += sizeof(uint32_t);
+            data += unknown1count * 0x5c;
+
+            data += sizeof(uint32_t);
+            uint32_t unknown2count = htobe32(*(uint32_t*)data);
+            printf("unknown2count: %d\n", unknown2count);
+            data += sizeof(uint32_t);
+            data += unknown2count * 0x70;
+
+            data += sizeof(uint32_t);
+            uint32_t unknown3count = *(uint32_t*)data;
+            printf("unknown3count: %d\n", unknown3count);
+            data += sizeof(uint32_t);
+            if (unknown3count)
+            {
+                printf("Unknown 3 has positive count.\n");
+                printf("offset: %#lx\n", data - initData);
+                return false;
+            }
+            //data += unknown3count;
+
+            data += sizeof(uint32_t);
+            uint32_t unknown4count = *(uint32_t*)data;
+            printf("unknown4count: %d\n", unknown4count);
+            data += sizeof(uint32_t);
+            if (unknown4count)
+            {
+                printf("Unknown 4 has positive count.\n");
+                printf("offset: %#lx\n", data - initData);
+                return false;
+            }
+            //data += unknown4count;
+
+            data += sizeof(uint32_t);
+            data += sizeof(uint32_t);
+            uint32_t unknown5unknown2 = htobe32(*(uint32_t*)data);
+            printf("unknown5unknown2: %d\n", unknown5unknown2);
+            data += unknown5unknown2;
+
+            printf("offset: %#lx\n", data - initData);
+            
         } break;
         case 0x24A0E52: // Script file format (?)
         {
