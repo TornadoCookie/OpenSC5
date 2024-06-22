@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <endian.h>
+#include <raylib.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -254,6 +255,14 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(float);
 
                             printf("Value: %f\n", value);
+                        } break;
+                        case 0x30: // vector2 type
+                        {
+                            // Raylib's vector2 type happens to fit nicely with the description.
+                            Vector2 val = *(Vector2*)data;
+                            data += sizeof(Vector2);
+
+                            printf("Value: {%f, %f}\n", val.x, val.y);
                         } break;
                         default:
                         {
