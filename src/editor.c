@@ -68,12 +68,34 @@ static const char *PackageEntryTypeToString(unsigned int type)
     }
 }
 
+static const char *PropValToString(PropVariable var, int i)
+{
+    switch (var.type)
+    {
+        case PROPVAR_BOOL: return var.values[i].b?"true":"false";
+        case PROPVAR_INT32: return TextFormat("%d", var.values[i].int32);
+        case PROPVAR_UINT32: return TextFormat("%u", var.values[i].uint32);
+        case PROPVAR_FLOAT: return TextFormat("%f", var.values[i].f);
+        case PROPVAR_STR8: return TextFormat("\"%s\"", var.values[i].string8);
+        case PROPVAR_STRING: return TextFormat("\"%s\"", var.values[i].string);
+        case PROPVAR_KEYS: return TextFormat("File: %#X, Type: %#X, Group:%#X", var.values[i].keys.file, var.values[i].keys.type, var.values[i].keys.group);
+        case PROPVAR_TEXTS: return TextFormat("File spec: %#X, Identifier: %#X", var.values[i].texts.fileSpec, var.values[i].texts.identifier);
+        case PROPVAR_VECT2: return TextFormat("{%f, %f}", var.values[i].vector2.x, var.values[i].vector2.y);
+        case PROPVAR_VECT3: return TextFormat("{%f, %f, %f}", var.values[i].vector3.x, var.values[i].vector3.y, var.values[i].vector3.z);
+        case PROPVAR_COLRGB: return TextFormat("%d, %d, %d", var.values[i].colorRGB.r*255, var.values[i].colorRGB.g*255, var.values[i].colorRGB.b*255);
+        case PROPVAR_BBOX: return TextFormat("min {%f, %f, %f}, max {%f, %f %f}", var.values[i].bbox.min.x, var.values[i].bbox.min.y, var.values[i].bbox.min.z, 
+                                             var.values[i].bbox.max.x, var.values[i].bbox.max.y, var.values[i].bbox.max.z);
+        default: return "Unable to read type";
+    }
+}
+
 int main()
 {
     Package loadedPkg = { 0 };
     bool hasLoadedPkg = false;
 
     int selectedPkgEntry = -1;
+    int selectedPropVal = -1;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor");
@@ -137,6 +159,7 @@ int main()
 
                 if (shouldToggleSelect)
                 {
+                    selectedPropVal = -1;
                     if (i != selectedPkgEntry) selectedPkgEntry = i;
                     else selectedPkgEntry = -1;
                 }
@@ -146,11 +169,13 @@ int main()
             if (IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN))
             {
                 selectedPkgEntry++;
+                selectedPropVal = -1;
             }
 
             if ((IsKeyPressed(KEY_UP) || IsKeyPressedRepeat(KEY_UP)) && selectedPkgEntry != 0)
             {
                 selectedPkgEntry--;
+                selectedPropVal = -1;
             }
 
             if (selectedPkgEntry != -1)
@@ -183,13 +208,38 @@ int main()
                             row.elementWidth = (float[3]){0.333, 0.333, 0.333};
                             row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
 
-                            DrawListRow((Rectangle){
+                            bool shouldToggleSelect = DrawListRow((Rectangle){
                                 GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2),
                                 GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
-                            }, row, false, true);
+                            }, row, i == selectedPropVal, true);
+
+                            if (shouldToggleSelect)
+                            {
+                                if (i != selectedPropVal) selectedPropVal = i;
+                                else selectedPropVal = -1;
+                            }
                         }
 
                         GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
+
+                        if (selectedPropVal != -1)
+                        {
+                            PropVariable var = propData.variables[selectedPropVal];
+                            
+                            for (int i = 0; i < var.count; i++)
+                            {
+                                ListRow row = { 0 };
+
+                                row.elementCount = 1;
+                                row.elementWidth = (float[1]){1.0};
+                                row.elementText = (const char *[1]){PropValToString(var, i)};
+
+                                DrawListRow((Rectangle) {
+                                    GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1),
+                                    GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                                }, row, false, false);
+                            }
+                        }
                     } break;
                     default:
                     {
