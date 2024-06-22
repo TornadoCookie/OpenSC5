@@ -76,5 +76,6 @@ typedef struct Package {
 } Package;
 
 Package LoadPackageFile(FILE *f);
+void UnloadPackageFile(Package pkg);
 
 #endif

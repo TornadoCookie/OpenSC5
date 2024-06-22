@@ -845,5 +845,12 @@ Package LoadPackageFile(FILE *f)
         free(data);
     }
 
+    free(entries);
+
     return pkg;
+}
+
+void UnloadPackageFile(Package pkg)
+{
+    free(pkg.entries);
 }

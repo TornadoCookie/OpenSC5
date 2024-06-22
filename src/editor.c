@@ -90,6 +90,10 @@ int main()
 
                 if (IsFileExtension(path, ".package"))
                 {
+                    if (hasLoadedPkg)
+                    {
+                        UnloadPackageFile(loadedPkg);
+                    }
                     hasLoadedPkg = true;
                     FILE *f = fopen(path, "rb");
                     loadedPkg = LoadPackageFile(f);
