@@ -298,6 +298,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(Vector3);
 
                             printf("Value: {%f, %f, %f}\n", val.x, val.y, val.z);
+
+                            if (!isArray)
+                            {
+                                data += sizeof(uint32_t);
+                            }
                         } break;
                         case 0x01: // bool type
                         {
@@ -337,6 +342,26 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             printf("Value: %s\n", str);
                             data += arrSize;*/
 
+                        } break;
+                        case 0x39: // bbox type
+                        {
+                            // Raylib's BoundingBox type happens to fit nicely with the description.
+                            BoundingBox bbox = { 0 };
+
+                            memcpy(&bbox, data, sizeof(BoundingBox));
+                            data += sizeof(BoundingBox);
+
+                            bbox.min = vec3tobe(bbox.min);
+                            bbox.max = vec3tobe(bbox.max);
+
+                            if (arrayNumber != 1)
+                            {
+                                printf("Array number expected to be 1.\n");
+                                return false;
+                            }
+
+                            printf("Value: min {%f, %f, %f}, max {%f, %f, %f}\n", 
+                                bbox.min.x, bbox.min.y, bbox.min.z, bbox.max.x, bbox.max.y, bbox.max.z);
                         } break;
                         default:
                         {
