@@ -337,6 +337,15 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 data += rule.extraCount * sizeof(RulesFileRuleExtra);
             }
         } break;
+        case 0x24A0E52: // Script file format (?)
+        {
+            printf("Script info:\n");
+
+            char *str = malloc(dataSize + 1);
+            memcpy(str, data, dataSize);
+            str[dataSize] = 0;
+            printf("Script source: \"%s\"\n", str);
+        } break;
         default:
         {
             printf("Unknown data type %#X.\n", dataType);
