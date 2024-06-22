@@ -421,8 +421,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 data += sizeof(RulesFileRule);
 
                 rule.startOffset = htobe32(rule.startOffset);
-                rule.endOffset = htobe32(rule.endOffset);
-                rule.extraCount = htobe32(rule.extraCount);
+                //rule.endOffset = htobe32(rule.endOffset);
+                //rule.extraCount = htobe32(rule.extraCount);
 
                 printf("\nRule %d:\n", i);
                 printf("Name: %#x\n", rule.ruleName);
@@ -430,7 +430,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 printf("End Offset: %d\n", rule.endOffset);
                 printf("Extra count: %d\n", rule.extraCount);
 
-                if (rule.extraCount == -65536)
+                if (rule.extraCount == 0xffff || rule.extraCount > 1000)
                 {
                     rule.extraCount = 0;
                 }
@@ -447,6 +447,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             data += sizeof(uint32_t);
             uint32_t unknown2count = htobe32(*(uint32_t*)data);
             printf("unknown2count: %d\n", unknown2count);
+            if (unknown2count > 1000)
+            {
+                printf("I'm gonna assume this is an invalid value. Please FIX!!!\n");
+                return false;
+            }
             data += sizeof(uint32_t);
             data += unknown2count * 0x70;
 
