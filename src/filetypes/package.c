@@ -109,6 +109,33 @@ typedef struct RulesFile {
     RulesFileRuleExtra **extras;
 } RulesFile;
 
+float htobefloat(float x)
+{
+    uint32_t val = *(uint32_t*)&x;
+    val = htobe32(val);
+    float ret = *(float*)&val;
+    return ret;
+}
+
+Vector2 vec2tobe(Vector2 v)
+{
+    return (Vector2)
+    {
+        htobefloat(v.x),
+        htobefloat(v.y),
+    };
+}
+
+Vector3 vec3tobe(Vector3 v)
+{
+    return (Vector3)
+    {
+        htobefloat(v.x),
+        htobefloat(v.y),
+        htobefloat(v.z),
+    };
+}
+
 static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
 {
     switch (dataType)
@@ -259,10 +286,18 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                         case 0x30: // vector2 type
                         {
                             // Raylib's vector2 type happens to fit nicely with the description.
-                            Vector2 val = *(Vector2*)data;
+                            Vector2 val = vec2tobe(*(Vector2*)data);
                             data += sizeof(Vector2);
 
                             printf("Value: {%f, %f}\n", val.x, val.y);
+                        } break;
+                        case 0x31: // vector3 type
+                        {
+                            // Raylib's vector3 type happens to fit nicely with the description.
+                            Vector3 val = vec3tobe(*(Vector3*)data);
+                            data += sizeof(Vector3);
+
+                            printf("Value: {%f, %f, %f}\n", val.x, val.y, val.z);
                         } break;
                         default:
                         {
