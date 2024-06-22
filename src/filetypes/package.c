@@ -573,6 +573,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             memcpy(str, data, dataSize);
             str[dataSize] = 0;
             printf("Script source: \"%s\"\n", str);
+            pkgEntry->data.scriptSource = str;
         } break;
         default:
         {

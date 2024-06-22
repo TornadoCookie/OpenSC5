@@ -67,6 +67,7 @@ typedef struct PackageEntry {
 
     union {
         PropData propData;
+        char *scriptSource;
     } data;
 } PackageEntry;
 
