@@ -89,6 +89,80 @@ static const char *PropValToString(PropVariable var, int i)
     }
 }
 
+static void DrawPackageEntry(PackageEntry entry, int selectedPropVal)
+{
+    switch (entry.type)
+    {
+        case PKGENTRY_PROP:
+        {
+            PropData propData = entry.data.propData;
+            GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties");
+
+            DrawListRow((Rectangle) {
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+            }, (ListRow) {
+                3, (float[3]){0.333, 0.333, 0.333},
+                (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
+            }, false, false);
+
+            for (int i = 0; i < propData.variableCount; i++)
+            {
+                PropVariable var = propData.variables[i];
+                ListRow row = { 0 };
+
+            row.elementCount = 3;
+            row.elementWidth = (float[3]){0.333, 0.333, 0.333};
+            row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
+
+            bool shouldToggleSelect = DrawListRow((Rectangle){
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2),
+                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
+            }, row, i == selectedPropVal, true);
+
+                if (shouldToggleSelect)
+                {
+                    if (i != selectedPropVal) selectedPropVal = i;
+                    else selectedPropVal = -1;
+                }
+            }
+
+            GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
+
+            if (selectedPropVal != -1)
+            {
+                PropVariable var = propData.variables[selectedPropVal];
+                
+                for (int i = 0; i < var.count; i++)
+                {
+                    ListRow row = { 0 };
+                    
+                    row.elementCount = 1;
+                    row.elementWidth = (float[1]){1.0};
+                    row.elementText = (const char *[1]){PropValToString(var, i)};
+                    
+                    DrawListRow((Rectangle) {
+                        GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1),
+                        GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                    }, row, false, false);
+                }
+            }
+        } break;
+        case PKGENTRY_SCPT:
+        {
+            GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
+            GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_WORD);            // WARNING: If wrap mode enabled, text editing is not supported
+            GuiTextBox((Rectangle){ GetScreenWidth()/2,0,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);
+            GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
+            GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
+        } break;
+        default:
+        {
+            DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
+        } break;
+    }
+}
+
 int main()
 {
     Package loadedPkg = { 0 };
@@ -184,76 +258,15 @@ int main()
 
                 PackageEntry entry = loadedPkg.entries[selectedPkgEntry];
 
-                switch (entry.type)
+                if (entry.corrupted)
                 {
-                    case PKGENTRY_PROP:
-                    {
-                        PropData propData = entry.data.propData;
-                        GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties");
-
-                        DrawListRow((Rectangle) {
-                            GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-                            GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-                        }, (ListRow) {
-                            3, (float[3]){0.333, 0.333, 0.333},
-                            (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
-                        }, false, false);
-
-                        for (int i = 0; i < propData.variableCount; i++)
-                        {
-                            PropVariable var = propData.variables[i];
-                            ListRow row = { 0 };
-
-                            row.elementCount = 3;
-                            row.elementWidth = (float[3]){0.333, 0.333, 0.333};
-                            row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
-
-                            bool shouldToggleSelect = DrawListRow((Rectangle){
-                                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2),
-                                GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT
-                            }, row, i == selectedPropVal, true);
-
-                            if (shouldToggleSelect)
-                            {
-                                if (i != selectedPropVal) selectedPropVal = i;
-                                else selectedPropVal = -1;
-                            }
-                        }
-
-                        GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
-
-                        if (selectedPropVal != -1)
-                        {
-                            PropVariable var = propData.variables[selectedPropVal];
-                            
-                            for (int i = 0; i < var.count; i++)
-                            {
-                                ListRow row = { 0 };
-
-                                row.elementCount = 1;
-                                row.elementWidth = (float[1]){1.0};
-                                row.elementText = (const char *[1]){PropValToString(var, i)};
-
-                                DrawListRow((Rectangle) {
-                                    GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1),
-                                    GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
-                                }, row, false, false);
-                            }
-                        }
-                    } break;
-                    case PKGENTRY_SCPT:
-                    {
-                        GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
-                        GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_WORD);            // WARNING: If wrap mode enabled, text editing is not supported
-                        GuiTextBox((Rectangle){ GetScreenWidth()/2,0,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);
-                        GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
-                        GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
-                    } break;
-                    default:
-                    {
-                        DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
-                    } break;
+                    DrawText("Corrupted.", GetScreenWidth()*3/4 - MeasureText("Corrupted.", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
                 }
+                else
+                {
+                    DrawPackageEntry(entry, selectedPropVal);
+                }
+                
             }
         }
         else
