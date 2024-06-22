@@ -278,7 +278,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                         } break;
                         case 0x0d: // float type
                         {
-                            float value = *(float*)data;
+                            float value = htobefloat(*(float*)data);
                             data += sizeof(float);
 
                             printf("Value: %f\n", value);
