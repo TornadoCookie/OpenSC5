@@ -299,6 +299,13 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Value: {%f, %f, %f}\n", val.x, val.y, val.z);
                         } break;
+                        case 0x01: // bool type
+                        {
+                            bool val = *(bool*)data;
+                            data += sizeof(bool);
+
+                            printf("Value: %s\n", val?"true":"false");
+                        } break;
                         default:
                         {
                             printf("Unrecognized variable type.\n");
