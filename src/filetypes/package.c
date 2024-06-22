@@ -197,8 +197,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                     
                     arraySize &= ~0x9C000000;
 
-                    printf("Array nmemb: %d\n", arrayNumber);
-                    printf("Array item size: %d\n", arraySize);
+                    arrayNumber &= 0xFFFF;
+                    arraySize &= 0xFFFF;
+
+                    printf("Array nmemb: %#x\n", arrayNumber);
+                    printf("Array item size: %#x\n", arraySize);
                 }
                 else
                 {
@@ -536,11 +539,12 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             data += sizeof(uint32_t);
             uint32_t unknown2count = htobe32(*(uint32_t*)data);
             printf("unknown2count: %d\n", unknown2count);
-            if (unknown2count > 1000)
+            /*if (unknown2count > 1000)
             {
                 printf("I'm gonna assume this is an invalid value. Please FIX!!!\n");
                 return false;
-            }
+            }*/
+            if (unknown2count == -1) unknown2count = 0;
             data += sizeof(uint32_t);
             data += unknown2count * 0x70;
 
