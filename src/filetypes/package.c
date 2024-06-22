@@ -136,18 +136,22 @@ Vector3 vec3tobe(Vector3 v)
     };
 }
 
-static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType)
+static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType, PackageEntry *pkgEntry)
 {
     switch (dataType)
     {
         case 0x00B1B104: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
         {
             uint32_t variableCount = htobe32(*(uint32_t*)data);
+            PropData propData;
 
             data += sizeof(uint32_t);
 
             printf("Properties Info:\n");
             printf("Variable count: %d\n", variableCount);
+
+            propData.variableCount = variableCount;
+            propData.variables = malloc(sizeof(PropVariable) * propData.variableCount);
             
             for (int i = 0; i < variableCount; i++)
             {
@@ -163,6 +167,9 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 printf("Identifier: %#x\n", identifier);
                 printf("Type: %#x\n", type);
                 printf("Specifier: %#x\n", specifier);
+
+                propData.variables[i].identifier = identifier;
+                propData.variables[i].type = type;
 
                 int32_t arrayNumber = 1;
                 int32_t arraySize = 0;
@@ -192,6 +199,9 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                     return false;
                 }
 
+                propData.variables[i].count = arrayNumber;
+                propData.variables[i].values = malloc(sizeof(*propData.variables[i].values) * arrayNumber);
+
                 for (int j = 0; j < arrayNumber; j++)
                 {
                     switch (type)
@@ -213,6 +223,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             printf("File: %#x\n", file);
                             printf("Type: %#x\n", type);
                             printf("Group: %#x\n", group);
+
+                            propData.variables[i].values[j].keys.file = file;
+                            propData.variables[i].values[j].keys.group = group;
+                            propData.variables[i].values[j].keys.type = type;
                         } break;
                         case 9: // int32 type
                         {
@@ -220,22 +234,28 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(int32_t);
 
                             printf("Value: %#x\n", value);
+
+                            propData.variables[i].values[j].int32 = value;
                         } break;
                         case 0x32: // colorRGB type
                         {
-                            float r = *(float*)data;
+                            float r = htobefloat(*(float*)data);
                             data += sizeof(float);
-                            float g = *(float*)data;
+                            float g = htobefloat(*(float*)data);
                             data += sizeof(float);
-                            float b = *(float*)data;
+                            float b = htobefloat(*(float*)data);
                             data += sizeof(float);
 
                             if (!isArray)
                             {
-                                data += sizeof(uint32_t);
+                                //data += sizeof(uint32_t);
                             }
 
                             printf("Value: {%f, %f, %f}\n", r, g, b);
+
+                            propData.variables[i].values[j].colorRGB.r = r;
+                            propData.variables[i].values[j].colorRGB.g = g;
+                            propData.variables[i].values[j].colorRGB.b = b;
                         } break;
                         case 0x13: // string type
                         {
@@ -256,6 +276,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             str[length] = 0;
 
                             printf("Value: %s\n", str);
+
+                            propData.variables[i].values[j].string = str;
                         } break;
                         case 0x0a: // uint32 type
                         {
@@ -263,6 +285,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(uint32_t);
 
                             printf("Value: %u\n", value);
+
+                            propData.variables[i].values[j].uint32 = value;
                         } break;
                         case 0x12: // string8 type
                         {
@@ -275,6 +299,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += length;
 
                             printf("Value: %s\n", str);
+
+                            propData.variables[i].values[j].string8 = str;
                         } break;
                         case 0x0d: // float type
                         {
@@ -282,6 +308,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(float);
 
                             printf("Value: %f\n", value);
+
+                            propData.variables[i].values[j].f = value;
                         } break;
                         case 0x30: // vector2 type
                         {
@@ -290,6 +318,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(Vector2);
 
                             printf("Value: {%f, %f}\n", val.x, val.y);
+
+                            propData.variables[i].values[j].vector2 = val;
                         } break;
                         case 0x31: // vector3 type
                         {
@@ -298,6 +328,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(Vector3);
 
                             printf("Value: {%f, %f, %f}\n", val.x, val.y, val.z);
+
+                            propData.variables[i].values[j].vector3 = val;
 
                             if (!isArray)
                             {
@@ -310,6 +342,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                             data += sizeof(bool);
 
                             printf("Value: %s\n", val?"true":"false");
+
+                            propData.variables[i].values[j].b = val;
                         } break;
                         case 0x22: // texts type
                         {
@@ -330,6 +364,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Texts file spec: %#x\n", textsFileSpec);
                             printf("Texts Identifier: %#x\n", textsIdentifier);
+
+                            propData.variables[i].values[j].texts.fileSpec = textsFileSpec;
+                            propData.variables[i].values[j].texts.identifier = textsIdentifier;
+
 /*
                             char *str = malloc(arrSize + 1);
 
@@ -362,6 +400,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
 
                             printf("Value: min {%f, %f, %f}, max {%f, %f, %f}\n", 
                                 bbox.min.x, bbox.min.y, bbox.min.z, bbox.max.x, bbox.max.y, bbox.max.z);
+                            
+                            propData.variables[i].values[j].bbox = bbox;
                         } break;
                         default:
                         {
@@ -371,6 +411,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                     }
                 }
             }
+            pkgEntry->data.propData = propData;
         } break;
         case 0x2F4E681C: // Raster file https://simswiki.info/wiki.php?title=Spore:2F4E681C
         {
@@ -409,12 +450,12 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             
         } break;
-        case 0xA98EAF0: // JSON file.
+        case 0x0A98EAF0: // JSON file.
         {
             printf("JSON:\n");
             printf("%s\n", data);
         } break;
-        case 0x8068AEB: // Binary rules file. https://community.simtropolis.com/forums/topic/55521-binary-rules-file-format/
+        case 0x08068AEB: // Binary rules file. https://community.simtropolis.com/forums/topic/55521-binary-rules-file-format/
         {
             RulesFile file = { 0 };
 
@@ -633,8 +674,9 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
     return ret;
 }
 
-void LoadPackageFile(FILE *f)
+Package LoadPackageFile(FILE *f)
 {
+    Package pkg = { 0 };
     PackageHeader header;
     fread(&header, sizeof(PackageHeader), 1, f);
 
@@ -678,11 +720,16 @@ void LoadPackageFile(FILE *f)
         readuint(&indexUnknown, f);
     }
 
+    pkg.entryCount = header.indexEntryCount;
+
     IndexEntry *entries = malloc(sizeof(IndexEntry) * header.indexEntryCount);
+
+    pkg.entries = malloc(sizeof(PackageEntry) * pkg.entryCount);
 
     for (int i = 0; i < header.indexEntryCount; i++)
     {
         IndexEntry entry = { 0 };
+        PackageEntry pkgEntry = { 0 };
 
         if ((index.indexType & (1 << 0)) == 1 << 0)
         {
@@ -733,7 +780,12 @@ void LoadPackageFile(FILE *f)
         printf("Mem Size: %u\n", entry.memSize);
         printf("Compressed? %s\n", entry.isCompressed?"yes":"no");
 
+        pkgEntry.type = entry.type;
+        pkgEntry.group = entry.group;
+        pkgEntry.instance = entry.instance;
+
         entries[i] = entry;
+        pkg.entries[i] = pkgEntry;
     }
 
     printf("\nData Cycle.\n");
@@ -764,7 +816,7 @@ void LoadPackageFile(FILE *f)
             if (uncompressed)
             {
                 int toPrint = entry.memSize;
-                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type)) toPrint = entry.memSize;
+                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &pkg.entries[i])) toPrint = entry.memSize;
                 for (int i = 0; i < toPrint; i++)
                 {
                     printf("%#x ", uncompressed[i]);
@@ -776,7 +828,7 @@ void LoadPackageFile(FILE *f)
         else
         {
             int toPrint = entry.diskSize;
-            if (!ProcessPackageData(data, entry.diskSize, entry.type)) toPrint = entry.diskSize;
+            if (!ProcessPackageData(data, entry.diskSize, entry.type, &pkg.entries[i])) toPrint = entry.diskSize;
             for (int i = 0; i < toPrint; i++)
             {
                 printf("%#x ", data[i]);
