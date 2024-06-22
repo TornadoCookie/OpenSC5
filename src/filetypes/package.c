@@ -328,11 +328,20 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 memcpy(&rule, data, sizeof(RulesFileRule));
                 data += sizeof(RulesFileRule);
 
+                rule.startOffset = htobe32(rule.startOffset);
+                rule.endOffset = htobe32(rule.endOffset);
+                rule.extraCount = htobe32(rule.extraCount);
+
                 printf("\nRule %d:\n", i);
                 printf("Name: %#x\n", rule.ruleName);
                 printf("Start Offset: %d\n", rule.startOffset);
                 printf("End Offset: %d\n", rule.endOffset);
                 printf("Extra count: %d\n", rule.extraCount);
+
+                if (rule.extraCount == -65536)
+                {
+                    continue;
+                }
 
                 data += rule.extraCount * sizeof(RulesFileRuleExtra);
             }
