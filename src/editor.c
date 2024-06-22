@@ -89,6 +89,26 @@ static const char *PropValToString(PropVariable var, int i)
     }
 }
 
+static const char *PropVarTypeToString(unsigned int type)
+{
+    switch (type)
+    {
+        case PROPVAR_BOOL: return "BOOL";
+        case PROPVAR_INT32: return "INT32";
+        case PROPVAR_UINT32: return "UINT32";
+        case PROPVAR_FLOAT: return "FLOAT";
+        case PROPVAR_STR8: return "STRING8";
+        case PROPVAR_STRING: return "STRING";
+        case PROPVAR_KEYS: return "KEYS";
+        case PROPVAR_TEXTS: return "TEXTS";
+        case PROPVAR_VECT2: return "VECTOR2";
+        case PROPVAR_VECT3: return "VECTOR3";
+        case PROPVAR_COLRGB: return "COLORRGB";
+        case PROPVAR_BBOX: return "BBOX";
+        default: return "UNKNOWN";
+    }
+}
+
 static int selectedPropVal;
 static Rectangle propView;
 static Vector2 propScroll;
@@ -113,7 +133,7 @@ static void DrawPackageEntry(PackageEntry entry)
 
                 row.elementCount = 3;
                 row.elementWidth = (float[3]){0.333, 0.333, 0.333};
-                row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X", var.type), TextFormat("%#X", var.count)};
+                row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X (%s)", var.type, PropVarTypeToString(var.type)), TextFormat("%#X", var.count)};
 
                 bool shouldToggleSelect = DrawListRow((Rectangle){
                     GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2)+propScroll.y,
