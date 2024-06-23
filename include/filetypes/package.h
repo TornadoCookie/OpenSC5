@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "prop.h"
 #include "rules.h"
+#include "rast.h"
 
 #define PKGENTRY_PROP 0x00B1B104
 #define PKGENTRY_SCPT 0x024A0E52
@@ -23,6 +24,7 @@ typedef struct PackageEntry {
         PropData propData;
         RulesData rulesData;
         char *scriptSource;
+        RastData rastData;
     } data;
 } PackageEntry;
 

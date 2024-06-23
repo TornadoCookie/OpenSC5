@@ -8,6 +8,7 @@ SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c
 Source filetypes/rules.c
+Source filetypes/rast.c
 
 Program test_package
 Source ../tests/test_package.c
@@ -23,6 +24,10 @@ Source filetypes/crcbin.c
 Program test_prop
 Source ../tests/test_prop.c
 Source filetypes/prop.c
+
+Program test_rast
+Source ../tests/test_rast.c
+Source filetypes/rast.c
 
 Program opensc5_editor
 Source editor.c

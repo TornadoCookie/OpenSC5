@@ -38,7 +38,7 @@ CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast opensc5_editor
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -61,6 +61,7 @@ LDFLAGS+=$(RAYLIB_DLL)
 dbpf_all_SOURCES+=src/filetypes/package.c
 dbpf_all_SOURCES+=src/filetypes/prop.c
 dbpf_all_SOURCES+=src/filetypes/rules.c
+dbpf_all_SOURCES+=src/filetypes/rast.c
 
 test_package_SOURCES+=src/../tests/test_package.c
 test_package_SOURCES+=$(dbpf_all_SOURCES)
@@ -85,6 +86,12 @@ test_prop_SOURCES+=src/filetypes/prop.c
 $(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_rast_SOURCES+=src/../tests/test_rast.c
+test_rast_SOURCES+=src/filetypes/rast.c
+
+$(DISTDIR)/test_rast$(EXEC_EXTENSION): $(test_rast_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 opensc5_editor_SOURCES+=src/editor.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
@@ -96,4 +103,5 @@ clean:
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_prop$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_rast$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
