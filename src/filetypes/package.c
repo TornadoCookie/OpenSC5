@@ -600,6 +600,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         default:
         {
             printf("Unknown data type %#X.\n", dataType);
+            return false;
         } break;
     }
 
@@ -701,6 +702,19 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
     }
 
     return ret;
+}
+
+static const char *GetExtensionFromType(unsigned int type)
+{
+    switch (type)
+    {
+        case PKGENTRY_PROP: return "prop";
+        case PKGENTRY_SCPT: return "script";
+        case PKGENTRY_RULE: return "rules";
+        case PKGENTRY_JSON: return "json";
+        case PKGENTRY_RAST: return "rast";
+        default: return "unkn";
+    }
 }
 
 Package LoadPackageFile(FILE *f)
@@ -844,8 +858,14 @@ Package LoadPackageFile(FILE *f)
             unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
             if (uncompressed)
             {
-                int toPrint = entry.memSize;
-                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i]))) pkg.entries[i].corrupted = true;
+                int toPrint = 10;
+                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
+                {
+                    FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)), "wb");
+                    fwrite(data, 1, entry.memSize, f);
+                    fclose(f);
+                    pkg.entries[i].corrupted = true;
+                }
                 for (int i = 0; i < toPrint; i++)
                 {
                     printf("%#x ", uncompressed[i]);
@@ -856,8 +876,14 @@ Package LoadPackageFile(FILE *f)
         }
         else
         {
-            int toPrint = entry.diskSize;
-            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i]))) pkg.entries[i].corrupted = true;
+            int toPrint = 10;
+            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i])))
+            {
+                FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)), "wb");
+                fwrite(data, 1, entry.diskSize, f);
+                fclose(f);
+                pkg.entries[i].corrupted = true;
+            }
             for (int i = 0; i < toPrint; i++)
             {
                 printf("%#x ", data[i]);
