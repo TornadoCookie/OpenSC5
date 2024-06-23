@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct CRCBinObject {
     uint32_t entryCount;
@@ -13,5 +14,6 @@ typedef struct CRCBinObject {
 } CRCBinObject;
 
 CRCBinObject LoadCRCBinFile(FILE *f);
+bool CheckCRC(CRCBinObject obj, const char *file);
 
 #endif
