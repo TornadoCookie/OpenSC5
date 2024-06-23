@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 static const char signature[] = { 137, 82, 87, 52, 119, 51, 50, 0, 13, 10, 26, 10, 0, 32, 4, 0, 52, 53, 52, 0, 48, 48, 48, 0, 0, 0, 0, 0 };
 
@@ -23,6 +24,21 @@ typedef struct RW4Header {
     uint32_t unknown3[5];
     uint32_t unknown4[7];
 } RW4Header;
+
+typedef struct RW4SectionHeader {
+    uint32_t Pos;
+    uint32_t unknown1;
+    uint32_t Size;
+    uint32_t Alignment;
+    uint32_t typeCodeIndirect;
+    uint32_t typeCode;
+} RW4SectionHeader;
+
+typedef struct RW4Section {
+    RW4SectionHeader header;
+    uint32_t *fixupOffsets;
+    int fixupOffsetCount;
+} RW4Section;
 
 typedef struct RW4File {
     RW4Header header;
@@ -64,6 +80,44 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     data += sectionTypeCount * sizeof(uint32_t);
 
     data += sizeof(uint32_t);
+    data += sizeof(uint32_t)*8;
+    data += sizeof(uint32_t);
+    uint32_t fixupCount = *(uint32_t*)data;
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t)*2;
+
+    uint32_t headerEnd = data - initData;
+
+    data = initData + file.header.sectionIndexBegin;
+
+    RW4Section *sections = malloc(file.header.sectionCount * sizeof(RW4Section));
+    for (int i = 0; i < file.header.sectionCount; i++)
+    {
+        RW4Section section = { 0 };
+        memcpy(&section.header, data, sizeof(RW4SectionHeader));
+        data += sizeof(RW4SectionHeader);
+        sections[i] = section;
+    }
+    for (int i = 0; i < fixupCount; i++)
+    {
+        uint32_t sind = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+        uint32_t offset = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+        sections[sind].fixupOffsetCount++;
+        sections[sind].fixupOffsets = realloc(sections[sind].fixupOffsets, sections[sind].fixupOffsetCount * sizeof(uint32_t));
+        sections[sind].fixupOffsets[sections[sind].fixupOffsetCount - 1] = offset;
+    }
+
+    uint32_t sectionIndexPadding = file.header.sectionIndexEnd - (data - initData);
+    
 
     return rw4data;
 }
