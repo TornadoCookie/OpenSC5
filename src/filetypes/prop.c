@@ -95,6 +95,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
             arrayNumber &= 0xFF;
             arraySize &= 0xFF;*/
+            arrayNumber &= 0xFF;
 
             printf("Array nmemb: %#x\n", arrayNumber);
             printf("Array item size: %#x\n", arraySize);
@@ -303,13 +304,6 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     bbox.min = vec3tobe(bbox.min);
                     bbox.max = vec3tobe(bbox.max);
-
-                    if (arrayNumber != 1)
-                    {
-                        printf("Array number expected to be 1.\n");
-                        propData.corrupted = true;
-                        return propData;
-                    }
 
                     printf("Value: min {%f, %f, %f}, max {%f, %f, %f}\n",
                            bbox.min.x, bbox.min.y, bbox.min.z, bbox.max.x, bbox.max.y, bbox.max.z);
