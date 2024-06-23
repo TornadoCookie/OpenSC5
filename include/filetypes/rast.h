@@ -5,8 +5,7 @@
 
 typedef struct RastData {
     bool corrupted;
-    int imageCount;
-    Image *imgs;
+    Image img;
 } RastData;
 
 RastData LoadRastData(unsigned char *data, int dataSize);
