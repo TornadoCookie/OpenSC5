@@ -368,6 +368,10 @@ Package LoadPackageFile(FILE *f)
         fread(&entry.unknown, sizeof(uint16_t), 1, f);
 
         entry.isCompressed = (entry.compressed == 0xFFFF);
+        if (entry.compressed != 0xFFFF && entry.compressed != 0x0000)
+        {
+            printf("Error: Invalid value for compressed: %#x\n", entry.compressed);
+        }
 
         printf("\nEntry %d:\n", i);
         printf("Type: %#X\n", entry.type);
@@ -417,7 +421,7 @@ Package LoadPackageFile(FILE *f)
                 if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
                 {
                     FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)), "wb");
-                    fwrite(data, 1, entry.memSize, f);
+                    fwrite(uncompressed, 1, entry.memSize, f);
                     fclose(f);
                     pkg.entries[i].corrupted = true;
                 }

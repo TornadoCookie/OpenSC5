@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
         FILE *f = fopen(files.paths[i], "rb");
 
-        LoadCRCBinFile(f);
+        CRCBinObject obj = LoadCRCBinFile(f);
 
         fclose(f);   
     }
