@@ -16,6 +16,7 @@
 #define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
 #define PKGENTRY_PNG  0x2F7D0004 // PNG file
+#define PKGENTRY_MOV  0x376840D7 // MOV file. Unable to be played in-editor.
 
 typedef struct PackageEntry {
     unsigned int type;

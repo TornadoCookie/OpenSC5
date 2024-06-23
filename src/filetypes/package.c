@@ -234,6 +234,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_RAST: return "rast";
         case PKGENTRY_RW4: return "rw4";
         case PKGENTRY_PNG: return "png";
+        case PKGENTRY_MOV: return "mov";
         default: return "unkn";
     }
 }
