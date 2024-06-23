@@ -316,6 +316,22 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     propData.variables[i].values[j].bbox = bbox;
                 } break;
+                case 0x38: // transform type
+                {
+                    uint16_t unknown1 = *(uint16_t*)data;
+                    data += sizeof(uint16_t);
+
+                    printf("Unknown 1: %#x\n", unknown1);
+
+                    float unknown2[13];
+
+                    for (int i = 0; i < 13; i++)
+                    {
+                        unknown2[i] = htobefloat(*(float*)data);
+                        printf("Unknown2[%d] = %f\n", i, unknown2[i]);
+                        data += sizeof(float);
+                    }
+                } break;
                 default:
                 {
                     printf("Unrecognized variable type.\n");
