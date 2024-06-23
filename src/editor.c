@@ -178,6 +178,7 @@ static void DrawPackageEntry(PackageEntry entry)
                 }
             }
         } break;
+        case PKGENTRY_JSON:
         case PKGENTRY_SCPT:
         {
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
@@ -205,6 +206,8 @@ int main()
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor");
 
+    SetTargetFPS(60);
+
     while (!WindowShouldClose())
     {
         // Update
@@ -223,6 +226,11 @@ int main()
                         UnloadPackageFile(loadedPkg);
                     }
                     hasLoadedPkg = true;
+
+                    BeginDrawing();
+                    ClearBackground(RAYWHITE);
+                    DrawText("Loading...", GetScreenWidth() / 2 - MeasureText("Loading...", 20)/2, GetScreenHeight() / 2 - 10, 20, GRAY);
+                    EndDrawing();
                     FILE *f = fopen(path, "rb");
                     loadedPkg = LoadPackageFile(f);
                     fclose(f);
@@ -239,7 +247,7 @@ int main()
 
         if (hasLoadedPkg)
         {
-            GuiScrollPanel((Rectangle){0, 0, GetScreenWidth()/2, GetScreenHeight()}, "Entries", (Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(loadedPkg.entryCount+1)}, &pkgEntryListScroll, &pkgEntryListView);
+            GuiScrollPanel((Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, GetScreenHeight()}, "Entries", (Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(loadedPkg.entryCount+1)}, &pkgEntryListScroll, &pkgEntryListView);
 
             BeginScissorMode(pkgEntryListView.x, pkgEntryListView.y, pkgEntryListView.width, pkgEntryListView.height);
 

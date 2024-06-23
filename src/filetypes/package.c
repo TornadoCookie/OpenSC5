@@ -175,6 +175,8 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 printf("Type: %#x\n", type);
                 printf("Specifier: %#x\n", specifier);
 
+                type &= 0xFF;
+
                 propData.variables[i].identifier = identifier;
                 propData.variables[i].type = type;
 
@@ -439,9 +441,9 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             file.header.type = htobe32(file.header.type);
             file.header.width = htobe32(file.header.width);
             file.header.height = htobe32(file.header.height);
-            file.header.mipmapct = htobe32(file.header.mipmapct);
-            file.header.pixelwidth = htobe32(file.header.pixelwidth);
-            file.header.pixelformat = htobe32(file.header.pixelformat);
+            file.header.mipmapct = file.header.mipmapct;
+            file.header.pixelwidth = file.header.pixelwidth;
+            file.header.pixelformat = file.header.pixelformat;
 
             printf("Type: %d\n", file.header.type);
             printf("Width: %d\n", file.header.width);
@@ -468,7 +470,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case 0x0A98EAF0: // JSON file.
         {
             printf("JSON:\n");
-            printf("%s\n", data);
+            char *str = malloc(dataSize-2);
+            memcpy(str, data+3, dataSize-3);
+            str[dataSize-3] = 0;
+            printf("%s\n", str);
+            pkgEntry->data.scriptSource = str;
         } break;
         case 0x08068AEB: // Binary rules file. https://community.simtropolis.com/forums/topic/55521-binary-rules-file-format/
         {
