@@ -216,10 +216,13 @@ static const char *GetExtensionFromType(unsigned int type)
     switch (type)
     {
         case PKGENTRY_PROP: return "prop";
-        case PKGENTRY_SCPT: return "script";
+        case PKGENTRY_TEXT:
+        case PKGENTRY_SCPT: return "txt";
         case PKGENTRY_RULE: return "rules";
+        case PKGENTRY_JSN8:
         case PKGENTRY_JSON: return "json";
         case PKGENTRY_RAST: return "rast";
+        case PKGENTRY_RW4: return "rw4";
         default: return "unkn";
     }
 }
