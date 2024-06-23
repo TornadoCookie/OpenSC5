@@ -90,11 +90,11 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
             arraySize = htobe32(*(int32_t *)data);
             data += sizeof(int32_t);
-
+/*
             arraySize &= ~0x9C000000;
 
-            arrayNumber &= 0xFFFF;
-            arraySize &= 0xFFFF;
+            arrayNumber &= 0xFF;
+            arraySize &= 0xFF;*/
 
             printf("Array nmemb: %#x\n", arrayNumber);
             printf("Array item size: %#x\n", arraySize);

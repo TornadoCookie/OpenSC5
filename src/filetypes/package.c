@@ -127,6 +127,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             
         } break;
+        case PKGENTRY_TEXT: // "textual" file.
         case PKGENTRY_JSON: // JSON file.
         {
             printf("JSON:\n");

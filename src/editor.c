@@ -64,6 +64,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_RULE: return "RULE";
         case PKGENTRY_JSON: return "JSON";
         case PKGENTRY_RAST: return "RAST";
+        case PKGENTRY_TEXT: return "TEXT";
         default: return "UNKN";
     }
 }
@@ -178,6 +179,7 @@ static void DrawPackageEntry(PackageEntry entry)
                 }
             }
         } break;
+        case PKGENTRY_TEXT:
         case PKGENTRY_JSON:
         case PKGENTRY_SCPT:
         {
