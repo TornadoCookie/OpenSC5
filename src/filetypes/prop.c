@@ -71,12 +71,20 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
         type &= 0xFF;
 
+        if (type == 0 && specifier == 0)
+        {
+            data += sizeof(uint32_t);
+            continue;
+        }
+
         propData.variables[i].identifier = identifier;
         propData.variables[i].type = type;
 
         int32_t arrayNumber = 1;
         int32_t arraySize = 0;
         bool isArray = false;
+        
+        if (specifier == 0x80FF) specifier &= ~0x30;
 
         if ((specifier & 0x30) == 0)
         {
@@ -317,9 +325,9 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     printf("Unknown 1: %#x\n", unknown1);
 
-                    float unknown2[13];
+                    float unknown2[12];
 
-                    for (int i = 0; i < 13; i++)
+                    for (int i = 0; i < 12; i++)
                     {
                         unknown2[i] = htobefloat(*(float*)data);
                         printf("Unknown2[%d] = %f\n", i, unknown2[i]);
