@@ -15,6 +15,7 @@
 #define PKGENTRY_RW4  0x2F4E681B // RenderWare 4 model file
 #define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
+#define PKGENTRY_JPEG 0x2F7D0004 // JPEG file
 
 typedef struct PackageEntry {
     unsigned int type;
@@ -27,6 +28,7 @@ typedef struct PackageEntry {
         RulesData rulesData;
         char *scriptSource;
         RastData rastData;
+        Image img;
     } data;
 } PackageEntry;
 

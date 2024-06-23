@@ -104,6 +104,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             printf("Script source: \"%s\"\n", str);
             pkgEntry->data.scriptSource = str;
         } break;
+        case PKGENTRY_JPEG: // JPEG file.
+        {
+            pkgEntry->data.img = LoadImageFromMemory(".jpeg", data, dataSize);
+            pkgEntry->corrupted = IsImageReady(pkgEntry->data.img);
+        } break;
         default:
         {
             printf("Unknown data type %#X.\n", dataType);
@@ -223,6 +228,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_JSON: return "json";
         case PKGENTRY_RAST: return "rast";
         case PKGENTRY_RW4: return "rw4";
+        case PKGENTRY_JPEG: return "jpeg";
         default: return "unkn";
     }
 }
