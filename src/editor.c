@@ -65,6 +65,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_JSON: return "JSON";
         case PKGENTRY_RAST: return "RAST";
         case PKGENTRY_TEXT: return "TEXT";
+        case PKGENTRY_PNG: return "PNG";
         default: return "UNKN";
     }
 }
@@ -84,6 +85,7 @@ static const char *PropValToString(PropVariable var, int i)
         case PROPVAR_VECT2: return TextFormat("{%f, %f}", var.values[i].vector2.x, var.values[i].vector2.y);
         case PROPVAR_VECT3: return TextFormat("{%f, %f, %f}", var.values[i].vector3.x, var.values[i].vector3.y, var.values[i].vector3.z);
         case PROPVAR_COLRGB: return TextFormat("%d, %d, %d", var.values[i].colorRGB.r*255, var.values[i].colorRGB.g*255, var.values[i].colorRGB.b*255);
+        case PROPVAR_CRGBA: return TextFormat("%d, %d, %d, %d", var.values[i].colorRGBA.r*255, var.values[i].colorRGBA.g*255, var.values[i].colorRGBA.b*255, var.values[i].colorRGBA.a*255);
         case PROPVAR_BBOX: return TextFormat("min {%f, %f, %f}, max {%f, %f %f}", var.values[i].bbox.min.x, var.values[i].bbox.min.y, var.values[i].bbox.min.z, 
                                              var.values[i].bbox.max.x, var.values[i].bbox.max.y, var.values[i].bbox.max.z);
         default: return "Unable to read type";
@@ -105,6 +107,8 @@ static const char *PropVarTypeToString(unsigned int type)
         case PROPVAR_VECT2: return "VECTOR2";
         case PROPVAR_VECT3: return "VECTOR3";
         case PROPVAR_COLRGB: return "COLORRGB";
+        case PROPVAR_CRGBA: return "COLORRGBA";
+        case PROPVAR_TRANS: return "TRANSFORM";
         case PROPVAR_BBOX: return "BBOX";
         default: return "UNKNOWN";
     }
@@ -181,6 +185,7 @@ static void DrawPackageEntry(PackageEntry entry)
         } break;
         case PKGENTRY_TEXT:
         case PKGENTRY_JSON:
+        case PKGENTRY_JSN8:
         case PKGENTRY_SCPT:
         {
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
@@ -188,6 +193,10 @@ static void DrawPackageEntry(PackageEntry entry)
             GuiTextBox((Rectangle){ GetScreenWidth()/2,0,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
+        } break;
+        case PKGENTRY_PNG:
+        {
+            DrawTexture(entry.data.imgData.tex, GetScreenWidth()/2, 0, WHITE);
         } break;
         default:
         {

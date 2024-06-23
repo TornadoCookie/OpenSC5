@@ -104,10 +104,15 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             printf("Script source: \"%s\"\n", str);
             pkgEntry->data.scriptSource = str;
         } break;
-        case PKGENTRY_JPEG: // JPEG file.
+        case PKGENTRY_PNG: // PNG file.
         {
-            pkgEntry->data.img = LoadImageFromMemory(".jpeg", data, dataSize);
-            pkgEntry->corrupted = IsImageReady(pkgEntry->data.img);
+            pkgEntry->data.imgData.img = LoadImageFromMemory(".png", data, dataSize);
+            pkgEntry->corrupted = IsImageReady(pkgEntry->data.imgData.img);
+            if (!pkgEntry->corrupted)
+            {
+                pkgEntry->data.imgData.tex = LoadTextureFromImage(pkgEntry->data.imgData.img);
+            }
+            return !pkgEntry->corrupted;
         } break;
         default:
         {
@@ -228,7 +233,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_JSON: return "json";
         case PKGENTRY_RAST: return "rast";
         case PKGENTRY_RW4: return "rw4";
-        case PKGENTRY_JPEG: return "jpeg";
+        case PKGENTRY_PNG: return "png";
         default: return "unkn";
     }
 }
