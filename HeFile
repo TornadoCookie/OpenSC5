@@ -20,6 +20,10 @@ Program test_crcbin
 Source ../tests/test_crcbin.c
 Source filetypes/crcbin.c
 
+Program test_prop
+Source ../tests/test_prop.c
+Source filetypes/prop.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all

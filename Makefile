@@ -38,7 +38,7 @@ CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
 endif
 
-PROGRAMS=test_package test_update test_crcbin opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop opensc5_editor
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -79,6 +79,12 @@ test_crcbin_SOURCES+=src/filetypes/crcbin.c
 $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_prop_SOURCES+=src/../tests/test_prop.c
+test_prop_SOURCES+=src/filetypes/prop.c
+
+$(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 opensc5_editor_SOURCES+=src/editor.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
@@ -89,4 +95,5 @@ clean:
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_prop$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
