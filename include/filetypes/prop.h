@@ -14,6 +14,7 @@
 #define PROPVAR_VECT2  0x30
 #define PROPVAR_VECT3  0x31
 #define PROPVAR_COLRGB 0x32
+#define PROPVAR_CRGBA  0x34
 #define PROPVAR_TRANS  0x38
 #define PROPVAR_BBOX   0x39
 
@@ -45,6 +46,12 @@ typedef struct PropVariable {
             unsigned int identifier;
         } texts;
         BoundingBox bbox;
+        struct {
+            float r;
+            float b;
+            float g;
+            float a;
+        } colorRGBA;
     } *values;
 } PropVariable;
 

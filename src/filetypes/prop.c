@@ -326,6 +326,29 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                         data += sizeof(float);
                     }
                 } break;
+                case 0x34: // colorRGBA type
+                {
+                    float r = htobefloat(*(float *)data);
+                    data += sizeof(float);
+                    float g = htobefloat(*(float *)data);
+                    data += sizeof(float);
+                    float b = htobefloat(*(float *)data);
+                    data += sizeof(float);
+                    float a = htobefloat(*(float *)data);
+                    data += sizeof(float);
+
+                    if (!isArray)
+                    {
+                        // data += sizeof(uint32_t);
+                    }
+
+                    printf("Value: {%f, %f, %f, %f}\n", r, g, b, a);
+
+                    propData.variables[i].values[j].colorRGBA.r = r;
+                    propData.variables[i].values[j].colorRGBA.g = g;
+                    propData.variables[i].values[j].colorRGBA.b = b;
+                    propData.variables[i].values[j].colorRGBA.a = a;
+                } break;
                 default:
                 {
                     printf("Unrecognized variable type.\n");
