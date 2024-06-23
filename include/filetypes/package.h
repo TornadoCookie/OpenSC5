@@ -7,13 +7,14 @@
 #include "rules.h"
 #include "rast.h"
 
-#define PKGENTRY_PROP 0x00B1B104
-#define PKGENTRY_SCPT 0x024A0E52
-#define PKGENTRY_TEXT 0x02FAC0B6
-#define PKGENTRY_RULE 0x08068AEB
-#define PKGENTRY_JSON 0x0A98EAF0
-#define PKGENTRY_RW4  0x2F4E681B
-#define PKGENTRY_RAST 0x2F4E681C
+#define PKGENTRY_PROP 0x00B1B104 // PROPerties file
+#define PKGENTRY_SCPT 0x024A0E52 // SCriPT file
+#define PKGENTRY_TEXT 0x02FAC0B6 // TEXT file
+#define PKGENTRY_RULE 0x08068AEB // RULEs file
+#define PKGENTRY_JSON 0x0A98EAF0 // JSON file (utf-8)
+#define PKGENTRY_RW4  0x2F4E681B // RenderWare 4 model file
+#define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image
+#define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
 
 typedef struct PackageEntry {
     unsigned int type;
