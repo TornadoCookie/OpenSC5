@@ -58,8 +58,12 @@ LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 
+dbpf_all_SOURCES+=src/filetypes/package.c
+dbpf_all_SOURCES+=src/filetypes/prop.c
+dbpf_all_SOURCES+=src/filetypes/rules.c
+
 test_package_SOURCES+=src/../tests/test_package.c
-test_package_SOURCES+=src/filetypes/package.c
+test_package_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_package$(EXEC_EXTENSION): $(test_package_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
@@ -76,7 +80,7 @@ $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 opensc5_editor_SOURCES+=src/editor.c
-opensc5_editor_SOURCES+=src/filetypes/package.c
+opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
