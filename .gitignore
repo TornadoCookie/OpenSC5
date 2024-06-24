@@ -4,3 +4,4 @@ log
 valgrind.info
 perf.data
 corrupted
+*.exe

@@ -5,17 +5,6 @@ DISTDIR?=.
 
 RAYLIB_NAME=raylib5-$(PLATFORM)
 
-ifeq ($(PLATFORM), linux64)
-EXEC_EXTENSION=
-LIB_EXTENSION=.so
-CC=gcc
-RAYLIB_DLL=-lraylib
-CFLAGS+=-O2
-CFLAGS+=-D RELEASE
-CFLAGS+=-D EXEC_EXTENSION=\"\"
-CFLAGS+=-D LIB_EXTENSION=\".so\"
-endif
-
 ifeq ($(PLATFORM), linux64-debug)
 EXEC_EXTENSION=-debug
 LIB_EXTENSION=-debug.so
@@ -36,6 +25,9 @@ CFLAGS+=-O2
 CFLAGS+=-D RELEASE
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
+CFLAGS+=-Llib/libcurl-win64/lib
+CFLAGS+=-lws2_32
+CFLAGS+=-Ilib/libcurl-win64/include
 endif
 
 PROGRAMS=test_package test_update test_crcbin test_prop test_rast opensc5_editor
