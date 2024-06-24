@@ -348,6 +348,11 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                         data += sizeof(float);
                     }
 
+                    if (unknown1 & 0x0f00)
+                    {
+                        data += sizeof(uint32_t);
+                    }
+
                 } break;
                 case 0x34: // colorRGBA type
                 {
