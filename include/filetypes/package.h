@@ -28,7 +28,6 @@ typedef struct PackageEntry {
         PropData propData;
         RulesData rulesData;
         char *scriptSource;
-        RastData rastData;
         struct {
             Image img;
             Texture2D tex;

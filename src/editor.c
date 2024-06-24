@@ -194,6 +194,7 @@ static void DrawPackageEntry(PackageEntry entry)
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
         } break;
+        case PKGENTRY_RAST:
         case PKGENTRY_PNG:
         {
             DrawTexture(entry.data.imgData.tex, GetScreenWidth()/2, 0, WHITE);

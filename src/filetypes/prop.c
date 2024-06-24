@@ -186,6 +186,13 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     printf("Length %d\n", length);
 
+                    if ((data - initData) + length > dataSize)
+                    {
+                        printf("{Corruption detected.}\n");
+                        propData.corrupted = true;
+                        return propData;
+                    }
+
                     char *str = malloc(length + 1);
 
                     for (int i = 0; i < length; i++)
@@ -214,6 +221,13 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                 {
                     uint32_t length = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
+
+                    if ((data - initData) + length > dataSize)
+                    {
+                        printf("{Corruption detected.}\n");
+                        propData.corrupted = true;
+                        return propData;
+                    }
 
                     char *str = malloc(length + 1);
                     memcpy(str, data, length);
@@ -333,7 +347,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                         printf("Unknown2[%d] = %f\n", i, unknown2[i]);
                         data += sizeof(float);
                     }
-                    
+
                 } break;
                 case 0x34: // colorRGBA type
                 {

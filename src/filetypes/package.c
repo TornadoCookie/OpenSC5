@@ -74,7 +74,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_RAST: // Raster file https://simswiki.info/wiki.php?title=Spore:2F4E681C
         {
             RastData rastData = LoadRastData(data, dataSize);
-            pkgEntry->data.rastData = rastData;
+            pkgEntry->data.imgData.img = rastData.img;
+            if (!rastData.corrupted)
+            {
+                pkgEntry->data.imgData.tex = LoadTextureFromImage(rastData.img);
+            }
             return !rastData.corrupted;            
         } break;
         case PKGENTRY_TEXT: // "textual" file.
