@@ -333,11 +333,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                         printf("Unknown2[%d] = %f\n", i, unknown2[i]);
                         data += sizeof(float);
                     }
-
-                    if (isArray)
-                    {
-                        data += sizeof(uint32_t);
-                    }
+                    
                 } break;
                 case 0x34: // colorRGBA type
                 {
