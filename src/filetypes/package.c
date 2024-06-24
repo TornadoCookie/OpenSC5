@@ -111,7 +111,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_PNG: // PNG file.
         {
             pkgEntry->data.imgData.img = LoadImageFromMemory(".png", data, dataSize);
-            pkgEntry->corrupted = IsImageReady(pkgEntry->data.imgData.img);
+            pkgEntry->corrupted = !IsImageReady(pkgEntry->data.imgData.img);
             if (!pkgEntry->corrupted)
             {
                 pkgEntry->data.imgData.tex = LoadTextureFromImage(pkgEntry->data.imgData.img);

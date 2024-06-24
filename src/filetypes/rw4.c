@@ -6,6 +6,8 @@
 
 static const char signature[] = { 137, 82, 87, 52, 119, 51, 50, 0, 13, 10, 26, 10, 0, 32, 4, 0, 52, 53, 52, 0, 48, 48, 48, 0, 0, 0, 0, 0 };
 
+#define TYPECODE_MESH 0x20009
+
 typedef struct RW4Header {
     char signature[28];
     uint32_t fileTypeCode;
@@ -117,7 +119,47 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     }
 
     uint32_t sectionIndexPadding = file.header.sectionIndexEnd - (data - initData);
-    
+    data += sectionIndexPadding;
+
+    bool used[sectionTypeCount];
+
+    for (int i = 0; i < file.header.sectionCount; i++)
+    {
+        used[sections[i].header.typeCodeIndirect] = 0;
+    }
+
+    for (int i = 0; i < file.header.sectionCount; i++)
+    {
+        RW4Section section = sections[i];
+        data = initData + section.header.Pos;
+        switch (section.header.typeCode)
+        {
+            case TYPECODE_MESH:
+            {
+                Mesh mesh = { 0 };
+
+                data += sizeof(uint32_t);
+                data += sizeof(uint32_t);
+                uint32_t triSection = *(int32_t*)data;
+                data += sizeof(int32_t);
+                uint32_t triCount = *(uint32_t*)data;
+                data += sizeof(uint32_t);
+                data += sizeof(uint32_t);
+                data += sizeof(uint32_t);
+                data += sizeof(uint32_t);
+                data += sizeof(uint32_t);
+                uint32_t vertCount = *(uint32_t*)data;
+                data += sizeof(uint32_t);
+                uint32_t vertSection = *(uint32_t*)data;
+                data += sizeof(uint32_t);
+
+            } break;
+            default:
+            {
+                printf("Unknown type code %#x.\n", section.header.typeCode);
+            } break;
+        }
+    }
 
     return rw4data;
 }

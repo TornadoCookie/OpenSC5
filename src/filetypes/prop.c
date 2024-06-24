@@ -348,7 +348,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                         data += sizeof(float);
                     }
 
-                    if (unknown1 & 0x0f00)
+                    if (unknown1 & 0x0100)
                     {
                         data += sizeof(uint32_t);
                     }
