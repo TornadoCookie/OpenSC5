@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <raylib.h>
+#include <pthread.h>
 
 struct MemoryStruct {
   char *memory;
@@ -50,6 +51,20 @@ void download_to_file(const char *url, FILE *f)
     curl_easy_cleanup(curl);
 }
 
+static void add_transfer(CURLM *cm, unsigned int i, int *left, const char *packagefilename)
+{
+    CURL *eh = curl_easy_init();
+    printf("Downloading %s...\n", packagefilename);
+    FILE *f = fopen(TextFormat("update/%s", packagefilename), "w+");
+    curl_easy_setopt(eh, CURLOPT_URL, TextFormat("http://update.prod.simcity.com/%s", packagefilename));
+    curl_easy_setopt(eh, CURLOPT_PRIVATE, f);
+    curl_easy_setopt(eh, CURLOPT_WRITEDATA, f);
+    curl_multi_add_handle(cm, eh);
+    (*left)++;
+}
+
+#define MAX_PARALLEL 10
+
 int main()
 {
     struct MemoryStruct chunk;
@@ -68,14 +83,18 @@ int main()
 
     CURLcode code = curl_easy_perform(curl);
 
+    curl_easy_cleanup(curl);
+
     if (code != CURLE_OK)
     {
         printf("Failed: %s\n", curl_easy_strerror(code));
     }
     else
     {
-        printf("Retrieved %lu bytes.\n", chunk.size);
+        printf("game_scripts_manifest.html: Retrieved %lu bytes.\n", chunk.size);
         
+        char **packages = NULL;
+        int packageCount;
 
         char *cursor = chunk.memory;
         while ((cursor - chunk.memory) < chunk.size)
@@ -89,21 +108,99 @@ int main()
             packagefilename[length] = 0;
             printf("%s\n", packagefilename);
 
-            const char *path = TextFormat("update/%s", packagefilename);
-
-            if (!FileExists(path))
-            {
-                FILE *f = fopen(path, "w+");
-                download_to_file(TextFormat("http://update.prod.simcity.com/%s", packagefilename), f);
-                fclose(f);
-            }
+            packageCount++;
+            packages = realloc(packages, packageCount * sizeof(char*));
+            packages[packageCount - 1] = packagefilename;
 
             cursor += strlitsize("\">");
             cursor += length;
         }
-    }
 
-    curl_easy_cleanup(curl);
+        CURLM *curlm = curl_multi_init();
+
+        printf("There are %d packages to download\n", packageCount);
+        printf("Download in parallel, %d scripts at a time\n", MAX_PARALLEL);
+
+        curl_multi_setopt(curlm, CURLMOPT_MAXCONNECTS, MAX_PARALLEL);
+        int transfers = 0;
+        int left = 0;
+
+        int pkgOff = 0;
+
+        for (transfers = 0; transfers < packageCount && transfers < MAX_PARALLEL; transfers++)
+        {
+            char *packagefilename = packages[transfers + pkgOff];
+            if (transfers + pkgOff >= packageCount)
+            {
+                printf("Finished.\n");
+                break;
+            }
+            if (FileExists(TextFormat("update/%s", packagefilename)))
+            {
+                printf("%s already downloaded.\n", packagefilename);
+                pkgOff++;
+                transfers--;
+                continue;
+            }
+            else
+            {
+                add_transfer(curlm, transfers, &left, packagefilename);
+            }
+        }
+
+        do
+        {
+            int stillAlive = 1;
+            int msgs_left = -1;
+            curl_multi_perform(curlm, &stillAlive);
+            CURLMsg *msg;
+
+            while ((msg = curl_multi_info_read(curlm, &msgs_left)) != NULL)
+            {
+                if (msg->msg == CURLMSG_DONE)
+                {
+                    CURL *e = msg->easy_handle;
+                    FILE *f;
+                    curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &f);
+                    fclose(f);
+                    curl_multi_remove_handle(curlm, e);
+                    curl_easy_cleanup(e);
+                    left--;
+                }
+                else
+                {
+                    printf("Error: CURLMsg %d\n", msg->msg);
+                }
+                if (transfers < packageCount)
+                {
+                    char *packagefilename = packages[transfers + pkgOff];
+                    if (transfers + pkgOff >= packageCount)
+                    {
+                        printf("Finished.\n");
+                        break;
+                    }
+                    while (FileExists(TextFormat("update/%s", packagefilename)))
+                    {
+                        printf("%s already downloaded.\n", packagefilename);
+                        pkgOff++;
+                        if (transfers + pkgOff >= packageCount)
+                        {
+                            printf("Finished.\n");
+                            break;
+                        }
+                        packagefilename = packages[transfers + pkgOff];
+                    }
+                    add_transfer(curlm, transfers++, &left, packagefilename);
+                }
+            }
+            if (left)
+            {
+                curl_multi_wait(curlm, NULL, 0, 1000, NULL);
+            }
+        } while (left);
+
+        curl_multi_cleanup(curlm);
+    }
 
     curl_global_cleanup();
     return 0;
