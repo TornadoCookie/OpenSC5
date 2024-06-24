@@ -1,6 +1,6 @@
 #include "filetypes/prop.h"
 #include <stdint.h>
-#include <endian.h>
+#include <cpl_endian.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>

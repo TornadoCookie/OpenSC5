@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <endian.h>
+#include <cpl_endian.h>
 #include <raylib.h>
 
 typedef struct PackageHeader {

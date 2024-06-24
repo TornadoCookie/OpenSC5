@@ -1,7 +1,7 @@
 #include "filetypes/rules.h"
 #include <stdint.h>
 #include <string.h>
-#include <endian.h>
+#include <cpl_endian.h>
 #include <stdio.h>
 
 typedef struct RulesFileHeader {

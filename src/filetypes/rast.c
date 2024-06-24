@@ -1,6 +1,6 @@
 #include "filetypes/rast.h"
 #include <stdint.h>
-#include <endian.h>
+#include <cpl_endian.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
