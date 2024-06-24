@@ -1,8 +1,8 @@
+#include <cpl_raylib.h>
 #include <curl/curl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <raylib.h>
 #include <pthread.h>
 
 struct MemoryStruct {

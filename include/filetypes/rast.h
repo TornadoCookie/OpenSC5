@@ -1,7 +1,7 @@
 #ifndef _RAST_
 #define _RAST_
 
-#include <raylib.h>
+#include <cpl_raylib.h>
 
 typedef struct RastData {
     bool corrupted;

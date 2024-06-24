@@ -1,7 +1,7 @@
 #ifndef _PROP_
 #define _PROP_
 
-#include <raylib.h>
+#include <cpl_raylib.h>
 
 #define PROPVAR_BOOL   0x01
 #define PROPVAR_INT32  0x09

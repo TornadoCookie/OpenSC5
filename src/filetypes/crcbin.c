@@ -1,8 +1,8 @@
 #include "filetypes/crcbin.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <cpl_raylib.h>
 #include <cpl_endian.h>
-#include <raylib.h>
 #include <string.h>
 
 typedef struct CRCBinHeader {
