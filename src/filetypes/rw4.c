@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <cpl_endian.h>
 
 typedef struct RWHeader {
     char magic[28];
@@ -36,6 +37,46 @@ typedef struct RWSectionInfo {
     uint32_t typeCode;
 } RWSectionInfo;
 
+typedef struct RWKeyframeAnim {
+    uint32_t channelNameOffset;
+    uint32_t channelCount;
+    uint32_t skeletonId;
+    uint32_t fieldC;
+    uint32_t channelDataOffset;
+    uint32_t paddingEndOffset;
+    uint32_t channelCount2;
+    uint32_t field1c;
+    float length;
+    uint32_t field24;
+    uint32_t flags;
+    uint32_t channelInfoOffset;
+} RWKeyframeAnim;
+
+typedef struct RWSkeleton {
+    uint32_t boneFlagOffset;
+    uint32_t boneParentOffset;
+    uint32_t boneNameOffset;
+    uint32_t count;
+    uint32_t skeletonId;
+    uint32_t unknown1;
+} RWSkeleton;
+
+typedef struct RWSkeletonsInK {
+    uint32_t object1;
+    uint32_t pFunction;
+    uint32_t arrayOffset;
+    uint32_t object2;
+    uint32_t skeleton;
+    uint32_t arrayCount;
+} RWSkeletonsInK;
+
+typedef struct RWBBox {
+    Vector3 min;
+    uint32_t fieldc;
+    Vector3 max;
+    uint32_t field1c;
+} RWBBox;
+
 RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 {
     RW4Data rw4data = { 0 };
@@ -48,7 +89,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     memcpy(&header, data, sizeof(RWHeader));
     data += sizeof(RWHeader);
 
-    printf("Type: %d\n", header.type);
+    printf("Type: %#x\n", header.type);
     printf("Section Count: %d\n", header.sectionCount);
     printf("Section Info Offset: %d\n", header.sectionInfoOffset);
     printf("Buffer Data Offset: %d\n", header.bufferDataOffset);
@@ -83,13 +124,84 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
         RWSectionInfo sectionInfo = sectionInfos[i];
         data = initData + sectionInfo.dataOffset;
 
+        printf("\nSection %d:\n", i);
+
         switch (sectionInfo.typeCode)
         {
+            case 0x70001: // KeyframeAnim
+            {
+                RWKeyframeAnim keyframeAnim;
+                memcpy(&keyframeAnim, data, sizeof(RWKeyframeAnim));
+
+                printf("Keyframe Anim Info:\n");
+                printf("Channel name offset: %d\n", keyframeAnim.channelNameOffset);
+                printf("Channel count: %d\n", keyframeAnim.channelCount);
+                printf("Skeleton Id: %#x\n", keyframeAnim.skeletonId);
+                printf("Channel Data offset: %d\n", keyframeAnim.channelDataOffset);
+                printf("Padding end offset: %d\n", keyframeAnim.paddingEndOffset);
+                printf("Length: %f\n", keyframeAnim.length);
+                printf("Flags: %#x\n", keyframeAnim.flags);
+                printf("Channel Info Offset: %d\n", keyframeAnim.channelInfoOffset);
+                printf("TODO\n");
+            } break;
+            case 0xff0001: // Animations
+            {
+                data += sizeof(uint32_t);
+                uint32_t count = *(uint32_t*)data;
+                data += sizeof(uint32_t);
+
+                printf("Animations Info:\n");
+                printf("Count: %d\n", count);
+                for (int i = 0; i < count; i++)
+                {
+                    uint32_t animationIndex = *(uint32_t*)data;
+                    data += sizeof(uint32_t);
+                    uint32_t section = *(uint32_t*)data;
+                    data += sizeof(uint32_t);
+                    printf("Animation %#x: [Section %d]\n", animationIndex, section);
+                }
+            } break;
+            case 0x70002: // Skeleton
+            {
+                RWSkeleton skeleton;
+                memcpy(&skeleton, data, sizeof(RWSkeleton));
+                data += sizeof(RWSkeleton);
+
+                printf("Skeleton Info:\n");
+                printf("Bone Flag Offset: %d\n", skeleton.boneFlagOffset);
+                printf("Bone Parent Offset: %d\n", skeleton.boneParentOffset);
+                printf("Bone Name Offset: %d\n", skeleton.boneNameOffset);
+                printf("Bone Count: %d\n", skeleton.count);
+                printf("Skeleton Id: %#x\n", skeleton.skeletonId);
+                printf("TODO\n");
+            } break;
+            case 0x7000b: // SkeletonsInK
+            {
+                RWSkeletonsInK skeletonsink;
+                memcpy(&skeletonsink, data, sizeof(RWSkeletonsInK));
+                data += sizeof(RWSkeletonsInK);
+
+                printf("SkeletonsInK Info:\n");
+                printf("Array Offset: %d\n", skeletonsink.arrayOffset);
+                printf("Skeleton: [Section %d]\n", skeletonsink.skeleton);
+                printf("Count: %d\n", skeletonsink.arrayCount);
+
+                printf("TODO\n");
+
+            } break;
+            case 0x80005: // BBox
+            {
+                RWBBox bbox;
+                memcpy(&bbox, data, sizeof(RWBBox));
+                data += sizeof(RWBBox);
+
+                printf("Bounding Box Information:\n");
+                printf("Min: {%f, %f, %f}\n", bbox.min.x, bbox.min.y, bbox.min.z);
+                printf("Max: {%f, %f, %f}\n", bbox.max.x, bbox.max.y, bbox.max.z);
+            } break;
             default:
             {
-                printf("Unrecognized type code %#x.\n");
-                rw4data.corrupted = true;
-                return rw4data;
+                printf("Unrecognized type code %#x.\n", sectionInfo.typeCode);
             } break;
         }
     }
