@@ -148,7 +148,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
 
     printf("Compression Type: %#x\n", compressionType);
 
-    if (compressionType != 0x10)
+    if (compressionType & 0x80)
     {
         printf("Unrecognized compression type.\n");
         free(ret);
