@@ -46,6 +46,53 @@ typedef struct RW4File {
     RW4Header header;
 } RW4File;
 
+typedef struct Triangle {
+    uint16_t i;
+    uint16_t j;
+    uint16_t k;
+} Triangle;
+
+typedef struct RW4TriangleArray {
+    Triangle *triangles;
+    int triangleCount;
+} RW4TriangleArray;
+
+RW4TriangleArray ReadTriangleArray(RW4Section *sections, unsigned char *data, unsigned char *initData)
+{
+    RW4TriangleArray ta = { 0 };
+
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    uint32_t indCount = *(uint32_t*)data;
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    data += sizeof(uint32_t);
+    uint32_t sectionNumber = *(uint32_t*)data;
+
+    ta.triangleCount = indCount / 3;
+
+    RW4Section section = sections[sectionNumber];
+
+    ta.triangles = malloc(sizeof(Triangle) * ta.triangleCount);
+
+    data = initData + section.header.Pos;
+
+    for (int i = 0; i < ta.triangleCount; i++)
+    {
+        Triangle tri;
+        memcpy(&tri, data, sizeof(Triangle));
+        data += sizeof(Triangle);
+        ta.triangles[i] = tri;
+    }
+
+    return ta;
+}
+
+typedef struct RW4VertexArray {
+    
+} RW4VertexArray;
+
 RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 {
     RW4Data rw4data = { 0 };
@@ -152,6 +199,13 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 data += sizeof(uint32_t);
                 uint32_t vertSection = *(uint32_t*)data;
                 data += sizeof(uint32_t);
+                
+                RW4TriangleArray ta = ReadTriangleArray(sections, initData + sections[triSection].header.Pos, initData);
+
+                if (vertSection != 0x400000)
+                {
+
+                }
 
             } break;
             default:
