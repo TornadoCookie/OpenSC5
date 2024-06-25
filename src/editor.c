@@ -121,6 +121,8 @@ static Vector2 propScroll;
 static Package loadedPkg = { 0 };
 static int selectedPkgEntry = -1;
 
+static int currentGifFrame;
+
 static void DrawPackageEntry(PackageEntry entry)
 {
     switch (entry.type)
@@ -198,6 +200,13 @@ static void DrawPackageEntry(PackageEntry entry)
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
         } break;
+        case PKGENTRY_GIF:
+        {
+            currentGifFrame++;
+            if (currentGifFrame > entry.data.gifData.frameCount) currentGifFrame = 0;
+            unsigned int nextFrameDataoffset = entry.data.gifData.img.width*entry.data.gifData.img.height*4*currentGifFrame;
+            UpdateTexture(entry.data.gifData.tex, ((unsigned char *)entry.data.gifData.img.data) + nextFrameDataoffset);
+        }
         case PKGENTRY_RAST:
         case PKGENTRY_PNG:
         {

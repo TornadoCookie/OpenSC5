@@ -61,6 +61,54 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
+#define SUPPORT_FILEFORMAT_GIF
+
+typedef unsigned char stbi_uc;
+#define STBIDEF extern
+
+STBIDEF stbi_uc *stbi_load_gif_from_memory(stbi_uc const *buffer, int len, int **delays, int *x, int *y, int *z, int *comp, int req_comp);
+
+// Load animated image data
+//  - Image.data buffer includes all frames: [image#0][image#1][image#2][...]
+//  - Number of frames is returned through 'frames' parameter
+//  - All frames are returned in RGBA format
+//  - Frames delay data is discarded
+Image LoadImageAnimFromMemory(const char *fileType, const unsigned char *fileData, int dataSize, int *frames)
+{
+    Image image = { 0 };
+    int frameCount = 0;
+
+    // Security check for input data
+    if ((fileType == NULL) || (fileData == NULL) || (dataSize == 0)) return image;
+
+#if defined(SUPPORT_FILEFORMAT_GIF)
+    if ((strcmp(fileType, ".gif") == 0) || (strcmp(fileType, ".GIF") == 0))
+    {
+        if (fileData != NULL)
+        {
+            int comp = 0;
+            int *delays = NULL;
+            image.data = stbi_load_gif_from_memory(fileData, dataSize, &delays, &image.width, &image.height, &frameCount, &comp, 4);
+
+            image.mipmaps = 1;
+            image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
+            RL_FREE(delays);        // NOTE: Frames delays are discarded
+        }
+    }
+#else
+    if (false) { }
+#endif
+    else
+    {
+        image = LoadImageFromMemory(fileType, fileData, dataSize);
+        frameCount = 1;
+    }
+
+    *frames = frameCount;
+    return image;
+}
+
 static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType, PackageEntry *pkgEntry)
 {
     switch (dataType)
@@ -127,6 +175,16 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_BNK:
         {
             pkgEntry->data.bnkData = LoadBnkData(data, dataSize);
+        } break;
+        case PKGENTRY_GIF:
+        {
+            pkgEntry->data.gifData.img = LoadImageAnimFromMemory(".gif", data, dataSize, &pkgEntry->data.gifData.frameCount);
+            pkgEntry->corrupted = !IsImageReady(pkgEntry->data.gifData.img);
+            if (!pkgEntry->corrupted)
+            {
+                pkgEntry->data.gifData.tex = LoadTextureFromImage(pkgEntry->data.gifData.img);
+            }
+            return !pkgEntry->corrupted;
         } break;
         default:
         {

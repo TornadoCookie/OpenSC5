@@ -19,6 +19,7 @@
 #define PKGENTRY_RW4  0x2F4E681B // RenderWare 4 model file
 #define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image
 #define PKGENTRY_PNG  0x2F7D0004 // PNG file
+#define PKGENTRY_GIF  0x2F7D0007 // GIF image.
 #define PKGENTRY_MOV  0x376840D7 // MOV file. Unable to be played in-editor.
 #define PKGENTRY_EXIF 0x3F8662EA // EXIF image. Unable to be viewed in-editor.
 
@@ -36,6 +37,12 @@ typedef struct PackageEntry {
             Image img;
             Texture2D tex;
         } imgData;
+        struct {
+            Image img;
+            Texture2D tex;
+            int frameCount;
+            int currentFrame;
+        } gifData;
         BnkData bnkData;
     } data;
 } PackageEntry;
