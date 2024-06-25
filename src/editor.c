@@ -74,6 +74,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_MOV: return "MOV";
         case PKGENTRY_EXIF: return "EXIF";
         case PKGENTRY_SWB: return "SWB";
+        case PKGENTRY_HTML: return "HTML";
         default: return "UNKN";
     }
 }
@@ -196,6 +197,7 @@ static void DrawPackageEntry(PackageEntry entry)
                 }
             }
         } break;
+        case PKGENTRY_HTML:
         case PKGENTRY_CSS:
         case PKGENTRY_TEXT:
         case PKGENTRY_JSON:

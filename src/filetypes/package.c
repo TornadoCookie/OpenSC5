@@ -145,6 +145,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             pkgEntry->data.rulesData = rulesData;
             return !rulesData.corrupted;
         } break;
+        case PKGENTRY_HTML:
         case PKGENTRY_CSS:
         case PKGENTRY_JSN8:
         case PKGENTRY_SCPT: // Script file format (?)
