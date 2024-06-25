@@ -177,6 +177,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_BNK:
         {
             pkgEntry->data.bnkData = LoadBnkData(data, dataSize);
+            return !pkgEntry->data.bnkData.corrupted;
         } break;
         case PKGENTRY_GIF:
         {
@@ -311,6 +312,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_MOV: return "mov";
         case PKGENTRY_EXIF: return "jpg";
         case PKGENTRY_SWB: return "swb";
+        case PKGENTRY_BNK: return "bnk";
         default: return "unkn";
     }
 }
