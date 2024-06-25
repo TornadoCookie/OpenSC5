@@ -33,6 +33,17 @@ static Vector3 vec3tobe(Vector3 v)
     };
 }
 
+static Vector4 vec4tobe(Vector4 v)
+{
+    return (Vector4)
+    {
+        htobefloat(v.x),
+        htobefloat(v.y),
+        htobefloat(v.z),
+        htobefloat(v.w),
+    };
+}
+
 PropData LoadPropData(unsigned char *data, int dataSize)
 {
     unsigned char *initData = data;
@@ -49,9 +60,9 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
     for (int i = 0; i < variableCount; i++)
     {
-        if (data - initData > dataSize)
+        if (data - initData > dataSize && i != variableCount - 1)
         {
-            printf("{Corruption Detected.}\n");
+            printf("{Corruption Detected: Variable}\n");
             propData.corrupted = true;
             return propData;
         }
@@ -99,11 +110,10 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             arraySize = htobe32(*(int32_t *)data);
             data += sizeof(int32_t);
 /*
-            arraySize &= ~0x9C000000;
+            arraySize &= ~0x9C000000;*/
 
             arrayNumber &= 0xFF;
-            arraySize &= 0xFF;*/
-            arrayNumber &= 0xFF;
+            arraySize &= 0xFF;
 
             printf("Array nmemb: %#x\n", arrayNumber);
             printf("Array item size: %#x\n", arraySize);
@@ -120,9 +130,9 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
         for (int j = 0; j < arrayNumber; j++)
         {
-            if (data - initData > dataSize)
+            if (data - initData > dataSize && j != arrayNumber - 1)
             {
-                printf("{Corruption Detected.}\n");
+                printf("{Corruption Detected: Array}\n");
                 propData.corrupted = true;
                 return propData;
             }
@@ -183,6 +193,8 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                 {
                     uint32_t length = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
+
+                    length &= 0xFF;
 
                     printf("Length %d\n", length);
 
@@ -376,6 +388,16 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                     propData.variables[i].values[j].colorRGBA.g = g;
                     propData.variables[i].values[j].colorRGBA.b = b;
                     propData.variables[i].values[j].colorRGBA.a = a;
+                } break;
+                case 0x33: // vector4 type
+                {
+                    // Raylib's vector4 type happens to fit nicely with the description.
+                    Vector4 val = vec4tobe(*(Vector4 *)data);
+                    data += sizeof(Vector4);
+
+                    printf("Value: {%f, %f, %f, %f}\n", val.x, val.y, val.z, val.w);
+
+                    propData.variables[i].values[j].vector4 = val;
                 } break;
                 default:
                 {

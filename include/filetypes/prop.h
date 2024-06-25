@@ -14,6 +14,7 @@
 #define PROPVAR_VECT2  0x30
 #define PROPVAR_VECT3  0x31
 #define PROPVAR_COLRGB 0x32
+#define PROPVAR_VECT4  0x33
 #define PROPVAR_CRGBA  0x34
 #define PROPVAR_TRANS  0x38
 #define PROPVAR_BBOX   0x39
@@ -52,6 +53,7 @@ typedef struct PropVariable {
             float g;
             float a;
         } colorRGBA;
+        Vector4 vector4;
     } *values;
 } PropVariable;
 
