@@ -54,6 +54,7 @@ dbpf_all_SOURCES+=src/filetypes/package.c
 dbpf_all_SOURCES+=src/filetypes/prop.c
 dbpf_all_SOURCES+=src/filetypes/rules.c
 dbpf_all_SOURCES+=src/filetypes/rast.c
+dbpf_all_SOURCES+=src/filetypes/bnk.c
 
 test_package_SOURCES+=src/../tests/test_package.c
 test_package_SOURCES+=$(dbpf_all_SOURCES)

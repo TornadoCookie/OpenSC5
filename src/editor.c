@@ -118,6 +118,9 @@ static int selectedPropVal;
 static Rectangle propView;
 static Vector2 propScroll;
 
+static Package loadedPkg = { 0 };
+static int selectedPkgEntry = -1;
+
 static void DrawPackageEntry(PackageEntry entry)
 {
     switch (entry.type)
@@ -199,6 +202,24 @@ static void DrawPackageEntry(PackageEntry entry)
         {
             DrawTexture(entry.data.imgData.tex, GetScreenWidth()/2, 0, WHITE);
         } break;
+        case PKGENTRY_BNK:
+        {
+            const char *text = TextFormat("Points to: %#x", entry.data.bnkData.pointsTo);
+            DrawText(text, GetScreenWidth()/2, 0, 20, BLACK);
+            if (GuiButton((Rectangle){
+                GetScreenWidth()/2 + MeasureText(text, 20), 0, 20, 50
+            }, "Go To"))
+            {
+                for (int i = 0; i < loadedPkg.entryCount; i++)
+                {
+                    if (loadedPkg.entries[i].group == entry.group && loadedPkg.entries[i].instance == entry.data.bnkData.pointsTo)
+                    {
+                        selectedPkgEntry = i;
+                        return;
+                    }
+                }
+            }
+        } break;
         default:
         {
             DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
@@ -208,10 +229,8 @@ static void DrawPackageEntry(PackageEntry entry)
 
 int main()
 {
-    Package loadedPkg = { 0 };
     bool hasLoadedPkg = false;
 
-    int selectedPkgEntry = -1;
     Rectangle pkgEntryListView = {0};
     Vector2 pkgEntryListScroll = {0};
 

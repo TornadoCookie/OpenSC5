@@ -118,6 +118,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             return !pkgEntry->corrupted;
         } break;
+        case PKGENTRY_BNK:
+        {
+            pkgEntry->data.bnkData = LoadBnkData(data, dataSize);
+        } break;
         default:
         {
             printf("Unknown data type %#X.\n", dataType);

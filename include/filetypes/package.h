@@ -6,6 +6,7 @@
 #include "prop.h"
 #include "rules.h"
 #include "rast.h"
+#include "bnk.h"
 
 #define PKGENTRY_PROP 0x00B1B104 // PROPerties file
 #define PKGENTRY_SCPT 0x024A0E52 // SCriPT file
@@ -17,6 +18,7 @@
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
 #define PKGENTRY_PNG  0x2F7D0004 // PNG file
 #define PKGENTRY_MOV  0x376840D7 // MOV file. Unable to be played in-editor.
+#define PKGENTRY_BNK  0x0AD48D09 // wwise soundBaNK. 
 
 typedef struct PackageEntry {
     unsigned int type;
@@ -32,6 +34,7 @@ typedef struct PackageEntry {
             Image img;
             Texture2D tex;
         } imgData;
+        BnkData bnkData;
     } data;
 } PackageEntry;
 

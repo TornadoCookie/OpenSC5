@@ -9,6 +9,7 @@ Source filetypes/package.c
 Source filetypes/prop.c
 Source filetypes/rules.c
 Source filetypes/rast.c
+Source filetypes/bnk.c
 
 Program test_package
 Source ../tests/test_package.c
