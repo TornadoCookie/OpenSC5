@@ -30,7 +30,7 @@ CFLAGS+=-lws2_32
 CFLAGS+=-Ilib/libcurl-win64/include
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 opensc5_editor
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -86,6 +86,12 @@ test_rast_SOURCES+=src/filetypes/rast.c
 $(DISTDIR)/test_rast$(EXEC_EXTENSION): $(test_rast_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_rw4_SOURCES+=src/../tests/test_rw4.c
+test_rw4_SOURCES+=src/filetypes/rw4.c
+
+$(DISTDIR)/test_rw4$(EXEC_EXTENSION): $(test_rw4_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 opensc5_editor_SOURCES+=src/editor.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
@@ -98,4 +104,5 @@ clean:
 	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_prop$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_rast$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_rw4$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)

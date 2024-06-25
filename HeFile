@@ -31,6 +31,10 @@ Program test_rast
 Source ../tests/test_rast.c
 Source filetypes/rast.c
 
+Program test_rw4
+Source ../tests/test_rw4.c
+Source filetypes/rw4.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
