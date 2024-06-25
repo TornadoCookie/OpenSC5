@@ -186,6 +186,7 @@ static void DrawPackageEntry(PackageEntry entry)
                 }
             }
         } break;
+        case PKGENTRY_CSS:
         case PKGENTRY_TEXT:
         case PKGENTRY_JSON:
         case PKGENTRY_JSN8:
