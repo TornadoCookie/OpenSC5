@@ -73,6 +73,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_GIF: return "GIF";
         case PKGENTRY_MOV: return "MOV";
         case PKGENTRY_EXIF: return "EXIF";
+        case PKGENTRY_SWB: return "SWB";
         default: return "UNKN";
     }
 }

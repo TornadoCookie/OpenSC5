@@ -167,6 +167,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             return !pkgEntry->corrupted;
         } break;
+        case PKGENTRY_SWB:
         case PKGENTRY_MOV:
         case PKGENTRY_EXIF:
         {
@@ -308,6 +309,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_PNG: return "png";
         case PKGENTRY_MOV: return "mov";
         case PKGENTRY_EXIF: return "jpg";
+        case PKGENTRY_SWB: return "swb";
         default: return "unkn";
     }
 }
