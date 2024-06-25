@@ -66,6 +66,13 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_RAST: return "RAST";
         case PKGENTRY_TEXT: return "TEXT";
         case PKGENTRY_PNG: return "PNG";
+        case PKGENTRY_JSN8: return "JSON8";
+        case PKGENTRY_BNK: return "BNK";
+        case PKGENTRY_CSS: return "CSS";
+        case PKGENTRY_RW4: return "RW4";
+        case PKGENTRY_GIF: return "GIF";
+        case PKGENTRY_MOV: return "MOV";
+        case PKGENTRY_EXIF: return "EXIF";
         default: return "UNKN";
     }
 }
