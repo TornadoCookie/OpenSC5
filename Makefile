@@ -68,6 +68,7 @@ $(DISTDIR)/test_update$(EXEC_EXTENSION): $(test_update_SOURCES)
 
 test_crcbin_SOURCES+=src/../tests/test_crcbin.c
 test_crcbin_SOURCES+=src/filetypes/crcbin.c
+test_crcbin_SOURCES+=src/crc32.c
 
 $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)

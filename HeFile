@@ -20,6 +20,7 @@ Source ../tests/test_update.c
 Program test_crcbin
 Source ../tests/test_crcbin.c
 Source filetypes/crcbin.c
+Source crc32.c
 
 Program test_prop
 Source ../tests/test_prop.c
