@@ -119,6 +119,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             return !pkgEntry->corrupted;
         } break;
+        case PKGENTRY_MOV:
+        case PKGENTRY_EXIF:
+        {
+            return false;
+        } break;
         case PKGENTRY_BNK:
         {
             pkgEntry->data.bnkData = LoadBnkData(data, dataSize);
@@ -244,6 +249,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_RW4: return "rw4";
         case PKGENTRY_PNG: return "png";
         case PKGENTRY_MOV: return "mov";
+        case PKGENTRY_EXIF: return "jpg";
         default: return "unkn";
     }
 }
