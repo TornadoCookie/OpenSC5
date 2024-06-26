@@ -30,6 +30,8 @@ RastData LoadRastData(unsigned char *data, int dataSize)
     printf("Raster info:\n");
     RasterFile file = { 0 };
 
+    unsigned char *initData = data;
+
     memcpy(&file.header, data, sizeof(RasterFileHeader));
     data += sizeof(RasterFileHeader);
 
@@ -73,6 +75,13 @@ RastData LoadRastData(unsigned char *data, int dataSize)
     for (int i = 0; i < 1; i++)
     {
         RasterFileImage rastImg = { 0 };
+
+        if (4*file.header.width*file.header.height > dataSize)
+        {
+            printf("{Corruption Detected.}\n");
+            rastData.corrupted = true;
+            return rastData;
+        }
 
         rastImg.blocksize = htobe32(*(uint32_t*)data);
         data += sizeof(uint32_t);

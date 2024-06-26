@@ -77,6 +77,66 @@ typedef struct RWBBox {
     uint32_t field1c;
 } RWBBox;
 
+typedef struct RWMesh {
+    uint32_t field0;
+    uint32_t primitiveType;
+    uint32_t indexBuffer;
+    uint32_t triangleCount;
+    uint32_t bufferCount;
+    uint32_t firstIndex;
+    uint32_t primitiveCount;
+    uint32_t firstVertex;
+    uint32_t vertexCount;
+} RWMesh;
+
+typedef struct RWVertexBuffer {
+    uint32_t vertexDescription;
+    uint32_t field4;
+    uint32_t baseVertexIndex;
+    uint32_t vertexCount;
+    uint32_t field10;
+    uint32_t vertexSize;
+    uint32_t vertexData;
+} RWVertexBuffer;
+
+typedef struct RWIndexBuffer {
+    uint32_t dxIndexBuffer;
+    uint32_t startIndex;
+    uint32_t primitiveCount;
+    uint32_t usage;
+    uint32_t format;
+    uint32_t primitiveType;
+    uint32_t indexData;
+} RWIndexBuffer;
+
+typedef struct RWVertexElement {
+    uint16_t stream;
+    uint16_t offset;
+    uint8_t type;
+    uint8_t method;
+    uint8_t usage;
+    uint8_t usageIndex;
+    uint32_t typeCode;
+} RWVertexElement;
+
+typedef struct RWVertexDescription {
+    uint32_t field0;
+    uint32_t field4;
+    uint32_t dxVertexDeclaration;
+    uint16_t count;
+    uint8_t fielde;
+    uint8_t vertexSize;
+    uint32_t elementFlags;
+    uint32_t field14;
+    RWVertexElement *elements;
+} RWVertexDescription;
+
+unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, char *initData, int *dataSize)
+{
+    if (dataSize) *dataSize = sectionInfos[section].size;
+    return sectionInfos[section].dataOffset + initData;
+}
+
 RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 {
     RW4Data rw4data = { 0 };
@@ -198,6 +258,141 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 printf("Bounding Box Information:\n");
                 printf("Min: {%f, %f, %f}\n", bbox.min.x, bbox.min.y, bbox.min.z);
                 printf("Max: {%f, %f, %f}\n", bbox.max.x, bbox.max.y, bbox.max.z);
+            } break;
+            case 0x20009: // Mesh
+            {
+                RWMesh rwmesh;
+                Mesh mesh = { 0 };
+
+                memcpy(&rwmesh, data, sizeof(RWMesh));
+                data += sizeof(RWMesh);
+
+                mesh.triangleCount = rwmesh.triangleCount;
+                mesh.vertexCount = rwmesh.vertexCount;
+                
+                printf("Mesh Info:\n");
+                printf("Primitive Type: %d\n", rwmesh.primitiveType);
+                printf("Index buffer: [Section %d]\n", rwmesh.indexBuffer);
+                printf("Triangle Count: %d\n", rwmesh.triangleCount);
+                printf("Buffer Count: %d\n", rwmesh.bufferCount);
+                printf("First Index: %d\n", rwmesh.firstIndex);
+                printf("Primitive Count: %d\n", rwmesh.primitiveCount);
+                printf("First Vertex: %d\n", rwmesh.firstVertex);
+                printf("Vertex Count: %d\n", rwmesh.vertexCount);
+
+                for (int i = 0; i < rwmesh.bufferCount; i++)
+                {
+                    uint32_t buffer = *(uint32_t*)data;
+                    data += sizeof(uint32_t);
+                    printf("Buffer %d: [Section %d]\n", i, buffer);
+
+                    RWVertexBuffer *vertexBuffer = (RWVertexBuffer*)LoadSectionData(sectionInfos, buffer, initData, NULL);
+                    
+                    unsigned char *vertexData = LoadSectionData(sectionInfos, vertexBuffer->vertexData, initData, NULL);
+                    unsigned char *vertexInitData = vertexData;
+
+                    int vertexCount = rwmesh.vertexCount;
+                    int vertexStart = rwmesh.firstVertex;
+
+                    RWVertexElement *positionElement = NULL;
+
+                    RWVertexDescription *description = (RWVertexDescription*)LoadSectionData(sectionInfos, vertexBuffer->vertexDescription, initData, NULL);
+                    
+                    for (int j = 0; j < description->count; j++)
+                    {
+                        unsigned char *descData = (unsigned char *)description + sizeof(RWVertexDescription) - sizeof(void*);
+                        descData += sizeof(RWVertexElement) * j;
+                        RWVertexElement *element = (RWVertexElement*)descData;
+                        if (element->typeCode == 0)
+                        {
+                            positionElement = element;
+                        }
+                    }
+
+                    float *positions = malloc(3 * vertexCount * sizeof(float));
+
+                    for (int j = 0; j < vertexCount; j++)
+                    {
+                        printf("Load vertex %d: ", j);
+                        vertexData = vertexInitData + ((vertexStart+j) * vertexBuffer->vertexSize + positionElement->offset);
+                        printf("vertexData %p, ", vertexData);
+                        positions[j*3+0] = *(float*)vertexData;
+                        vertexData += sizeof(float);
+                        positions[j*3+1] = *(float*)vertexData;
+                        vertexData += sizeof(float);
+                        positions[j*3+2] = *(float*)vertexData;
+                        vertexData += sizeof(float);
+                        printf("{%f, %f, %f}.\n", positions[j*3+0], positions[j*3+1], positions[j*3+2]);
+                    }
+
+                    mesh.vertices = positions;
+
+                }
+
+                rw4data.model.meshCount++;
+                rw4data.model.meshes = realloc(rw4data.model.meshes, rw4data.model.meshCount * sizeof(Mesh));
+                rw4data.model.meshes[rw4data.model.meshCount - 1] = mesh;
+            } break;
+            case 0x20005: // VertexBuffer
+            {
+                RWVertexBuffer vertexBuffer;
+                memcpy(&vertexBuffer, data, sizeof(RWVertexBuffer));
+                data += sizeof(RWVertexBuffer);
+
+                printf("Vertex Buffer Info:\n");
+                printf("Vertex Description: [Section %d]\n", vertexBuffer.vertexDescription);
+                printf("Base Vertex Index: %d\n", vertexBuffer.baseVertexIndex);
+                printf("Vertex Count: %d\n", vertexBuffer.vertexCount);
+                printf("Vertex Size: %d\n", vertexBuffer.vertexSize);
+                printf("Vertex Data: [Section %d]\n", vertexBuffer.vertexData);
+            } break;
+            case 0x10030: // BaseResource
+            {
+                printf("Base Resource info:\n");
+                printf("Size: %d\n", sectionInfo.size);
+            } break;
+            case 0x20007: // IndexBuffer
+            {
+                RWIndexBuffer indexBuffer;
+                memcpy(&indexBuffer, data, sizeof(RWIndexBuffer));
+                data += sizeof(RWIndexBuffer);
+
+                printf("Index Buffer Info:\n");
+                printf("DirectX Index Buffer: %d\n", indexBuffer.dxIndexBuffer);
+                printf("Start Index: %d\n", indexBuffer.startIndex);
+                printf("Primitive Count: %d\n", indexBuffer.primitiveCount);
+                printf("Usage: %d\n", indexBuffer.usage);
+                printf("Format: %d\n", indexBuffer.format);
+                printf("Primitive Type: %d\n", indexBuffer.primitiveType);
+                printf("Index Data: [Section %d]\n", indexBuffer.indexData);
+            } break;
+            case 0x20004: // VertexDescription
+            {
+                RWVertexDescription vertexDescription;
+                memcpy(&vertexDescription, data, sizeof(RWVertexDescription));
+                data += sizeof(RWVertexDescription);
+
+                printf("Vertex Description Info:\n");
+                printf("DirectX Vertex Declaration: %d\n", vertexDescription.dxVertexDeclaration);
+                printf("Count: %d\n", vertexDescription.count);
+                printf("Vertex Size: %d\n", vertexDescription.vertexSize);
+                printf("Element Flags: %#x\n", vertexDescription.elementFlags);
+
+                vertexDescription.elements = malloc(sizeof(RWVertexElement) * vertexDescription.count);
+                memcpy(vertexDescription.elements, data, sizeof(RWVertexElement) * vertexDescription.count);
+
+                for (int j = 0; j < vertexDescription.count; j++)
+                {
+                    RWVertexElement element = vertexDescription.elements[j];
+                    printf("\nElement %d:\n", j);
+                    printf("Stream: %d\n", element.stream);
+                    printf("Offset: %d\n", element.offset);
+                    printf("Type: %d\n", element.type);
+                    printf("Method: %d\n", element.method);
+                    printf("Usage: %d\n", element.usage);
+                    printf("Usage index: %d\n", element.usageIndex);
+                    printf("Type Code: %#x\n", element.typeCode);
+                }
             } break;
             default:
             {
