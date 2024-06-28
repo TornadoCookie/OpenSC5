@@ -97,11 +97,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
         
         if (specifier == 0x80FF) specifier &= ~0x30;
 
-        if ((specifier & 0x30) == 0)
-        {
-            isArray = false;
-        }
-        else if ((specifier & 0x40) == 0)
+        if ((specifier & 0x40) == 0)
         {
             isArray = true;
             arrayNumber = htobe32(*(int32_t *)data);
@@ -117,13 +113,13 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
             printf("Array nmemb: %#x\n", arrayNumber);
             printf("Array item size: %#x\n", arraySize);
-        }
+        }/*
         else
         {
             printf("Invalid specifier.\n");
             propData.corrupted = true;
             return propData;
-        }
+        }*/
 
         propData.variables[i].count = arrayNumber;
         propData.variables[i].values = malloc(sizeof(*propData.variables[i].values) * arrayNumber);
@@ -140,11 +136,11 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             {
                 case 0x20: // key type
                 {
-                    uint32_t file = *(uint32_t *)data;
+                    uint32_t file = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
-                    uint32_t type = *(uint32_t *)data;
+                    uint32_t type = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
-                    uint32_t group = *(uint32_t *)data;
+                    uint32_t group = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
 
                     if (!isArray)
