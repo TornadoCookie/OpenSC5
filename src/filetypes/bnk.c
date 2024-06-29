@@ -118,13 +118,10 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
 
         data = soundDataOffset + index.offset;
 
-        bnkData.waves[i] = LoadWaveFromMemory(".wav", data, index.size);
-
-        //if (!IsWaveReady(bnkData.waves[i]))
         {
-            //FILE *f = fopen(TextFormat("corrupted/BNK_%#X.ogg_raw", index.id), "wb");
-            //fwrite(data, 1, index.size, f);
-            //fclose(f);
+            FILE *f = fopen(TextFormat("corrupted/BNK_%#X.wem", index.id), "wb");
+            fwrite(data, 1, index.size, f);
+            fclose(f);
         }
     }
 

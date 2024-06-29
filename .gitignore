@@ -5,3 +5,4 @@ valgrind.info
 perf.data
 corrupted
 *.exe
+perf.data.old

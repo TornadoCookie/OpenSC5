@@ -313,6 +313,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_EXIF: return "jpg";
         case PKGENTRY_SWB: return "swb";
         case PKGENTRY_BNK: return "bnk";
+        case PKGENTRY_WEM: return "wem";
         default: return "unkn";
     }
 }
