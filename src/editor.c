@@ -126,6 +126,8 @@ static const char *PropVarTypeToString(unsigned int type)
 static int selectedPropVal;
 static Rectangle propView;
 static Vector2 propScroll;
+static Rectangle propValView;
+static Vector2 propValScroll;
 
 static Package loadedPkg = { 0 };
 static int selectedPkgEntry = -1;
@@ -141,7 +143,12 @@ static void DrawPackageEntry(PackageEntry entry)
             PropData propData = entry.data.propData;
             GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties");
 
-            GuiScrollPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2}, "Properties", (Rectangle){GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2,GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(propData.variableCount+1)}, &propScroll, &propView);
+            GuiScrollPanel(
+                (Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()/2},
+                "Properties",
+                (Rectangle){GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2,GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(propData.variableCount+1)},
+                &propScroll,
+                &propView);
 
             BeginScissorMode(propView.x, propView.y, propView.width, propView.height);
 
@@ -176,7 +183,14 @@ static void DrawPackageEntry(PackageEntry entry)
                 (const char *[3]){"IDENTIFIER", "TYPE", "COUNT"}
             }, false, false);
 
-            GuiPanel((Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2}, "Values");
+            GuiScrollPanel(
+                (Rectangle){GetScreenWidth()/2,GetScreenHeight()/2,GetScreenWidth()/2,GetScreenHeight()/2},
+                "Values",
+                (Rectangle){GetScreenWidth()/2,GetScreenHeight()/2+RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2,GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(propData.variableCount+1)},
+                &propValScroll,
+                &propValView);
+
+            BeginScissorMode(propValView.x, propValView.y, propValView.width, propValView.height);
 
             if (selectedPropVal != -1)
             {
@@ -191,11 +205,13 @@ static void DrawPackageEntry(PackageEntry entry)
                     row.elementText = (const char *[1]){PropValToString(var, i)};
                     
                     DrawListRow((Rectangle) {
-                        GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1),
+                        GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1)+propValScroll.y,
                         GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
                     }, row, false, false);
                 }
             }
+
+            EndScissorMode();
         } break;
         case PKGENTRY_HTML:
         case PKGENTRY_CSS:
@@ -204,6 +220,8 @@ static void DrawPackageEntry(PackageEntry entry)
         case PKGENTRY_JSN8:
         case PKGENTRY_SCPT:
         {
+            //GuiScrollPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()}, "Source", (Rectangle){GetTextBounds(TEXTBOX, )})
+
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_WORD);            // WARNING: If wrap mode enabled, text editing is not supported
             GuiTextBox((Rectangle){ GetScreenWidth()/2,0,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);

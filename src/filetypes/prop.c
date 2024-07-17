@@ -97,7 +97,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
         
         if (specifier == 0x80FF) specifier &= ~0x30;
 
-        if ((specifier & 0x40) == 0)
+        if ((specifier & 0x30) && (specifier & 0x40) == 0)
         {
             isArray = true;
             arrayNumber = htobe32(*(int32_t *)data);

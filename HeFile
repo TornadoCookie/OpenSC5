@@ -35,6 +35,10 @@ Program test_rw4
 Source ../tests/test_rw4.c
 Source filetypes/rw4.c
 
+Program test_sdelta
+Source ../tests/test_sdelta.c
+Source filetypes/sdelta.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
