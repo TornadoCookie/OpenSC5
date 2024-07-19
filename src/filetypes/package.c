@@ -168,6 +168,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             }
             return !pkgEntry->corrupted;
         } break;
+        case PKGENTRY_TTF:
         case PKGENTRY_SWB:
         case PKGENTRY_MOV:
         case PKGENTRY_EXIF:
@@ -314,6 +315,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_SWB: return "swb";
         case PKGENTRY_BNK: return "bnk";
         case PKGENTRY_WEM: return "wem";
+        case PKGENTRY_TTF: return "ttf";
         default: return "unkn";
     }
 }

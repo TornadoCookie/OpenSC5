@@ -143,6 +143,13 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                     uint32_t group = htobe32(*(uint32_t *)data);
                     data += sizeof(uint32_t);
 
+                    if (data - initData > dataSize && j != arrayNumber - 1)
+                    {
+                        printf("{Corruption Detected: Key Type}\n");
+                        propData.corrupted = true;
+                        return propData;
+                    }
+
                     if (!isArray)
                     {
                         // data += sizeof(uint32_t);

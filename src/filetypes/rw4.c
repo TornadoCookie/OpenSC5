@@ -149,8 +149,10 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     memcpy(&header, data, sizeof(RWHeader));
     data += sizeof(RWHeader);
 
+    header.sectionCount &= 0xFF;
+
     printf("Type: %#x\n", header.type);
-    printf("Section Count: %d\n", header.sectionCount);
+    printf("Section Count: %#x\n", header.sectionCount);
     printf("Section Info Offset: %d\n", header.sectionInfoOffset);
     printf("Buffer Data Offset: %d\n", header.bufferDataOffset);
     
@@ -397,6 +399,10 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
             default:
             {
                 printf("Unrecognized type code %#x.\n", sectionInfo.typeCode);
+
+                //FILE *f = fopen(TextFormat("corrupted/RW4-%#X-%#X.unkn", sectionInfo.typeCode, i), "wb");
+                //fwrite(data, 1, sectionInfo.size, f);
+                //fclose(f);
             } break;
         }
     }

@@ -16,6 +16,7 @@
 #define PKGENTRY_JSON 0x0A98EAF0 // JSON file (utf-8)
 #define PKGENTRY_BNK  0x0A4D8D09 // wwise soundBaNK. 
 #define PKGENTRY_WEM  0x0D9E5710 // Wwise Encoded Music. extract using ww2ogg, using arguments --pcb packed_codebooks_aoTuV_603.bin.
+#define PKGENTRY_TTF  0x276CA4B9 // TTF font. Unable to be viewed in-editor.
 #define PKGENTRY_CSS  0x2C978DB6 // Cascading Style Sheets
 #define PKGENTRY_RW4  0x2F4E681B // RenderWare 4 model file
 #define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image

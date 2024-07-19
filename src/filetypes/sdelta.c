@@ -57,8 +57,10 @@ SDelta LoadSDeltaFile(const char *filename)
 
         fread(&entry, sizeof(SDeltaEntry), 1, f);
 
+        entry.unknown1 = htobe32(entry.unknown1);
         entry.unknown3 = htobe32(entry.unknown3);
         entry.unknown5 = htobe32(entry.unknown5);
+        entry.unknown6 = htobe32(entry.unknown6);
 
         printf("Unknown 1: %#x\n", entry.unknown1);
 
