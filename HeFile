@@ -39,6 +39,10 @@ Program test_sdelta
 Source ../tests/test_sdelta.c
 Source filetypes/sdelta.c
 
+Program test_heightmap
+Source ../tests/test_heightmap.c
+Source filetypes/heightmap.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all

@@ -30,7 +30,7 @@ CFLAGS+=-lws2_32
 CFLAGS+=-Ilib/libcurl-win64/include
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap opensc5_editor
 LIBRARIES=
 
 all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
@@ -98,6 +98,12 @@ test_sdelta_SOURCES+=src/filetypes/sdelta.c
 $(DISTDIR)/test_sdelta$(EXEC_EXTENSION): $(test_sdelta_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_heightmap_SOURCES+=src/../tests/test_heightmap.c
+test_heightmap_SOURCES+=src/filetypes/heightmap.c
+
+$(DISTDIR)/test_heightmap$(EXEC_EXTENSION): $(test_heightmap_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 opensc5_editor_SOURCES+=src/editor.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
@@ -112,4 +118,5 @@ clean:
 	rm -f $(DISTDIR)/test_rast$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_rw4$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_sdelta$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_heightmap$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
