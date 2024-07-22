@@ -50,6 +50,12 @@ LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 
+wwriff_NAME=libwwriff-$(PLATFORM)
+CFLAGS+=-Ilib/$(wwriff_NAME)/include
+CFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
+LDFLAGS+=-Llib/$(wwriff_NAME)/lib
+LDFLAGS+=-lwwriff
+
 dbpf_all_SOURCES+=src/filetypes/package.c
 dbpf_all_SOURCES+=src/filetypes/prop.c
 dbpf_all_SOURCES+=src/filetypes/rules.c

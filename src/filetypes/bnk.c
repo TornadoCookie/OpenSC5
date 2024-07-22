@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cwwriff.h>
 
 typedef struct BnkHeader {
     char signature[4]; // BKHD
@@ -122,6 +123,10 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
             FILE *f = fopen(TextFormat("corrupted/BNK_%#X.wem", index.id), "wb");
             fwrite(data, 1, index.size, f);
             fclose(f);
+
+            WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/BNK_%#X.wem", index.id), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
+            WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/BNK_%#X.ogg", index.id));
+            remove(TextFormat("corrupted/BNK_%#X.wem", index.id));
         }
     }
 

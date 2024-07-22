@@ -4,6 +4,8 @@ UseRaylib
 
 ExtraCFlag -lcurl
 
+NativeDependency wwriff
+
 SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c

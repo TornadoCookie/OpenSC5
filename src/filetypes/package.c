@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cpl_endian.h>
 #include <raylib.h>
+#include <cwwriff.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -189,6 +190,18 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
                 pkgEntry->data.gifData.tex = LoadTextureFromImage(pkgEntry->data.gifData.img);
             }
             return !pkgEntry->corrupted;
+        } break;
+        case PKGENTRY_WEM:
+        {
+            FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance), "wb");
+            fwrite(data, 1, dataSize, f);
+            fclose(f);
+
+            WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
+            WWRiff_PrintInfo(wwriff);
+            WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
+
+            remove(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
         } break;
         default:
         {
