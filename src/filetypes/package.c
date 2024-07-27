@@ -146,6 +146,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             pkgEntry->data.rulesData = rulesData;
             return !rulesData.corrupted;
         } break;
+        case PKGENTRY_ER2:
         case PKGENTRY_HTML:
         case PKGENTRY_CSS:
         case PKGENTRY_JSN8:
@@ -329,6 +330,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_BNK: return "bnk";
         case PKGENTRY_WEM: return "wem";
         case PKGENTRY_TTF: return "ttf";
+        case PKGENTRY_ER2: return "er2";
         default: return "unkn";
     }
 }
@@ -479,11 +481,11 @@ Package LoadPackageFile(FILE *f)
             if (uncompressed)
             {
                 int toPrint = 10;
+                pkg.entries[i].dataRaw = uncompressed;
+                pkg.entries[i].dataRawSize = entry.memSize;
                 if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
                 {
-                    FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)), "wb");
-                    fwrite(uncompressed, 1, entry.memSize, f);
-                    fclose(f);
+                    ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
                     pkg.entries[i].corrupted = true;
                 }
                 for (int i = 0; i < toPrint; i++)
@@ -491,17 +493,18 @@ Package LoadPackageFile(FILE *f)
                     printf("%#x ", uncompressed[i]);
                 }
                 puts("");
-                free(uncompressed);
             }
+
+            free(data);
         }
         else
         {
             int toPrint = 10;
+            pkg.entries[i].dataRaw = data;
+            pkg.entries[i].dataRawSize = entry.diskSize;
             if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i])))
             {
-                FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)), "wb");
-                fwrite(data, 1, entry.diskSize, f);
-                fclose(f);
+                ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
                 pkg.entries[i].corrupted = true;
             }
             for (int i = 0; i < toPrint; i++)
@@ -510,8 +513,6 @@ Package LoadPackageFile(FILE *f)
             }
             puts("");
         }
-
-        free(data);
     }
 
     free(entries);
@@ -522,4 +523,9 @@ Package LoadPackageFile(FILE *f)
 void UnloadPackageFile(Package pkg)
 {
     free(pkg.entries);
+}
+
+void ExportPackageEntry(PackageEntry entry, const char *filename)
+{
+    SaveFileData(filename, entry.dataRaw, entry.dataRawSize);
 }

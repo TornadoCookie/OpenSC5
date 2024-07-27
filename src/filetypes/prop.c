@@ -121,6 +121,11 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             return propData;
         }*/
 
+       if (arrayNumber & 0x40)
+       {
+            continue;
+       }
+
         propData.variables[i].count = arrayNumber;
         propData.variables[i].values = malloc(sizeof(*propData.variables[i].values) * arrayNumber);
 

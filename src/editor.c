@@ -75,6 +75,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_EXIF: return "EXIF";
         case PKGENTRY_SWB: return "SWB";
         case PKGENTRY_HTML: return "HTML";
+        case PKGENTRY_ER2: return "ER2";
         default: return "UNKN";
     }
 }
@@ -213,6 +214,7 @@ static void DrawPackageEntry(PackageEntry entry)
 
             EndScissorMode();
         } break;
+        case PKGENTRY_ER2:
         case PKGENTRY_HTML:
         case PKGENTRY_CSS:
         case PKGENTRY_TEXT:
@@ -382,6 +384,8 @@ int main()
                 {
                     DrawPackageEntry(entry);
                 }
+
+                GuiButton((Rectangle){0, 0, 100, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}, "Export Entry");
                 
             }
         }

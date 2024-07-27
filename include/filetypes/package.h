@@ -13,6 +13,7 @@
 #define PKGENTRY_TEXT 0x02FAC0B6 // TEXT file
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
 #define PKGENTRY_RULE 0x08068AEB // RULEs file
+#define PKGENTRY_ER2  0x08068AEC // .er2 (uncompiled rules file)
 #define PKGENTRY_JSON 0x0A98EAF0 // JSON file (utf-8)
 #define PKGENTRY_BNK  0x0A4D8D09 // wwise soundBaNK. 
 #define PKGENTRY_WEM  0x0D9E5710 // Wwise Encoded Music. extract using ww2ogg, using arguments --pcb packed_codebooks_aoTuV_603.bin.
@@ -32,6 +33,9 @@ typedef struct PackageEntry {
     unsigned int group;
     unsigned int instance;
     bool corrupted;
+
+    unsigned char *dataRaw;
+    int dataRawSize;
 
     union {
         PropData propData;
@@ -58,5 +62,7 @@ typedef struct Package {
 
 Package LoadPackageFile(FILE *f);
 void UnloadPackageFile(Package pkg);
+
+void ExportPackageEntry(PackageEntry entry, const char *filename);
 
 #endif

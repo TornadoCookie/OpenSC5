@@ -1,7 +1,7 @@
 #ifndef _RW4_
 #define _RW4_
 
-#include <raylib.h>
+#include <cpl_raylib.h>
 
 typedef struct RW4Data {
     bool corrupted;
