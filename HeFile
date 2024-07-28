@@ -2,8 +2,7 @@ DefaultPlatform linux64-debug
 RaylibVersion 5
 UseRaylib
 
-ExtraCFlag -lcurl
-
+NativeDependency curl
 NativeDependency wwriff
 
 SourceGroup dbpf_all

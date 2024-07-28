@@ -10,7 +10,5 @@ IsRelease
 ExecExtension .exe
 LibExtension .dll
 Compiler x86_64-w64-mingw32-gcc
-ExtraCFlag -Llib/libcurl-win64/lib
 ExtraCFlag -lws2_32
-ExtraCFlag -Ilib/libcurl-win64/include
 RaylibLdFlag -lraylibdll

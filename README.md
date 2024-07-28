@@ -5,7 +5,6 @@ To build for win64: <br>
 `$ PLATFORM=win64 make -j$(nproc)` <br>
 
 Requires GNU make and gcc/mingw. <br>
-Building for windows is currently broken, I'll work on that some time. <br>
 
 <br>This program is based on the source code to SimCityPak and SporeModder-FX.<br>
 

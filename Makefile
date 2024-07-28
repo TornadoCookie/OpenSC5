@@ -25,23 +25,37 @@ CFLAGS+=-O2
 CFLAGS+=-D RELEASE
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
-CFLAGS+=-Llib/libcurl-win64/lib
 CFLAGS+=-lws2_32
-CFLAGS+=-Ilib/libcurl-win64/include
 endif
 
 PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap opensc5_editor
 LIBRARIES=
 
-all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
+curl_NAME=libcurl-$(PLATFORM)
+CFLAGS+=-Ilib/$(curl_NAME)/include
+CFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
+LDFLAGS+=-Llib/$(curl_NAME)/lib
+LDFLAGS+=-lcurl
+
+wwriff_NAME=libwwriff-$(PLATFORM)
+CFLAGS+=-Ilib/$(wwriff_NAME)/include
+CFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
+LDFLAGS+=-Llib/$(wwriff_NAME)/lib
+LDFLAGS+=-lwwriff
+
+all: $(DISTDIR) deps $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
 
 $(DISTDIR):
 	mkdir -p $@
 
+deps:
+	mkdir -p $(DISTDIR)/lib
+	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib/$(curl_NAME); fi
+	if [ -d lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib/$(wwriff_NAME); fi
+
 CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
 CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
-CFLAGS+=-lcurl
 
 CFLAGS+=-Ilib/$(RAYLIB_NAME)/include
 CFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
@@ -49,12 +63,6 @@ CFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
-
-wwriff_NAME=libwwriff-$(PLATFORM)
-CFLAGS+=-Ilib/$(wwriff_NAME)/include
-CFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
-LDFLAGS+=-Llib/$(wwriff_NAME)/lib
-LDFLAGS+=-lwwriff
 
 dbpf_all_SOURCES+=src/filetypes/package.c
 dbpf_all_SOURCES+=src/filetypes/prop.c
@@ -126,3 +134,7 @@ clean:
 	rm -f $(DISTDIR)/test_sdelta$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_heightmap$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
+
+all_dist:
+	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)
+	DISTDIR=$(DISTDIR)/dist/win64 PLATFORM=win64 $(MAKE)
