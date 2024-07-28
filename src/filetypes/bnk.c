@@ -26,7 +26,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
     unsigned char *soundDataOffset;
     unsigned char *initData = data;
 
-    ContentIndex *contentIndices;
+    ContentIndex *contentIndices = NULL;
     int contentIndexCount;
 
     while ((data - initData) < dataSize)
@@ -108,6 +108,13 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
             bnkData.corrupted = true;
             return bnkData;
         }
+    }
+
+    if (contentIndices == NULL)
+    {
+        printf("Error: BNK has no content indices.\n");
+        bnkData.corrupted = true;
+        return bnkData;
     }
 
     bnkData.waveCount = contentIndexCount;

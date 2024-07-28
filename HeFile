@@ -11,6 +11,7 @@ Source filetypes/prop.c
 Source filetypes/rules.c
 Source filetypes/rast.c
 Source filetypes/bnk.c
+Source threadpool.c
 
 Program test_package
 Source ../tests/test_package.c

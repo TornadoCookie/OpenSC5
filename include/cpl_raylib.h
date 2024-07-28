@@ -17,6 +17,7 @@ typedef struct tagMSG *LPMSG;
 #endif
 
 #include <raylib.h>
+#include "textformat_ng.h"
 
 #endif
 

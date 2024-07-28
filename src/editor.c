@@ -1,6 +1,8 @@
 #include <raylib.h>
 #include "filetypes/package.h"
 #include <raymath.h>
+#include <threadpool.h>
+#include <pthread.h>
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -267,6 +269,19 @@ static void DrawPackageEntry(PackageEntry entry)
     }
 }
 
+typedef struct LoadPackageFileAsyncArgs {
+    FILE *f;
+    Package *pkg;
+    bool done;
+} LoadPackageFileAsyncArgs;
+
+static void *loadPackageFile_async(LoadPackageFileAsyncArgs *args)
+{
+    args->done = false;
+    *args->pkg = LoadPackageFile(args->f);
+    args->done = true;
+}
+
 int main()
 {
     bool hasLoadedPkg = false;
@@ -303,8 +318,30 @@ int main()
                     DrawText("Loading...", GetScreenWidth() / 2 - MeasureText("Loading...", 20)/2, GetScreenHeight() / 2 - 10, 20, GRAY);
                     EndDrawing();
                     FILE *f = fopen(path, "rb");
-                    loadedPkg = LoadPackageFile(f);
+                    LoadPackageFileAsyncArgs args;
+                    args.f = f;
+                    args.pkg = &loadedPkg;
+                    pthread_t thread;
+                    pthread_create(&thread, NULL, loadPackageFile_async, &args);
+
+                    while (!args.done)
+                    {
+                        BeginDrawing();
+                        ClearBackground(RAYWHITE);
+                        DrawText(TextFormat("Loading... %d left", GetThreadpoolTasksLeft()), GetScreenWidth() / 2 - MeasureText("Loading...", 20)/2, GetScreenHeight() / 2 - 10, 20, GRAY);
+                        EndDrawing();
+                    }
+
                     fclose(f);
+
+                    for (int i = 0; i < loadedPkg.entryCount; i++)
+                    {
+                        PackageEntry entry = loadedPkg.entries[i];
+                        if (entry.type == PKGENTRY_RAST || entry.type == PKGENTRY_PNG || entry.type == PKGENTRY_GIF && !entry.corrupted)
+                        {
+                            entry.data.imgData.tex = LoadTextureFromImage(entry.data.imgData.img);
+                        }
+                    }
                 }
             }
 

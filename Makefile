@@ -1,3 +1,5 @@
+# Generated using Helium v1.3.1
+
 PLATFORM?=linux64-debug
 DISTDIR?=.
 
@@ -43,15 +45,20 @@ CFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
 LDFLAGS+=-Llib/$(wwriff_NAME)/lib
 LDFLAGS+=-lwwriff
 
-all: $(DISTDIR) deps $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION))
+all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION)) deps
 
-$(DISTDIR):
-	mkdir -p $@
-
+ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib/$(curl_NAME); fi
 	if [ -d lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib/$(wwriff_NAME); fi
+	if [ -d lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib/$(RAYLIB_NAME); fi
+else
+deps:
+endif
+
+$(DISTDIR):
+	mkdir -p $@
 
 CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
@@ -69,6 +76,7 @@ dbpf_all_SOURCES+=src/filetypes/prop.c
 dbpf_all_SOURCES+=src/filetypes/rules.c
 dbpf_all_SOURCES+=src/filetypes/rast.c
 dbpf_all_SOURCES+=src/filetypes/bnk.c
+dbpf_all_SOURCES+=src/threadpool.c
 
 test_package_SOURCES+=src/../tests/test_package.c
 test_package_SOURCES+=$(dbpf_all_SOURCES)

@@ -6,6 +6,8 @@
 #include <cpl_endian.h>
 #include <raylib.h>
 #include <cwwriff.h>
+#include <threadpool.h>
+#include <pthread.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -79,10 +81,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         {
             RastData rastData = LoadRastData(data, dataSize);
             pkgEntry->data.imgData.img = rastData.img;
-            if (!rastData.corrupted)
-            {
-                pkgEntry->data.imgData.tex = LoadTextureFromImage(rastData.img);
-            }
+            //if (!rastData.corrupted)
+            //{
+            //    pkgEntry->data.imgData.tex = LoadTextureFromImage(rastData.img);
+            //}
             return !rastData.corrupted;            
         } break;
         case PKGENTRY_TEXT: // "textual" file.
@@ -119,10 +121,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         {
             pkgEntry->data.imgData.img = LoadImageFromMemory(".png", data, dataSize);
             pkgEntry->corrupted = !IsImageReady(pkgEntry->data.imgData.img);
-            if (!pkgEntry->corrupted)
-            {
-                pkgEntry->data.imgData.tex = LoadTextureFromImage(pkgEntry->data.imgData.img);
-            }
+            //if (!pkgEntry->corrupted)
+            //{
+            //    pkgEntry->data.imgData.tex = LoadTextureFromImage(pkgEntry->data.imgData.img);
+            //}
             return !pkgEntry->corrupted;
         } break;
         case PKGENTRY_TTF:
@@ -141,10 +143,10 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         {
             pkgEntry->data.gifData.img = LoadImageAnimFromMemory(".gif", data, dataSize, &pkgEntry->data.gifData.frameCount);
             pkgEntry->corrupted = !IsImageReady(pkgEntry->data.gifData.img);
-            if (!pkgEntry->corrupted)
-            {
-                pkgEntry->data.gifData.tex = LoadTextureFromImage(pkgEntry->data.gifData.img);
-            }
+            //if (!pkgEntry->corrupted)
+            //{
+            //    pkgEntry->data.gifData.tex = LoadTextureFromImage(pkgEntry->data.gifData.img);
+            //}
             return !pkgEntry->corrupted;
         } break;
         case PKGENTRY_WEM:
@@ -290,6 +292,87 @@ static const char *GetExtensionFromType(unsigned int type)
     }
 }
 
+typedef struct DataCycleArgs {
+    FILE *f;
+    int i;
+    IndexEntry *entries;
+    Package *pkg;
+    pthread_mutex_t *fmutex;
+} DataCycleArgs;
+
+static void datacycle(DataCycleArgs *args)
+{
+    IndexEntry *entries = args->entries;
+    int i = args->i;
+    FILE *f = args->f;
+    Package pkg = *args->pkg;
+
+    IndexEntry entry = entries[i];
+
+    printf("\nEntry %d:\n", i);
+
+    pthread_mutex_lock(args->fmutex);
+
+    if (fseek(f, entry.chunkOffset, SEEK_SET) == -1)
+    {
+        perror("Unexpected error occurred");
+    }
+
+    unsigned char *data = malloc(entry.diskSize);
+    fread(data, 1, entry.diskSize, f);
+
+    if (feof(f))
+    {
+        printf("Unexpected end of file.\n");
+    }
+
+    pthread_mutex_unlock(args->fmutex);
+
+    if (entry.isCompressed)
+    {
+        unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
+        if (uncompressed)
+        {
+            int toPrint = 10;
+            pkg.entries[i].dataRaw = uncompressed;
+            pkg.entries[i].dataRawSize = entry.memSize;
+            
+            if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
+            {
+                ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
+                pkg.entries[i].corrupted = true;
+            }
+
+            for (int i = 0; i < toPrint; i++)
+            {
+                printf("%#x ", uncompressed[i]);
+            }
+
+            puts("");
+        }
+        free(data);
+    }
+    else
+    {
+        int toPrint = 10;
+        pkg.entries[i].dataRaw = data;
+        pkg.entries[i].dataRawSize = entry.diskSize;
+
+        if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i])))
+        {
+            ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
+            pkg.entries[i].corrupted = true;
+        }
+
+        for (int i = 0; i < toPrint; i++)
+        {
+            printf("%#x ", data[i]);
+        }
+
+        puts("");
+    }
+}
+
 Package LoadPackageFile(FILE *f)
 {
     Package pkg = { 0 };
@@ -409,66 +492,27 @@ Package LoadPackageFile(FILE *f)
     }
 
     printf("\nData Cycle.\n");
+    
+    InitThreadpool(-1);
+    pthread_mutex_t fmutex;
+    pthread_mutex_init(&fmutex, NULL);
+
+    DataCycleArgs *argList = malloc(sizeof(DataCycleArgs) * header.indexEntryCount);
 
     for (int i = 0; i < header.indexEntryCount; i++)
     {
-        IndexEntry entry = entries[i];
-
-        printf("\nEntry %d:\n", i);
-
-        if (fseek(f, entry.chunkOffset, SEEK_SET) == -1)
-        {
-            perror("Unexpected error occurred");
-        }
-
-        unsigned char *data = malloc(entry.diskSize);
-
-        fread(data, 1, entry.diskSize, f);
-
-        if (feof(f))
-        {
-            printf("Unexpected end of file.\n");
-        }
-
-        if (entry.isCompressed)
-        {
-            unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
-            if (uncompressed)
-            {
-                int toPrint = 10;
-                pkg.entries[i].dataRaw = uncompressed;
-                pkg.entries[i].dataRawSize = entry.memSize;
-                if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
-                {
-                    ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
-                    pkg.entries[i].corrupted = true;
-                }
-                for (int i = 0; i < toPrint; i++)
-                {
-                    printf("%#x ", uncompressed[i]);
-                }
-                puts("");
-            }
-
-            free(data);
-        }
-        else
-        {
-            int toPrint = 10;
-            pkg.entries[i].dataRaw = data;
-            pkg.entries[i].dataRawSize = entry.diskSize;
-            if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i])))
-            {
-                ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
-                pkg.entries[i].corrupted = true;
-            }
-            for (int i = 0; i < toPrint; i++)
-            {
-                printf("%#x ", data[i]);
-            }
-            puts("");
-        }
+        DataCycleArgs args;
+        args.f = f;
+        args.i = i;
+        args.pkg = &pkg;
+        args.entries = entries;
+        args.fmutex = &fmutex;
+        argList[i] = args;
+        NewThreadpoolTask(datacycle, &argList[i]);
     }
+
+    WaitForThreadpoolTasksDone();
+    CloseThreadpool();
 
     free(entries);
 
