@@ -7,6 +7,10 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
+#undef RAYGUI_IMPLEMENTATION
+#define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
+#include "gui_window_file_dialog.h"
+
 typedef struct ListRow {
     int elementCount;
     float *elementWidth;
@@ -19,7 +23,7 @@ static bool DrawListRow(Rectangle bounds, ListRow row, bool selected, bool canSe
     bool focused = false;
     bool pressed = false;
 
-    if (canSelect && CheckCollisionPointRec(GetMousePosition(), bounds)) 
+    if (canSelect && CheckCollisionPointRec(GetMousePosition(), bounds) && GetMousePosition().y > RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2 && !GuiIsLocked()) 
     {
         focused = true;
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -304,6 +308,8 @@ int main()
 
     SetTargetFPS(60);
 
+    GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+
     while (!WindowShouldClose())
     {
         // Update
@@ -349,7 +355,7 @@ int main()
                         PackageEntry entry = loadedPkg.entries[i];
                         if (entry.type == PKGENTRY_RAST || entry.type == PKGENTRY_PNG || entry.type == PKGENTRY_GIF && !entry.corrupted)
                         {
-                            entry.data.imgData.tex = LoadTextureFromImage(entry.data.imgData.img);
+                            loadedPkg.entries[i].data.imgData.tex = LoadTextureFromImage(entry.data.imgData.img);
                         }
                     }
                 }
@@ -358,10 +364,18 @@ int main()
             UnloadDroppedFiles(droppedFiles);
         }
 
+        if (fileDialogState.SelectFilePressed)
+        {
+            ExportPackageEntry(loadedPkg.entries[selectedPkgEntry], TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+            fileDialogState.SelectFilePressed = false;
+        }
+
         // Draw
         BeginDrawing();
 
         ClearBackground(RAYWHITE);
+
+        if (fileDialogState.windowActive) GuiLock();
 
         if (hasLoadedPkg)
         {
@@ -374,9 +388,9 @@ int main()
                 ListRow row = { 0 };
                 PackageEntry entry = loadedPkg.entries[i];
 
-                row.elementCount = 3;
-                row.elementWidth = (float[3]){0.333, 0.333, 0.333};
-                row.elementText = (const char*[3]){TextFormat("%#X (%s)", entry.type, PackageEntryTypeToString(entry.type)), TextFormat("%#X", entry.instance), TextFormat("%#X", entry.group)};
+                row.elementCount = 4;
+                row.elementWidth = (float[4]){0.3, 0.3, 0.3, 0.1};
+                row.elementText = (const char*[4]){TextFormat("%#X (%s)", entry.type, PackageEntryTypeToString(entry.type)), TextFormat("%#X", entry.instance), TextFormat("%#X", entry.group), entry.compressed ? "YES" : "NO"};
 
                 bool shouldToggleSelect = DrawListRow((Rectangle) {
                     0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT * (i+2) + pkgEntryListScroll.y,
@@ -399,8 +413,8 @@ int main()
                 0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
                 GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
             }, (ListRow) {
-                3, (float[3]){0.333, 0.333, 0.333},
-                (const char *[3]){"TYPE", "INSTANCE", "GROUP"}
+                4, (float[4]){0.3, 0.3, 0.3, 0.1},
+                (const char *[4]){"TYPE", "INSTANCE", "GROUP", "COMPRESSED?"}
             }, false, false);
 
             if (IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN))
@@ -432,7 +446,11 @@ int main()
                     DrawPackageEntry(entry);
                 }
 
-                GuiButton((Rectangle){0, 0, 100, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}, "Export Entry");
+                if (GuiButton((Rectangle){0, 0, 100, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}, "Export Entry"))
+                {
+                    fileDialogState.saveFileMode = true;
+                    fileDialogState.windowActive = true;
+                }
                 
             }
         }
@@ -440,6 +458,10 @@ int main()
         {
             DrawText("Drop a .PACKAGE file to start", GetScreenWidth() / 2 - MeasureText("Drop a .PACKAGE file to start", 20)/2, GetScreenHeight() / 2 - 10, 20, GRAY);
         }
+
+        GuiUnlock();
+
+        GuiWindowFileDialog(&fileDialogState);
 
         EndDrawing();
     }

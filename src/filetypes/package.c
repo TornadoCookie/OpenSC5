@@ -330,6 +330,7 @@ static void datacycle(DataCycleArgs *args)
 
     if (entry.isCompressed)
     {
+        pkg.entries[i].compressed = true;
         unsigned char *uncompressed = DecompressDBPF(data, entry.diskSize, entry.memSize);
         if (uncompressed)
         {
@@ -492,7 +493,7 @@ Package LoadPackageFile(FILE *f)
     }
 
     printf("\nData Cycle.\n");
-    
+
     InitThreadpool(-1);
     pthread_mutex_t fmutex;
     pthread_mutex_init(&fmutex, NULL);
