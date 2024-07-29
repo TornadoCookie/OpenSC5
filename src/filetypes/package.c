@@ -8,6 +8,7 @@
 #include <cwwriff.h>
 #include <threadpool.h>
 #include <pthread.h>
+#include <ctype.h>
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -87,13 +88,29 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             //}
             return !rastData.corrupted;            
         } break;
+        case PKGENTRY_ER2:
+        case PKGENTRY_HTML:
+        case PKGENTRY_CSS:
+        case PKGENTRY_JSN8:
+        case PKGENTRY_SCPT: // Script file format (?)
         case PKGENTRY_TEXT: // "textual" file.
         case PKGENTRY_JSON: // JSON file.
         {
             printf("JSON:\n");
-            char *str = malloc(dataSize-2);
-            memcpy(str, data+3, dataSize-3);
-            str[dataSize-3] = 0;
+            char *str = malloc(dataSize);
+            int actualSize = 0;
+
+            // Filter out these disgusting UTF-8 characters.
+            for (int i = 0; i < dataSize; i++)
+            {
+                if (!isprint(data[i]) && data[i] != '\n' && data[i] != '\t') continue;
+                str[actualSize] = data[i];
+                actualSize++;
+            }
+
+            str = realloc(str, actualSize + 1);
+            str[actualSize] = 0;
+
             printf("%s\n", str);
             pkgEntry->data.scriptSource = str;
         } break;
@@ -102,20 +119,6 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             RulesData rulesData = LoadRulesData(data, dataSize);
             pkgEntry->data.rulesData = rulesData;
             return !rulesData.corrupted;
-        } break;
-        case PKGENTRY_ER2:
-        case PKGENTRY_HTML:
-        case PKGENTRY_CSS:
-        case PKGENTRY_JSN8:
-        case PKGENTRY_SCPT: // Script file format (?)
-        {
-            printf("Script info:\n");
-
-            char *str = malloc(dataSize + 1);
-            memcpy(str, data, dataSize);
-            str[dataSize] = 0;
-            printf("Script source: \"%s\"\n", str);
-            pkgEntry->data.scriptSource = str;
         } break;
         case PKGENTRY_PNG: // PNG file.
         {
@@ -265,6 +268,8 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         if (byte0 >= 0xFC & byte0 <= 0xFF) break;
     }
 
+    if (retCursor - ret != outDataSize) printf("Decompression Sanity Error: RetCursor: %d; RetLength: %d.\n", retCursor - ret, outDataSize);
+
     return ret;
 }
 
@@ -288,6 +293,7 @@ static const char *GetExtensionFromType(unsigned int type)
         case PKGENTRY_WEM: return "wem";
         case PKGENTRY_TTF: return "ttf";
         case PKGENTRY_ER2: return "er2";
+        case PKGENTRY_GIF: return "gif";
         default: return "unkn";
     }
 }
@@ -527,5 +533,18 @@ void UnloadPackageFile(Package pkg)
 
 void ExportPackageEntry(PackageEntry entry, const char *filename)
 {
-    SaveFileData(filename, entry.dataRaw, entry.dataRawSize);
+    switch (entry.type)
+    {
+        case PKGENTRY_ER2:
+        case PKGENTRY_HTML:
+        case PKGENTRY_CSS:
+        case PKGENTRY_JSN8:
+        case PKGENTRY_SCPT: // Script file format (?)
+        case PKGENTRY_TEXT: // "textual" file.
+        case PKGENTRY_JSON: // JSON file.
+        {
+            SaveFileData(filename, entry.data.scriptSource, strlen(entry.data.scriptSource));
+        } break;
+        default: SaveFileData(filename, entry.dataRaw, entry.dataRawSize); break;
+    }
 }

@@ -1,4 +1,4 @@
-# Generated using Helium v1.3.1
+# Generated using Helium v1.3.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=.
@@ -30,7 +30,7 @@ CFLAGS+=-D LIB_EXTENSION=\".dll\"
 CFLAGS+=-lws2_32
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -126,6 +126,12 @@ test_heightmap_SOURCES+=src/filetypes/heightmap.c
 $(DISTDIR)/test_heightmap$(EXEC_EXTENSION): $(test_heightmap_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+test_rules_SOURCES+=src/../tests/test_rules.c
+test_rules_SOURCES+=src/filetypes/rules.c
+
+$(DISTDIR)/test_rules$(EXEC_EXTENSION): $(test_rules_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 opensc5_editor_SOURCES+=src/editor.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
@@ -141,6 +147,7 @@ clean:
 	rm -f $(DISTDIR)/test_rw4$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_sdelta$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_heightmap$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/test_rules$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
 
 all_dist:

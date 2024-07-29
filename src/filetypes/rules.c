@@ -66,22 +66,18 @@ RulesData LoadRulesData(unsigned char *data, int dataSize)
         memcpy(&rule, data, sizeof(RulesFileRule));
         data += sizeof(RulesFileRule);
 
+        rule.ruleName = htobe32(rule.ruleName);
         rule.startOffset = htobe32(rule.startOffset);
         // rule.endOffset = htobe32(rule.endOffset);
-        // rule.extraCount = htobe32(rule.extraCount);
+        rule.extraCount = htobe32(rule.extraCount);
 
         printf("\nRule %d:\n", i);
         printf("Name: %#x\n", rule.ruleName);
         printf("Start Offset: %d\n", rule.startOffset);
         printf("End Offset: %d\n", rule.endOffset);
-        printf("Extra count: %d\n", rule.extraCount);
+        printf("Extra Count: %d\n", rule.extraCount);
 
-        if (rule.extraCount == 0xffff)
-        {
-            rule.extraCount = 0;
-        }
-
-        data += rule.extraCount * sizeof(RulesFileRuleExtra);
+        data += 12 * rule.extraCount;
 
         if (data - initData > dataSize)
         {

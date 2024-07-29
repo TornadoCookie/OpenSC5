@@ -45,6 +45,10 @@ Program test_heightmap
 Source ../tests/test_heightmap.c
 Source filetypes/heightmap.c
 
+Program test_rules
+Source ../tests/test_rules.c
+Source filetypes/rules.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
