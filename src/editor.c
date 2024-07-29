@@ -132,6 +132,9 @@ static Vector2 propScroll;
 static Rectangle propValView;
 static Vector2 propValScroll;
 
+static Rectangle srcView;
+static Vector2 srcScroll;
+
 static Package loadedPkg = { 0 };
 static int selectedPkgEntry = -1;
 
@@ -224,13 +227,20 @@ static void DrawPackageEntry(PackageEntry entry)
         case PKGENTRY_JSN8:
         case PKGENTRY_SCPT:
         {
-            //GuiScrollPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()}, "Source", (Rectangle){GetTextBounds(TEXTBOX, )})
+            GuiScrollPanel(
+                (Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()},
+                "Source",
+                GetTextBounds(TEXTBOX, (Rectangle){ GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,GetScreenWidth()/2,GetScreenHeight() }), &srcScroll, &srcView);
+
+            BeginScissorMode(srcView.x, srcView.y, srcView.width, srcView.height);
 
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);   // WARNING: Word-wrap does not work as expected in case of no-top alignment
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_WORD);            // WARNING: If wrap mode enabled, text editing is not supported
-            GuiTextBox((Rectangle){ GetScreenWidth()/2,0,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);
+            GuiTextBox((Rectangle){ GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + srcScroll.y,GetScreenWidth()/2,GetScreenHeight() }, entry.data.scriptSource, strlen(entry.data.scriptSource), false);
             GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, TEXT_WRAP_NONE);
             GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_MIDDLE);
+
+            EndScissorMode();
         } break;
         case PKGENTRY_GIF:
         {

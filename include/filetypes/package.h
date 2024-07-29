@@ -11,7 +11,7 @@
 #define PKGENTRY_PROP 0x00B1B104 // PROPerties file
 #define PKGENTRY_SCPT 0x024A0E52 // SCriPT file
 #define PKGENTRY_TEXT 0x02FAC0B6 // TEXT file
-#define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
+#define PKGENTRY_SHDR 0x0469A3F7 // Compiled DirectX shader.
 #define PKGENTRY_RULE 0x08068AEB // RULEs file
 #define PKGENTRY_ER2  0x08068AEC // .er2 (uncompiled rules file)
 #define PKGENTRY_JSON 0x0A98EAF0 // JSON file (utf-8)
@@ -25,6 +25,7 @@
 #define PKGENTRY_GIF  0x2F7D0007 // GIF image.
 #define PKGENTRY_MOV  0x376840D7 // MOV file. Unable to be played in-editor.
 #define PKGENTRY_EXIF 0x3F8662EA // EXIF image. Unable to be viewed in-editor.
+#define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii)
 #define PKGENTRY_HTML 0xDD6233D6 // HyperText Markup Language
 #define PKGENTRY_SWB  0xEA5118B0 // SWarm Binary file, particles. Unable to be viewed in-editor.
 
