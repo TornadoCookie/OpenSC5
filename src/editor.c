@@ -2,7 +2,7 @@
 #include "filetypes/package.h"
 #include <raymath.h>
 #include <threadpool.h>
-#include <pthread.h>
+#include <cpl_pthread.h>
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"

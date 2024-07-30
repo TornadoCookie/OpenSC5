@@ -282,11 +282,11 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 printf("First Vertex: %d\n", rwmesh.firstVertex);
                 printf("Vertex Count: %d\n", rwmesh.vertexCount);
 
-                for (int i = 0; i < rwmesh.bufferCount; i++)
+                for (int j = 0; j < rwmesh.bufferCount; j++)
                 {
                     uint32_t buffer = *(uint32_t*)data;
                     data += sizeof(uint32_t);
-                    printf("Buffer %d: [Section %d]\n", i, buffer);
+                    printf("Buffer %d: [Section %d]\n", j, buffer);
 
                     RWVertexBuffer *vertexBuffer = (RWVertexBuffer*)LoadSectionData(sectionInfos, buffer, initData, NULL);
                     
@@ -300,10 +300,10 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                     RWVertexDescription *description = (RWVertexDescription*)LoadSectionData(sectionInfos, vertexBuffer->vertexDescription, initData, NULL);
                     
-                    for (int j = 0; j < description->count; j++)
+                    for (int k = 0; k < description->count; k++)
                     {
                         unsigned char *descData = (unsigned char *)description + sizeof(RWVertexDescription) - sizeof(void*);
-                        descData += sizeof(RWVertexElement) * j;
+                        descData += sizeof(RWVertexElement) * k;
                         RWVertexElement *element = (RWVertexElement*)descData;
                         if (element->typeCode == 0)
                         {
@@ -313,18 +313,20 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                     float *positions = malloc(3 * vertexCount * sizeof(float));
 
-                    for (int j = 0; j < vertexCount; j++)
+                    SaveFileData("helpme.bin", vertexData, sectionInfos[vertexBuffer->vertexData].size);
+
+                    for (int k = 0; k < vertexCount; k++)
                     {
-                        printf("Load vertex %d: ", j);
-                        vertexData = vertexInitData + ((vertexStart+j) * vertexBuffer->vertexSize + positionElement->offset);
-                        printf("vertexData %p, ", vertexData);
-                        positions[j*3+0] = *(float*)vertexData;
+                        printf("Load vertex %d: ", k);
+                        vertexData = vertexInitData + (8 * vertexBuffer->vertexSize + vertexCount) + 0x10 *k; //((vertexStart+k) * vertexBuffer->vertexSize + positionElement->offset);
+                        printf("vertexData %p, off %#x, ", vertexData, vertexData - vertexInitData);
+                        positions[k*3+0] = *(float*)vertexData;
                         vertexData += sizeof(float);
-                        positions[j*3+1] = *(float*)vertexData;
+                        positions[k*3+1] = *(float*)vertexData;
                         vertexData += sizeof(float);
-                        positions[j*3+2] = *(float*)vertexData;
+                        positions[k*3+2] = *(float*)vertexData;
                         vertexData += sizeof(float);
-                        printf("{%f, %f, %f}.\n", positions[j*3+0], positions[j*3+1], positions[j*3+2]);
+                        printf("{%f, %f, %f}.\n", positions[k*3+0], positions[k*3+1], positions[k*3+2]);
                     }
 
                     mesh.vertices = positions;

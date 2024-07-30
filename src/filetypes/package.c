@@ -7,7 +7,7 @@
 #include <raylib.h>
 #include <cwwriff.h>
 #include <threadpool.h>
-#include <pthread.h>
+#include <cpl_pthread.h>
 #include <ctype.h>
 
 typedef struct PackageHeader {

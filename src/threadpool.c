@@ -1,9 +1,14 @@
 #include "threadpool.h"
-#include <pthread.h>
-#include <sys/sysinfo.h>
+#include <cpl_pthread.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include <stdio.h>
+
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#elif defined(_WIN32)
+#include <sysinfoapi.h>
+#endif
 
 static pthread_t *threadpool;
 static int threadpoolCount;
@@ -38,7 +43,18 @@ void *threadpool_runner(void *__unused_arg)
 
 void InitThreadpool(int nproc)
 {
-    int nproc_true = get_nprocs();
+    int nproc_true = 1;
+
+    #ifdef __linux__
+    nproc_true = get_nprocs();
+    #elif defined(_WIN32)
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    nproc_true = sysInfo.dwNumberOfProcessors;
+    #else
+    #warning Add a way to get number of processors to improve threadpool performance.
+    #endif
+
     if (nproc == -1)
     {
         nproc = nproc_true;
