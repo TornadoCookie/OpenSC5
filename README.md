@@ -1,7 +1,7 @@
 
 To build for linux64: <br>
 `$ make -j$(nproc)` <br>
-To build for win64: <br>
+To build for win64 (can only build on linux): <br>
 `$ PLATFORM=win64 make -j$(nproc)` <br>
 
 Requires GNU make and gcc/mingw. <br>
