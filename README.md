@@ -13,6 +13,7 @@ What do the programs do:
 - test_package `file`: Prints information in parsing the .package file `file`.
 - test_rast, test_rw4, test_heightmap, test_sdelta, test_prop `file`: Prints information in parsing the file format.
 - test_crcbin `dir`: Prints information in parsing the directory containins .bin files.
+- opensc5_editor: GUI editor based on the design of s3pe.
 
 Quick "style guide":
 - Source files must not exceed 1000 lines. If it is longer than 1000 lines, break it up into smaller modules.
