@@ -17,12 +17,15 @@ static DWORD WINAPI _threadproc(void *param)
     _ThreadProcArgs *args = param;
 
     args->func(args->arg);
+    free(args);
 }
 
 static void pthread_create(pthread_t *newThread, void *unused, void *(*func)(void *), void *arg)
 {
-    _ThreadProcArgs args = {func, arg};
-    *newThread = CreateThread(NULL, 0, _threadproc, &args, 0, NULL);
+    _ThreadProcArgs *args = malloc(sizeof(_ThreadProcArgs));
+    args->func = func;
+    args->arg = arg;
+    *newThread = CreateThread(NULL, 0, _threadproc, args, 0, NULL);
 }
 
 static void pthread_cancel(pthread_t thread)
@@ -36,7 +39,6 @@ typedef HANDLE pthread_mutex_t;
 static void pthread_mutex_init(pthread_mutex_t *mutex, void *attr)
 {
     *mutex = CreateMutex(NULL, FALSE, "opensc5_threadpool_worker");
-    nextMutexId++;
 }
 
 static void pthread_mutex_lock(pthread_mutex_t *mutex)

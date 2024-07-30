@@ -4,6 +4,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/stat.h>
+
+#ifdef __linux__
+#define mkdir(x) mkdir(x, 0777)
+#endif
 
 struct MemoryStruct {
   char *memory;
@@ -84,6 +89,8 @@ int main()
     CURLcode code = curl_easy_perform(curl);
 
     curl_easy_cleanup(curl);
+
+    mkdir("update");
 
     if (code != CURLE_OK)
     {

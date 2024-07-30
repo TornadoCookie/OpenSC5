@@ -9,6 +9,11 @@
 #include <threadpool.h>
 #include <cpl_pthread.h>
 #include <ctype.h>
+#include <sys/stat.h>
+
+#ifdef __linux__
+#define mkdir(x) mkdir(x, 0777)
+#endif
 
 typedef struct PackageHeader {
     char magic[4];              //00
@@ -388,6 +393,8 @@ Package LoadPackageFile(FILE *f)
     Package pkg = { 0 };
     PackageHeader header;
     fread(&header, sizeof(PackageHeader), 1, f);
+
+    mkdir("corrupted");
 
     printf("Header:\n");
     printf("Magic: %.4s\n", header.magic);
