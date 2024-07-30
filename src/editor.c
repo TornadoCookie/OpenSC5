@@ -11,6 +11,141 @@
 #define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
 #include "gui_window_file_dialog.h"
 
+static Package loadedPkg = { 0 };
+static int selectedPkgEntry = -1;
+
+typedef struct {
+    // Window management variables
+    bool windowActive;
+    Rectangle windowBounds;
+    Vector2 panOffset;
+    bool dragMode;
+    bool supportDrag;
+
+    // Search variables;
+    bool searchInstance;
+    bool searchGroup;
+    bool searchType;
+
+    unsigned int instance;
+    unsigned int group;
+    unsigned int type;
+
+    int resultCount;
+    int *results;
+
+    int index;
+
+    char instanceIdStr[256];
+    char groupIdStr[256];
+    char typeIdStr[256];
+
+    bool instanceEditMode;
+    bool groupEditMode;
+    bool typeEditMode;
+
+} GuiWindowFindDialogState;
+
+GuiWindowFindDialogState InitGuiWindowFindDialog()
+{
+    GuiWindowFindDialogState state = { 0 };
+
+    // Init window data
+    state.windowBounds = (Rectangle){ GetScreenWidth()/2 - 440/2, GetScreenHeight()/2 - 310/2, 440, 310 };
+    state.windowActive = false;
+    state.supportDrag = true;
+    state.dragMode = false;
+    state.panOffset = (Vector2){ 0, 0 };
+
+    state.searchInstance = false;
+    state.searchGroup = false;
+    state.searchType = false;
+
+    state.results = NULL;
+    state.resultCount = 0;
+
+    state.index = 0;
+    
+    state.instanceEditMode = false;
+    state.groupEditMode = false;
+    state.typeEditMode = false;
+
+    return state;
+}
+
+// Update and draw file dialog
+void GuiWindowFindDialog(GuiWindowFindDialogState *state)
+{
+    if (state->windowActive)
+    {
+        // Update window dragging
+        //----------------------------------------------------------------------------------------
+        if (state->supportDrag)
+        {
+            Vector2 mousePosition = GetMousePosition();
+
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
+                // Window can be dragged from the top window bar
+                if (CheckCollisionPointRec(mousePosition, (Rectangle){ state->windowBounds.x, state->windowBounds.y, (float)state->windowBounds.width, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT }))
+                {
+                    state->dragMode = true;
+                    state->panOffset.x = mousePosition.x - state->windowBounds.x;
+                    state->panOffset.y = mousePosition.y - state->windowBounds.y;
+                }
+            }
+
+            if (state->dragMode)
+            {
+                state->windowBounds.x = (mousePosition.x - state->panOffset.x);
+                state->windowBounds.y = (mousePosition.y - state->panOffset.y);
+
+                // Check screen limits to avoid moving out of screen
+                if (state->windowBounds.x < 0) state->windowBounds.x = 0;
+                else if (state->windowBounds.x > (GetScreenWidth() - state->windowBounds.width)) state->windowBounds.x = GetScreenWidth() - state->windowBounds.width;
+
+                if (state->windowBounds.y < 0) state->windowBounds.y = 0;
+                else if (state->windowBounds.y > (GetScreenHeight() - state->windowBounds.height)) state->windowBounds.y = GetScreenHeight() - state->windowBounds.height;
+
+                if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) state->dragMode = false;
+            }
+        }
+
+        // Draw window and controls
+        //----------------------------------------------------------------------------------------
+        state->windowActive = !GuiWindowBox(state->windowBounds, "#42# Find");
+
+        GuiCheckBox((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 32, 24, 24}, "Match Instance ID", &state->searchInstance);
+        GuiCheckBox((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 64, 24, 24}, "Match Group ID", &state->searchGroup);
+        GuiCheckBox((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 96, 24, 24}, "Match Type ID", &state->searchType);
+
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 32, 240, 24}, state->instanceIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->instanceEditMode)) state->instanceEditMode = !state->instanceEditMode;
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 64, 240, 24}, state->groupIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->groupEditMode)) state->groupEditMode = !state->groupEditMode;
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 96, 240, 24}, state->typeIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->typeEditMode)) state->typeEditMode = !state->typeEditMode;
+        
+        if (GuiButton((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 280, 120, 24}, "FIND NEXT"))
+        {
+            free(state->results);
+            state->results = SearchPackage(loadedPkg, (PackageSearchParams) {
+                state->searchInstance, state->searchGroup, state->searchType,
+                state->instanceIdStr, state->groupIdStr, state->typeIdStr
+            }, &state->resultCount);
+            if (state->index < state->resultCount) state->index++;
+        }
+
+        if (GuiButton((Rectangle){state->windowBounds.x + 136, state->windowBounds.y + 280, 120, 24}, "FIND PREVIOUS"))
+        {
+            if (state->index > 0) state->index--;
+        }
+
+        GuiLabel((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 248, 120, 24}, TextFormat("%d Results", state->resultCount));
+
+        GuiSpinner((Rectangle){state->windowBounds.x + 312, state->windowBounds.y + 280, 120, 24}, "", &state->index, 0, state->resultCount - 1, false);
+
+        if (state->results) selectedPkgEntry = state->results[state->index];
+    }
+}
+
 typedef struct ListRow {
     int elementCount;
     float *elementWidth;
@@ -92,7 +227,7 @@ static const char *PropValToString(PropVariable var, int i)
     {
         case PROPVAR_BOOL: return var.values[i].b?"true":"false";
         case PROPVAR_INT32: return TextFormat("%d", var.values[i].int32);
-        case PROPVAR_UINT32: return TextFormat("%u", var.values[i].uint32);
+        case PROPVAR_UINT32: return TextFormat("%#X", var.values[i].uint32);
         case PROPVAR_FLOAT: return TextFormat("%f", var.values[i].f);
         case PROPVAR_STR8: return TextFormat("\"%s\"", var.values[i].string8);
         case PROPVAR_STRING: return TextFormat("\"%s\"", var.values[i].string);
@@ -138,9 +273,6 @@ static Vector2 propValScroll;
 
 static Rectangle srcView;
 static Vector2 srcScroll;
-
-static Package loadedPkg = { 0 };
-static int selectedPkgEntry = -1;
 
 static int currentGifFrame;
 
@@ -309,6 +441,7 @@ int main()
     SetTargetFPS(60);
 
     GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+    GuiWindowFindDialogState findDialogState = InitGuiWindowFindDialog();
 
     while (!WindowShouldClose())
     {
@@ -446,12 +579,17 @@ int main()
                     DrawPackageEntry(entry);
                 }
 
-                if (GuiButton((Rectangle){0, 0, 100, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}, "Export Entry"))
+                if (GuiButton((Rectangle){32, 0, 100, 24}, "Export Entry"))
                 {
                     fileDialogState.saveFileMode = true;
                     fileDialogState.windowActive = true;
                 }
                 
+            }
+
+            if (GuiButton((Rectangle){0, 0, 24, 24}, "#42#"))
+            {
+                findDialogState.windowActive = true;
             }
         }
         else
@@ -462,6 +600,7 @@ int main()
         GuiUnlock();
 
         GuiWindowFileDialog(&fileDialogState);
+        GuiWindowFindDialog(&findDialogState);
 
         EndDrawing();
     }

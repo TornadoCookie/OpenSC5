@@ -43,6 +43,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
         }
         else if (!strncmp(signature, "HIRC", 4))
         {
+            data += 4;
             uint32_t objectCount = *(uint32_t*)data;
             data += sizeof(uint32_t);
 

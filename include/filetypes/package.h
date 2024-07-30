@@ -80,4 +80,16 @@ void UnloadPackageFile(Package pkg);
 
 void ExportPackageEntry(PackageEntry entry, const char *filename);
 
+typedef struct PackageSearchParams {
+    bool searchInstance;
+    bool searchGroup;
+    bool searchType;
+
+    char *instance;
+    char *group;
+    char *type;
+} PackageSearchParams;
+
+int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults);
+
 #endif

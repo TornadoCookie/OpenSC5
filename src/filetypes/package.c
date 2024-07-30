@@ -159,6 +159,9 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             fclose(f);
 
             WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
+            
+            if (!wwriff) return false;
+            
             WWRiff_PrintInfo(wwriff);
             WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
 
@@ -547,4 +550,40 @@ void ExportPackageEntry(PackageEntry entry, const char *filename)
         } break;
         default: SaveFileData(filename, entry.dataRaw, entry.dataRawSize); break;
     }
+}
+
+static bool TextStartsWith(const char *t1, const char *startsWith)
+{
+    return strstr(t1, startsWith) == t1;
+}
+
+int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults)
+{
+    int *results = NULL;
+
+    *nResults = 0;
+
+    for (int i = 0; i < pkg.entryCount; i++)
+    {
+        bool isCorrect = true;
+        if (params.searchInstance)
+        {
+            if (!TextStartsWith(TextFormat("%#X", pkg.entries[i].instance), params.instance)) isCorrect = false;
+        }
+        if (params.searchGroup)
+        {
+            if (!TextStartsWith(TextFormat("%#X", pkg.entries[i].group), params.group)) isCorrect = false;
+        }
+        if (params.searchType)
+        {
+            if (!TextStartsWith(TextFormat("%#X", pkg.entries[i].type), params.type)) isCorrect = false;
+        }
+        if (!isCorrect) continue;
+
+        (*nResults)++;
+        results = realloc(results, sizeof(int) * (*nResults));
+        results[(*nResults) - 1] = i;
+    }
+
+    return results;
 }
