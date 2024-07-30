@@ -1,4 +1,4 @@
-# Generated using Helium v1.3.1 (https://github.com/tornadocookie/he)
+# Generated using Helium v1.3.2 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=.
@@ -53,6 +53,7 @@ deps:
 	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib/$(curl_NAME); fi
 	if [ -d lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib/$(wwriff_NAME); fi
 	if [ -d lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib/$(RAYLIB_NAME); fi
+	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 else
 deps:
 endif

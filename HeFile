@@ -5,6 +5,8 @@ UseRaylib
 NativeDependency curl
 NativeDependency wwriff
 
+DistData packed_codebooks_aoTuV_603.bin
+
 SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c
