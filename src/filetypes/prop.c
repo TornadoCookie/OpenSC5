@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+#include "hash.h"
 
 static float htobefloat(float x)
 {
@@ -418,4 +420,74 @@ PropData LoadPropData(unsigned char *data, int dataSize)
     }
 
     return propData;
+}
+
+static bool TextStartsWith(const char *t1, const char *startsWith)
+{
+    return strstr(t1, startsWith) == t1;
+}
+
+PropertyNameList LoadPropertyNameList(const char *filename)
+{
+    FILE *f = fopen(filename, "r");
+
+    PropertyNameList nameList = { 0 };
+
+    char buf[1024];
+    int lineNo = 0;
+
+    while (!feof(f))
+    {
+        lineNo++;
+        fgets(buf, 1023, f);
+        if (*buf == '#' || *buf == '\n' || *buf == 0) continue;
+
+        if (!TextStartsWith(buf, "property"))
+        {
+            printf("%s: unknown token on line %d\n", filename, lineNo);
+        }
+
+        //printf("%s", buf);
+        
+        nameList.propCount++;
+        nameList.propIds = realloc(nameList.propIds, sizeof(unsigned long) * nameList.propCount);
+        nameList.propNames = realloc(nameList.propNames, sizeof(const char *) * nameList.propCount);
+
+        char *name = strchr(buf, ' ') + 1;
+        int length = strchr(name, ' ') - name;
+
+        if (TextStartsWith(name, "OptionMotionBlur"))
+        {
+            length = strchr(name, '\t') - name;
+        }
+
+        char *nameCopy = malloc(length + 1);
+        memcpy(nameCopy, name, length);
+        nameCopy[length] = 0;
+
+        nameList.propNames[nameList.propCount - 1] = nameCopy;
+
+        unsigned long id = strtoul(name + length, NULL, 16);
+        if (id == 0 && strstr(name, "(hash("))
+        {
+            char *idStr = strchr(name + length, '(') + 6;
+            int idStrLength = strchr(idStr, ')') - idStr;
+
+            char *idCopy = malloc(idStrLength + 1);
+            memcpy(idCopy, idStr, idStrLength);
+            idCopy[idStrLength] = 0;
+
+            id = TheHash(idCopy);
+
+            free(idCopy);
+        }
+
+        nameList.propIds[nameList.propCount - 1] = id;
+
+        printf("property name %s with id %#X\n", nameCopy, nameList.propIds[nameList.propCount - 1]);
+    }
+
+    fclose(f);
+
+    return nameList;
 }

@@ -65,4 +65,13 @@ typedef struct PropData {
 
 PropData LoadPropData(unsigned char *data, int dataSize);
 
+// Properties.txt.
+typedef struct PropertyNameList {
+    unsigned long *propIds;
+    const char **propNames;
+    int propCount;
+} PropertyNameList;
+
+PropertyNameList LoadPropertyNameList(const char *filename);
+
 #endif

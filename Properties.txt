@@ -1,0 +1,209 @@
+#
+# Player options, stored in prefs.
+#
+
+# Current version number of preferences file.
+# If it doesn't match what the code expects, your preferences file is ignored & reset to default.
+property OptionVersion        0x04754439 uint32
+property OptionDefaultsSet    0x0461709d bool
+
+
+#######################################################
+# Config manager options
+#
+# NOTE: All options set through the config manager must be uint32s
+# Each of these should have a corresponding entry in Options.txt,
+# and potentially SPOptionIDs.h.
+
+# Low/Med/High
+property OptionShadows              0x0461709e uint32
+property OptionTextureDetail        0x0461709f uint32
+property OptionEffects              0x046170a0 uint32
+property OptionLighting             0x046170a6 uint32
+property OptionGameQuality          0x05c9482d uint32
+property OptionPeopleQuality        0x0e619e57 uint32
+property OptionSignQuality          0x0e619e58 uint32
+property OptionCityImpostorQuality  0x0ec4a693 uint32
+property OptionGeometryDetail       0x0ee02eba uint32
+property OptionAnimationDetail      0x0ee6a981 uint32
+
+property OptionPhotoRes       0x0473b8cb uint32
+property OptionVideoRes       0x0473b8cc uint32
+property OptionAudioPerformance 0x7d8ed666 uint32
+
+# on/off
+property OptionFXAA             0x0ee9a303 uint32
+property OptionMotionBlur		0x108f3b4c uint32
+property OptionFullScreen       0x046170a2 uint32
+property OptionFitToScreen      0x046170a5 uint32
+property OptionMovieRecordNoUI  0x0ee6dd0a uint32
+property OptionNoWindowBorders  0x0eeb4268 uint32
+
+property OptionDiskCacheSize  0x046170a4 uint32
+
+# Populated in code; contains screen resolution & refresh rate
+property OptionScreenSize     0x046170a1 uint32
+
+property OptionGamma          0x0e7bf0d5 uint32
+
+property OptionDOFStrength    0x0eebfe4b uint32
+
+property OptionFramerateCap   0x0f1e2951 uint32
+property OptionVsync          0x0f2b34d1 uint32
+
+# other
+property OptionPictureFilter  0x0efe44d8 uint32
+
+
+#######################################################
+# Audio
+#
+# These are manipulated directly rather than through the
+# config manager.
+
+property AudioMasterVolume   0x0aaf2940     float
+
+property AudioAmbienceVolume 0x0aaf2941     float
+property AudioMusicVolume    0x0aaf2942     float
+property AudioSFXVolume      0x0aaf2943     float
+property AudioUIVolume       0x0aaf2944     float
+property AudioVOXVolume      0x0aaf2945     float
+
+property AudioMuteAll        0x0aaf2950     bool
+property AudioSpeakerMode    0x0aaf2951     uint32
+
+
+#######################################################
+# Names for props set directly by config manager script
+#
+property ShaderPath              (hash(ShaderPath))  int
+property EffectsInstancing       (hash(effectsInstancing)) bool
+property MRT                     41              bool
+property RenderTargetCorrection  68              bool
+property dropShadowQualityText   (hash(dropShadowQualityText))  int
+property dropShadowQualityImage  (hash(dropShadowQualityImage)) int
+property NumFramesToBuffer       0x05c97448 int
+property IsIntelIntegratedGPU    0x0f30a0fa bool
+
+property UpdateChannel           0x0c357b70 int
+
+# Mac
+property MacSpecificText         0x061b67b6  bool
+property Support51Audio          0x063ab656  bool
+property AlwaysFullscreen        0x05dd4647  bool
+
+#######################################################
+# Game-specific
+#
+property OptionCameraPanMode     (hash(OptionCameraPanMode)) uint32
+property OptionGameCamera    (hash(OptionGameCamera)) uint32
+property OptionDisasterSlowdown  0x0d9a6060 uint32
+property OptionUIZoomLevel       0x0e7422ce float
+property OptionDisplayPathGuides 0x0e9513b4 bool
+property OptionDisplayCityBoundary 0x0ed71bca uint32
+property OptionShowTutorials (hash(OptionShowTutorials)) uint32
+property OptionEnableAutosave 0x34862ea5 uint32
+property OptionDisableOfflineTelem 0xd06d26d1 uint32
+property OptionDisableDisasters 0xf372f846 uint32
+property OptionFarCamera     0x0ef18906 uint32
+property OptionCameraGestureControl 0x0ffe72cc uint32
+property OptionEdgeScroll 0x0f11225d float
+property OptionHideSpeechBubbles 0x0f1f7006 uint32
+property OptionHideThoughtBubbles 0x0f1f7017 uint32
+property OptionHideVehicleAvatars 0x0f236dab uint32
+
+########################################################
+# Minitutorials
+########################################################
+
+property tutorial_MSTutorialDensity                         (hash(tutorial_MSTutorialDensity)) uint32
+property tutorial_MSTutorialHappiness                       (hash(tutorial_MSTutorialHappiness)) uint32
+property tutorial_MSTutorialLandValue                       (hash(tutorial_MSTutorialLandValue)) uint32
+property tutorial_MSTutorialBudgetUI                        (hash(tutorial_MSTutorialBudgetUI)) uint32
+property tutorial_MSTutorialCoalMinePlacement               (hash(tutorial_MSTutorialCoalMinePlacement)) uint32
+property tutorial_MSTutorialOilWellPlacement                (hash(tutorial_MSTutorialOilWellPlacement)) uint32
+property tutorial_MSTutorialMyFirstCity                     (hash(tutorial_MSTutorialMyFirstCity)) uint32
+
+property tutorial_MSTutorialRoadUpgrades                    (hash(tutorial_MSTutorialRoadUpgrades)) uint32
+property tutorial_MSTutorialTradeDepot                      (hash(tutorial_MSTutorialTradeDepot)) uint32
+property tutorial_MSTutorialTradePort                       (hash(tutorial_MSTutorialTradePort)) uint32
+
+#Transports
+property tutorial_MSCivicTutorialGamblingPassengerTrains    (hash(tutorial_MSCivicTutorialGamblingPassengerTrains)) uint32
+property tutorial_MSCivicTutorialGamblingAirport            (hash(tutorial_MSCivicTutorialGamblingAirport)) uint32
+
+#Region
+property tutorial_MSTutorialClaimCity                       (hash(tutorial_MSTutorialClaimCity)) uint32
+property tutorial_MSTutorialRegionMassTranist               (hash(tutorial_MSTutorialRegionMassTranist)) uint32
+property tutorial_MSTutorialTradingSims                     (hash(tutorial_MSTutorialTradingSims)) uint32
+property tutorial_MSTutorialTradingPower                    (hash(tutorial_MSTutorialTradingPower)) uint32
+property tutorial_MSTutorialTradingWater                    (hash(tutorial_MSTutorialTradingWater)) uint32
+property tutorial_MSTutorialTradingSewage                    (hash(tutorial_MSTutorialTradingSewage)) uint32
+
+#Sharing Services
+property tutorial_MSTutorialSharingGarbageServices          (hash(tutorial_MSTutorialSharingGarbageServices)) uint32
+property tutorial_MSTutorialSharingFireServices             (hash(tutorial_MSTutorialSharingFireServices)) uint32
+property tutorial_MSTutorialSharingHealthServices           (hash(tutorial_MSTutorialSharingHealthServices)) uint32
+property tutorial_MSTutorialSharingPoliceServices           (hash(tutorial_MSTutorialSharingPoliceServices)) uint32
+
+#Gifting Resources
+property tutorial_MSTutorialGiftingCoal                     (hash(tutorial_MSTutorialGiftingCoal)) uint32
+property tutorial_MSTutorialGiftingOil                      (hash(tutorial_MSTutorialGiftingOil)) uint32
+property tutorial_MSTutorialGiftingSimoleons                (hash(tutorial_MSTutorialGiftingSimoleons)) uint32
+
+#GreatWorks
+property tutorial_MSTutorialMiniGreatWorks                  (hash(tutorial_MSTutorialMiniGreatWorks)) uint32
+
+#Gambling
+property tutorial_MSCivicTutorialGamblingHall               (hash(tutorial_MSCivicTutorialGamblingHall)) uint32
+property tutorial_MSCivicTutorialGamblingIncreasingProfit   (hash(tutorial_MSCivicTutorialGamblingIncreasingProfit)) uint32
+property tutorial_MSCivicTutorialGamblingIncProfitTransit   (hash(tutorial_MSCivicTutorialGamblingIncProfitTransit)) uint32
+property tutorial_MSCivicTutorialGamblingGamingDiv          (hash(tutorial_MSCivicTutorialGamblingGamingDiv)) uint32
+property tutorial_MSCivicTutorialGamblingEntDiv             (hash(tutorial_MSCivicTutorialGamblingEntDiv)) uint32
+property tutorial_MSCivicTutorialGamblingLodgingDiv         (hash(tutorial_MSCivicTutorialGamblingLodgingDiv)) uint32
+
+#DLC
+property tutorial_MSTutorialDLC_RomanLuckCasino             (hash(tutorial_MSTutorialDLC_RomanLuckCasino)) uint32
+property tutorial_MSTutorialDLC_HeroesAndVillains           (hash(tutorial_MSTutorialDLC_HeroesAndVillains)) uint32
+property tutorial_MSTutorialDLC_London                      (hash(tutorial_MSTutorialDLC_London)) uint32
+property tutorial_MSTutorialDLC_Berlin                      (hash(tutorial_MSTutorialDLC_Berlin)) uint32
+property tutorial_MSTutorialDLC_Paris                       (hash(tutorial_MSTutorialDLC_Paris)) uint32
+property tutorial_MSTutorialDLC_3CitySets                   (hash(tutorial_MSTutorialDLC_3CitySets)) uint32
+property tutorial_MSTutorialDLC_Airships                    (hash(tutorial_MSTutorialDLC_Airships)) uint32
+property tutorial_MSTutorialDLC_Nissan_Leaf                 (hash(tutorial_MSTutorialDLC_Nissan_Leaf)) uint32
+property tutorial_MSTutorialDLC_Crest                       (hash(tutorial_MSTutorialDLC_Crest)) uint32
+property tutorial_MSTutorialDLC_AmusementParks              (hash(tutorial_MSTutorialDLC_AmusementParks)) uint32
+property tutorial_MSTutorialDLC_AmusementParkMiniTutorial   (hash(tutorial_MSTutorialDLC_AmusementParkMiniTutorial)) uint32
+property tutorial_MSTutorialDLC_PartnerPlay                 (hash(tutorial_MSTutorialDLC_PartnerPlay)) uint32
+property tutorial_MSTutorialDLC_PartnerMetro                (hash(tutorial_MSTutorialDLC_PartnerMetro)) uint32
+property tutorial_MSTutorialDLC_PartnerMicroMania           (hash(tutorial_MSTutorialDLC_PartnerMicroMania)) uint32
+property tutorial_MSTutorialDLC_PartnerTelia                (hash(tutorial_MSTutorialDLC_PartnerTelia)) uint32
+property tutorial_MSTutorialDLC_PartnerMediaMarkt           (hash(tutorial_MSTutorialDLC_PartnerMediaMarkt)) uint32
+property tutorial_MSTutorialDLC_LaunchMemorialPark          (hash(tutorial_MSTutorialDLC_LaunchMemorialPark)) uint32
+property tutorial_MSTutorialDLC_Worship                     (hash(tutorial_MSTutorialDLC_Worship)) uint32
+property tutorial_MSTutorialDLC_RedCross                    (hash(tutorial_MSTutorialDLC_RedCross)) uint32
+property tutorial_MSTutorialDLC_Progressive                 (hash(tutorial_MSTutorialDLC_Progressive)) uint32
+property tutorial_MSTutorialDLC_EP1CitiesOfTomorrow         (hash(tutorial_MSTutorialDLC_EP1CitiesOfTomorrow )) uint32
+property tutorial_MSTutorialDLC_EP1OmegaCo                  (hash(tutorial_MSTutorialDLC_EP1OmegaCo )) uint32
+property tutorial_MSTutorialDLC_EP1Drones                   (hash(tutorial_MSTutorialDLC_EP1Drones )) uint32
+property tutorial_MSTutorialDLC_EP1MegaTower                (hash(tutorial_MSTutorialDLC_EP1MegaTower )) uint32
+property tutorial_MSTutorialDLC_EP1Academy                  (hash(tutorial_MSTutorialDLC_EP1Academy )) uint32
+property tutorial_MSTutorialDLC_EP1EntitledNeighbor         (hash(tutorial_MSTutorialDLC_EP1EntitledNeighbor )) uint32
+property tutorial_MSTutorialDLC_EP1Radiation                (hash(tutorial_MSTutorialDLC_EP1Radiation )) uint32
+########################################################
+# Main Tutorial
+########################################################
+property tutorial_GettingStartedScenario                    (hash(tutorial_GettingStartedScenario)) uint32
+
+
+#PW
+property scWorldRest      0x0f362828 string8
+property scWorldGame      0x0f362827 string8
+property scWorldSocket    0x0f362829 string8
+property scWorldTelem     0x0f362830 string8
+property scWorldId        0x0f362831 int
+property scWorldNameId    0x0f362832 string8
+property scWorldServiceNews 0x0f362833 string8
+property scWorldConnect   0x0f362834 int
+property scOfflinePref      0x10a469a8 int
+property scOfflineLastPlayedBoxId 0x74402b5b uint32

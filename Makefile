@@ -78,6 +78,7 @@ dbpf_all_SOURCES+=src/filetypes/rules.c
 dbpf_all_SOURCES+=src/filetypes/rast.c
 dbpf_all_SOURCES+=src/filetypes/bnk.c
 dbpf_all_SOURCES+=src/threadpool.c
+dbpf_all_SOURCES+=src/hash.c
 
 test_package_SOURCES+=src/../tests/test_package.c
 test_package_SOURCES+=$(dbpf_all_SOURCES)
@@ -99,6 +100,7 @@ $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
 
 test_prop_SOURCES+=src/../tests/test_prop.c
 test_prop_SOURCES+=src/filetypes/prop.c
+test_prop_SOURCES+=src/hash.c
 
 $(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
@@ -134,6 +136,7 @@ $(DISTDIR)/test_rules$(EXEC_EXTENSION): $(test_rules_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 opensc5_editor_SOURCES+=src/editor.c
+opensc5_editor_SOURCES+=src/getopt.c
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES)

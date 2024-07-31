@@ -3,6 +3,8 @@
 #include <raymath.h>
 #include <threadpool.h>
 #include <cpl_pthread.h>
+#include <getopt.h>
+#include "filetypes/prop.h"
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -217,6 +219,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_SWB: return "SWB";
         case PKGENTRY_HTML: return "HTML";
         case PKGENTRY_ER2: return "ER2";
+        case PKGENTRY_TTF: return "TTF";
         default: return "UNKN";
     }
 }
@@ -428,7 +431,7 @@ static void *loadPackageFile_async(LoadPackageFileAsyncArgs *args)
     args->done = true;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     bool hasLoadedPkg = false;
 
@@ -442,6 +445,9 @@ int main()
 
     GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
     GuiWindowFindDialogState findDialogState = InitGuiWindowFindDialog();
+
+    PropertyNameList nameList = LoadPropertyNameList("Properties.txt");
+    char **names = NULL;
 
     while (!WindowShouldClose())
     {
@@ -483,6 +489,9 @@ int main()
 
                     fclose(f);
 
+                    free(names);
+                    names = calloc(loadedPkg.entryCount, sizeof(char *));
+
                     for (int i = 0; i < loadedPkg.entryCount; i++)
                     {
                         PackageEntry entry = loadedPkg.entries[i];
@@ -490,7 +499,17 @@ int main()
                         {
                             loadedPkg.entries[i].data.imgData.tex = LoadTextureFromImage(entry.data.imgData.img);
                         }
+                        
+                        for (int j = 0; j < nameList.propCount; j++)
+                        {
+                            if (entry.instance == nameList.propIds[j])
+                            {
+                                names[i] = nameList.propNames[j];
+                            }
+                        }
                     }
+
+
                 }
             }
 
@@ -523,7 +542,16 @@ int main()
 
                 row.elementCount = 4;
                 row.elementWidth = (float[4]){0.3, 0.3, 0.3, 0.1};
-                row.elementText = (const char*[4]){TextFormat("%#X (%s)", entry.type, PackageEntryTypeToString(entry.type)), TextFormat("%#X", entry.instance), TextFormat("%#X", entry.group), entry.compressed ? "YES" : "NO"};
+                row.elementText = (const char*[4]){
+                    TextFormat("%#X (%s)", entry.type, PackageEntryTypeToString(entry.type)),
+                    TextFormat("%#X", entry.instance),
+                    TextFormat("%#X", entry.group),
+                    entry.compressed ? "YES" : "NO"};
+                
+                if (names[i])
+                {
+                    row.elementText[1] = TextFormat("%#X (%s)", entry.instance, names[i]);
+                }
 
                 bool shouldToggleSelect = DrawListRow((Rectangle) {
                     0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT * (i+2) + pkgEntryListScroll.y,

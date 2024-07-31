@@ -14,6 +14,7 @@ Source filetypes/rules.c
 Source filetypes/rast.c
 Source filetypes/bnk.c
 Source threadpool.c
+Source hash.c
 
 Program test_package
 Source ../tests/test_package.c
@@ -30,6 +31,7 @@ Source crc32.c
 Program test_prop
 Source ../tests/test_prop.c
 Source filetypes/prop.c
+Source hash.c
 
 Program test_rast
 Source ../tests/test_rast.c
@@ -54,3 +56,4 @@ Source filetypes/rules.c
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
+Source getopt.c
