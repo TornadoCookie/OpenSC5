@@ -214,11 +214,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         int numToCopy = 0;
         int copyOffset = 0;
         //printf("Control character: %#x\n", byte0);
-        if (byte0 >= 0xE0 && byte0 <= 0xFB)
-        {
-            numPlainText = ((byte0 & 0x1F) + 1) * 4;
-        }
-        else if (byte0 >= 0x00 && byte0 <= 0x7F)
+        if (byte0 < 0x80)
         {
             uint8_t byte1 = *data;
             data++;
@@ -226,7 +222,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
             numToCopy = ((byte0 & 0x1C) >> 2) + 3;
             copyOffset = (((byte0 & 0x60) << 3) | byte1) + 1;
         }
-        else if (byte0 >= 0x80 && byte0 <= 0xBF)
+        else if (byte0 < 0xC0)
         {
             uint8_t byte1 = *data;
             data++;
@@ -237,12 +233,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
             numToCopy = (byte0 & 0x3F) + 4;
             copyOffset = (((byte1 & 0x3F) << 8) | byte2) + 1;
         }
-        else if (byte0 >= 0xFC & byte0 <= 0xFF)
-        {
-            numPlainText = byte0 & 0x03;
-            numToCopy = 0; 
-        }
-        else if (byte0 >= 0xC0 && byte0 <= 0xDF)
+        else if (byte0 < 0xE0)
         {
             uint8_t byte1 = *data;
             data++;
@@ -254,6 +245,15 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
             numPlainText = byte0 & 0x03;
             numToCopy = (((byte0 & 0x0C) << 6) | byte3) + 5;
             copyOffset = ((((byte0 & 0x10) << 4) | byte1 << 8) | byte2) + 1;
+        }
+        else if (byte0 < 0xFC)
+        {
+            numPlainText = ((byte0 & 0x1F) + 1) * 4;
+        }
+        else if (byte0 <= 0xFF)
+        {
+            numPlainText = byte0 & 0x03;
+            numToCopy = 0; 
         }
         else
         {
