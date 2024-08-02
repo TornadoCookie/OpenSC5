@@ -160,6 +160,8 @@ static bool DrawListRow(Rectangle bounds, ListRow row, bool selected, bool canSe
     bool focused = false;
     bool pressed = false;
 
+    if (bounds.y + bounds.height < 0 || bounds.y > GetScreenHeight()) return false;
+
     if (canSelect && CheckCollisionPointRec(GetMousePosition(), bounds) && GetMousePosition().y > RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2 && !GuiIsLocked()) 
     {
         focused = true;
