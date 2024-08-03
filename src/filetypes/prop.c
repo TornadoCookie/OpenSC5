@@ -484,7 +484,7 @@ PropertyNameList LoadPropertyNameList(const char *filename)
 
         nameList.propIds[nameList.propCount - 1] = id;
 
-        printf("property name %s with id %#X\n", nameCopy, nameList.propIds[nameList.propCount - 1]);
+        printf("property name %s with id %#lX\n", nameCopy, nameList.propIds[nameList.propCount - 1]);
     }
 
     fclose(f);

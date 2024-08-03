@@ -50,10 +50,14 @@ all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)
 ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
-	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib/$(curl_NAME); fi
-	if [ -d lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib/$(wwriff_NAME); fi
-	if [ -d lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib/$(RAYLIB_NAME); fi
+	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
+	cp -r README.md $(DISTDIR)
+	cp -r LICENSE $(DISTDIR)
+	cp -r Properties.txt $(DISTDIR)
+	cp -r launcher.bat $(DISTDIR)
 else
 deps:
 endif

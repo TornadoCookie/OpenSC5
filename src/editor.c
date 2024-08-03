@@ -426,8 +426,9 @@ typedef struct LoadPackageFileAsyncArgs {
     bool done;
 } LoadPackageFileAsyncArgs;
 
-static void *loadPackageFile_async(LoadPackageFileAsyncArgs *args)
+static void *loadPackageFile_async(void *param)
 {
+    LoadPackageFileAsyncArgs *args = param;
     args->done = false;
     *args->pkg = LoadPackageFile(args->f);
     args->done = true;
@@ -449,7 +450,7 @@ int main(int argc, char **argv)
     GuiWindowFindDialogState findDialogState = InitGuiWindowFindDialog();
 
     PropertyNameList nameList = LoadPropertyNameList("Properties.txt");
-    char **names = NULL;
+    const char **names = NULL;
 
     while (!WindowShouldClose())
     {

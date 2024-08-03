@@ -6,6 +6,10 @@ NativeDependency curl
 NativeDependency wwriff
 
 DistData packed_codebooks_aoTuV_603.bin
+DistData README.md
+DistData LICENSE
+DistData Properties.txt
+DistData launcher.bat
 
 SourceGroup dbpf_all
 Source filetypes/package.c

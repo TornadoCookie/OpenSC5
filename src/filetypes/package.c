@@ -276,7 +276,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         if (byte0 >= 0xFC & byte0 <= 0xFF) break;
     }
 
-    if (retCursor - ret != outDataSize) printf("Decompression Sanity Error: RetCursor: %d; RetLength: %d.\n", retCursor - ret, outDataSize);
+    if (retCursor - ret != outDataSize) printf("Decompression Sanity Error: RetCursor: %ld; RetLength: %d.\n", retCursor - ret, outDataSize);
 
     return ret;
 }
@@ -314,8 +314,9 @@ typedef struct DataCycleArgs {
     pthread_mutex_t *fmutex;
 } DataCycleArgs;
 
-static void datacycle(DataCycleArgs *args)
+static void datacycle(void *param)
 {
+    DataCycleArgs *args = param;
     IndexEntry *entries = args->entries;
     int i = args->i;
     FILE *f = args->f;
