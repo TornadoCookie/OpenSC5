@@ -205,5 +205,7 @@ property scWorldId        0x0f362831 int
 property scWorldNameId    0x0f362832 string8
 property scWorldServiceNews 0x0f362833 string8
 property scWorldConnect   0x0f362834 int
+property scWorldSub      0x0f362835 string8
 property scOfflinePref      0x10a469a8 int
 property scOfflineLastPlayedBoxId 0x74402b5b uint32
+property scInfoDisplayCount 0x1285b385 uint32
