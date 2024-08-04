@@ -595,3 +595,13 @@ int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults)
 
     return results;
 }
+
+void MergePackages(Package *dest, Package src)
+{
+    int startIndex = dest->entryCount;
+
+    dest->entryCount += src.entryCount;
+    dest->entries = realloc(dest->entries, dest->entryCount * sizeof(PackageEntry));
+
+    memcpy(dest->entries + startIndex, src.entries, src.entryCount * sizeof(PackageEntry));
+}

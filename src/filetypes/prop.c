@@ -433,6 +433,12 @@ PropertyNameList LoadPropertyNameList(const char *filename)
 
     PropertyNameList nameList = { 0 };
 
+    if (!f)
+    {
+        perror("Error opening Properties.txt");
+        return nameList;
+    }
+
     char buf[1024];
     int lineNo = 0;
 
@@ -440,11 +446,11 @@ PropertyNameList LoadPropertyNameList(const char *filename)
     {
         lineNo++;
         fgets(buf, 1023, f);
-        if (*buf == '#' || *buf == '\n' || *buf == 0) continue;
+        if (*buf == '#' || *buf == '\n' || *buf == 0xd || *buf == 0) continue;
 
         if (!TextStartsWith(buf, "property"))
         {
-            printf("%s: unknown token on line %d\n", filename, lineNo);
+            printf("%s: unknown token on line %d (%#x)\n", filename, lineNo, *buf);
         }
 
         //printf("%s", buf);

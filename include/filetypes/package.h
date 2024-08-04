@@ -92,4 +92,6 @@ typedef struct PackageSearchParams {
 
 int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults);
 
+void MergePackages(Package *dest, Package src);
+
 #endif

@@ -30,7 +30,7 @@ CFLAGS+=-D LIB_EXTENSION=\".dll\"
 CFLAGS+=-lws2_32
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor opensc5
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -146,6 +146,12 @@ opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+opensc5_SOURCES+=src/game.c
+opensc5_SOURCES+=$(dbpf_all_SOURCES)
+
+$(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 clean:
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
@@ -157,6 +163,7 @@ clean:
 	rm -f $(DISTDIR)/test_heightmap$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/test_rules$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/opensc5$(EXEC_EXTENSION)
 
 all_dist:
 	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)

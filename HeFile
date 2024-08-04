@@ -61,3 +61,7 @@ Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
 Source getopt.c
+
+Program opensc5
+Source game.c
+UseSourceGroup dbpf_all
