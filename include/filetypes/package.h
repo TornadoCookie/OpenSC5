@@ -93,6 +93,8 @@ typedef struct PackageSearchParams {
 int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults);
 
 void MergePackages(Package *dest, Package src);
-void SetWriteCorrutedPackageEntries(bool val);
+void SetWriteCorruptedPackageEntries(bool val);
+
+void ExportPackage(Package pkg, const char *filename);
 
 #endif

@@ -609,7 +609,81 @@ void MergePackages(Package *dest, Package src)
     memcpy(dest->entries + startIndex, src.entries, src.entryCount * sizeof(PackageEntry));
 }
 
-void SetWriteCorrutedPackageEntries(bool val)
+void SetWriteCorruptedPackageEntries(bool val)
 {
     writeCorrupted = val;
+}
+
+typedef struct MemStream {
+    void *buf;
+    int size;
+} MemStream;
+
+void memstream_write(MemStream *stream, void *buf, int size)
+{
+    int oldSize = stream->size;
+    stream->size += size;
+    stream->buf = realloc(stream->buf, stream->size);
+    memcpy(stream->buf + oldSize, buf, size);
+}
+
+void ExportPackage(Package pkg, const char *filename)
+{
+    FILE *f = fopen(filename, "wb");
+
+    PackageHeader header = { .magic = "DBPF" };
+    header.majorVersion = 3;
+    header.minorVersion = 0;
+    header.indexEntryCount = pkg.entryCount;
+    header.indexMajorVersion = 0;
+    header.indexMinorVersion = 3;
+
+    IndexEntry *indexEntries = malloc(sizeof(IndexEntry) * pkg.entryCount);
+
+    // TODO check if all entries have same group or type
+
+    MemStream dataStream = { 0 };
+
+    for (int i = 0; i < pkg.entryCount; i++)
+    {
+        indexEntries[i].type = pkg.entries[i].type;
+        indexEntries[i].group = pkg.entries[i].group;
+        indexEntries[i].instance = pkg.entries[i].instance;
+        indexEntries[i].chunkOffset = dataStream.size + sizeof(PackageHeader);
+
+        // TODO: compress data
+        memstream_write(&dataStream, pkg.entries[i].dataRaw, pkg.entries[i].dataRawSize);
+        indexEntries[i].diskSize = pkg.entries[i].dataRawSize; // TODO bitwise OR with 0x80000000?
+        indexEntries[i].memSize = pkg.entries[i].dataRawSize;
+        indexEntries[i].compressed = 0x0000;
+        indexEntries[i].unknown = 0x0000;
+    }
+
+    header.indexOffset = dataStream.size + sizeof(PackageHeader);
+
+    MemStream indexStream = { 0 };
+
+    uint32_t indexType = 0;
+    memstream_write(&indexStream, &indexType, sizeof(uint32_t));
+
+    for (int i = 0; i < pkg.entryCount; i++)
+    {
+        memstream_write(&indexStream, &indexEntries[i].type, 4);
+        memstream_write(&indexStream, &indexEntries[i].group, 4);
+        uint32_t unk = 0;
+        memstream_write(&indexStream, &unk, 4);
+        memstream_write(&indexStream, &indexEntries[i].instance, 4);
+        memstream_write(&indexStream, &indexEntries[i].chunkOffset, 4);
+        memstream_write(&indexStream, &indexEntries[i].diskSize, 4);
+        memstream_write(&indexStream, &indexEntries[i].memSize, 4);
+        memstream_write(&indexStream, &indexEntries[i].compressed, 2);
+        memstream_write(&indexStream, &indexEntries[i].unknown, 2);
+    }
+
+    header.indexSize = indexStream.size;
+
+    fwrite(&header, sizeof(PackageHeader), 1, f);
+    fwrite(dataStream.buf, 1, dataStream.size, f);
+    fwrite(indexStream.buf, 1, indexStream.size, f);
+
 }

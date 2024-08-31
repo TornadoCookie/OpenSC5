@@ -434,6 +434,14 @@ static void *loadPackageFile_async(void *param)
     args->done = true;
 }
 
+typedef enum {
+    EXPORT_PACKAGE_ENTRY,
+    EXPORT_PACKAGE,
+    IMPORT_FILE
+} FileDialogReason;
+
+static FileDialogReason fileDialogReason;
+
 int main(int argc, char **argv)
 {
     bool hasLoadedPkg = false;
@@ -451,6 +459,8 @@ int main(int argc, char **argv)
 
     PropertyNameList nameList = LoadPropertyNameList("Properties.txt");
     const char **names = NULL;
+
+    SetTraceLogLevel(LOG_DEBUG);
 
     while (!WindowShouldClose())
     {
@@ -521,8 +531,16 @@ int main(int argc, char **argv)
 
         if (fileDialogState.SelectFilePressed)
         {
-            ExportPackageEntry(loadedPkg.entries[selectedPkgEntry], TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-            fileDialogState.SelectFilePressed = false;
+            if (fileDialogReason == EXPORT_PACKAGE)
+            {
+                ExportPackage(loadedPkg, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+                fileDialogState.SelectFilePressed = false;
+            }
+            else
+            {
+                ExportPackageEntry(loadedPkg.entries[selectedPkgEntry], TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+                fileDialogState.SelectFilePressed = false;
+            }
         }
 
         // Draw
@@ -534,6 +552,13 @@ int main(int argc, char **argv)
 
         if (hasLoadedPkg)
         {
+            if (GuiButton((Rectangle){32, 0, 100, 24}, "Export Package"))
+            {
+                fileDialogState.saveFileMode = true;
+                fileDialogState.windowActive = true;
+                fileDialogReason = EXPORT_PACKAGE;
+            }
+
             GuiScrollPanel((Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, GetScreenHeight()}, "Entries", (Rectangle){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(loadedPkg.entryCount+1)}, &pkgEntryListScroll, &pkgEntryListView);
 
             BeginScissorMode(pkgEntryListView.x, pkgEntryListView.y, pkgEntryListView.width, pkgEntryListView.height);
@@ -610,8 +635,9 @@ int main(int argc, char **argv)
                     DrawPackageEntry(entry);
                 }
 
-                if (GuiButton((Rectangle){32, 0, 100, 24}, "Export Entry"))
+                if (GuiButton((Rectangle){56, 0, 100, 24}, "Export Entry"))
                 {
+                    fileDialogReason = EXPORT_PACKAGE_ENTRY;
                     fileDialogState.saveFileMode = true;
                     fileDialogState.windowActive = true;
                 }

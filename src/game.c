@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
     SetTraceLogLevel(LOG_INFO);
     InitWindow(1280, 720, "OpenSC5 Launcher");
-    SetWriteCorrutedPackageEntries(false);
+    SetWriteCorruptedPackageEntries(false);
 
     for (int i = 0; i < simcityData.count; i++)
     {
