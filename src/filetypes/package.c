@@ -65,7 +65,7 @@ static void readuint(uint32_t *ret, FILE *f)
 
     if (feof(f))
     {
-        printf("Unexpected end of file: %lu.\n", ftell(f));
+        TRACELOG(LOG_FATAL, "Unexpected end of file: %lu.\n", ftell(f));
         exit(EXIT_FAILURE);
     }
 }
@@ -101,7 +101,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_TEXT: // "textual" file.
         case PKGENTRY_JSON: // JSON file.
         {
-            printf("JSON:\n");
+            TRACELOG(LOG_DEBUG, "Text:\n");
             char *str = malloc(dataSize);
             int actualSize = 0;
 
@@ -116,7 +116,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             str = realloc(str, actualSize + 1);
             str[actualSize] = 0;
 
-            printf("%s\n", str);
+            TRACELOG(LOG_DEBUG, "%s\n", str);
             pkgEntry->data.scriptSource = str;
         } break;
         case PKGENTRY_RULE: // Binary rules file. https://community.simtropolis.com/forums/topic/55521-binary-rules-file-format/
@@ -135,6 +135,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             //}
             return !pkgEntry->corrupted;
         } break;
+        case PKGENTRY_RW4:
         case PKGENTRY_TTF:
         case PKGENTRY_SWB:
         case PKGENTRY_MOV:
@@ -168,13 +169,14 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             if (!wwriff) return false;
             
             WWRiff_PrintInfo(wwriff);
-            WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
-
+            bool res = WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
             remove(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
+
+            return res;
         } break;
         default:
         {
-            printf("Unknown data type %#X.\n", dataType);
+            TRACELOG(LOG_WARNING, "Unknown data type %#X.", dataType);
             return false;
         } break;
     }
@@ -190,11 +192,11 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
     uint8_t compressionType = data[0];
     uint32_t uncompressedSize;
 
-    printf("Compression Type: %#x\n", compressionType);
+    TRACELOG(LOG_DEBUG, "Compression Type: %#x\n", compressionType);
 
     if (compressionType & 0x80)
     {
-        printf("Unrecognized compression type.\n");
+        TRACELOG(LOG_ERROR, "Unrecognized compression type %#x.\n", compressionType);
         free(ret);
         return NULL;
     }
@@ -257,7 +259,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         }
         else
         {
-            printf("Unrecognized control character %#x.\n", byte0);
+            TRACELOG(LOG_WARNING, "Unrecognized control character %#x.\n", byte0);
             return NULL;
         }
 
@@ -267,7 +269,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
 
         if (retCursor - copyOffset < ret)
         {
-            printf("Invalid copyOffset. Ret=%p, retCursor - copyOffset = %p.\n", ret, retCursor - copyOffset - 1);
+            TRACELOG(LOG_ERROR, "Invalid copyOffset. Ret=%p, retCursor - copyOffset = %p.\n", ret, retCursor - copyOffset - 1);
         }
 
         memcpy(retCursor, retCursor - copyOffset, numToCopy);
@@ -276,7 +278,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         if (byte0 >= 0xFC & byte0 <= 0xFF) break;
     }
 
-    if (retCursor - ret != outDataSize) printf("Decompression Sanity Error: RetCursor: %ld; RetLength: %d.\n", retCursor - ret, outDataSize);
+    if (retCursor - ret != outDataSize) TRACELOG(LOG_ERROR, "Decompression Sanity Error: RetCursor: %ld; RetLength: %d.\n", retCursor - ret, outDataSize);
 
     return ret;
 }
@@ -306,6 +308,8 @@ static const char *GetExtensionFromType(unsigned int type)
     }
 }
 
+static bool writeCorrupted = true;
+
 typedef struct DataCycleArgs {
     FILE *f;
     int i;
@@ -324,8 +328,9 @@ static void datacycle(void *param)
 
     IndexEntry entry = entries[i];
 
-    printf("\nEntry %d:\n", i);
+    TRACELOG(LOG_DEBUG, "\nEntry %d:\n", i);
 
+    printf("Locking fmutex.\n");
     pthread_mutex_lock(args->fmutex);
 
     if (fseek(f, entry.chunkOffset, SEEK_SET) == -1)
@@ -338,9 +343,10 @@ static void datacycle(void *param)
 
     if (feof(f))
     {
-        printf("Unexpected end of file.\n");
+        TRACELOG(LOG_ERROR, "Unexpected end of file.\n");
     }
 
+    printf("Unlocking fmutex.\n");
     pthread_mutex_unlock(args->fmutex);
 
     if (entry.isCompressed)
@@ -355,16 +361,14 @@ static void datacycle(void *param)
             
             if (!ProcessPackageData(uncompressed, entry.memSize, entry.type, &(pkg.entries[i])))
             {
-                ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
+                if (writeCorrupted) ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
                 pkg.entries[i].corrupted = true;
             }
 
             for (int i = 0; i < toPrint; i++)
             {
-                printf("%#x ", uncompressed[i]);
+                TRACELOG(LOG_DEBUG, "%#x\n", uncompressed[i]);
             }
-
-            puts("");
         }
         free(data);
     }
@@ -376,16 +380,14 @@ static void datacycle(void *param)
 
         if (!ProcessPackageData(data, entry.diskSize, entry.type, &(pkg.entries[i])))
         {
-            ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
+            if (writeCorrupted) ExportPackageEntry(pkg.entries[i], TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type)));
             pkg.entries[i].corrupted = true;
         }
 
         for (int i = 0; i < toPrint; i++)
         {
-            printf("%#x ", data[i]);
+            TRACELOG(LOG_DEBUG, "%#x\n", data[i]);
         }
-
-        puts("");
     }
 }
 
@@ -397,23 +399,23 @@ Package LoadPackageFile(FILE *f)
 
     mkdir("corrupted");
 
-    printf("Header:\n");
-    printf("Magic: %.4s\n", header.magic);
-    printf("Major Version #: %d\n", header.majorVersion);
-    printf("Minor Version #: %d\n", header.minorVersion);
-    printf("Index Entry Count: %d\n", header.indexEntryCount);
-    printf("Index Size: %d\n", header.indexSize);
-    printf("Index Major Version: %d\n", header.indexMajorVersion);
-    printf("Index Minor Version: %d\n", header.indexMinorVersion);
-    printf("Index Offset: %d\n", header.indexOffset);
+    TRACELOG(LOG_DEBUG, "Header:\n");
+    TRACELOG(LOG_DEBUG, "Magic: %.4s\n", header.magic);
+    TRACELOG(LOG_DEBUG, "Major Version #: %d\n", header.majorVersion);
+    TRACELOG(LOG_DEBUG, "Minor Version #: %d\n", header.minorVersion);
+    TRACELOG(LOG_DEBUG, "Index Entry Count: %d\n", header.indexEntryCount);
+    TRACELOG(LOG_DEBUG, "Index Size: %d\n", header.indexSize);
+    TRACELOG(LOG_DEBUG, "Index Major Version: %d\n", header.indexMajorVersion);
+    TRACELOG(LOG_DEBUG, "Index Minor Version: %d\n", header.indexMinorVersion);
+    TRACELOG(LOG_DEBUG, "Index Offset: %d\n", header.indexOffset);
 
     fseek(f, header.indexOffset, SEEK_SET);
     Index index = { 0 };
 
     readuint(&index.indexType, f);
 
-    printf("\nIndex information:\n");
-    printf("Index Type: %d\n", index.indexType);
+    TRACELOG(LOG_DEBUG, "\nIndex information:\n");
+    TRACELOG(LOG_DEBUG, "Index Type: %d\n", index.indexType);
 
     IndexData indexData = index.data;
 
@@ -489,17 +491,17 @@ Package LoadPackageFile(FILE *f)
         entry.isCompressed = (entry.compressed == 0xFFFF);
         if (entry.compressed != 0xFFFF && entry.compressed != 0x0000)
         {
-            printf("Error: Invalid value for compressed: %#x\n", entry.compressed);
+            TRACELOG(LOG_ERROR, "Error: Invalid value for compressed: %#x\n", entry.compressed);
         }
 
-        printf("\nEntry %d:\n", i);
-        printf("Type: %#X\n", entry.type);
-        printf("Group: %#X\n", entry.group);
-        printf("Instance: %#X\n", entry.instance);
-        printf("Chunk Offset: %u\n", entry.chunkOffset);
-        printf("Disk Size: %u\n", entry.diskSize);
-        printf("Mem Size: %u\n", entry.memSize);
-        printf("Compressed? %s\n", entry.isCompressed?"yes":"no");
+        TRACELOG(LOG_DEBUG, "\nEntry %d:\n", i);
+        TRACELOG(LOG_DEBUG, "Type: %#X\n", entry.type);
+        TRACELOG(LOG_DEBUG, "Group: %#X\n", entry.group);
+        TRACELOG(LOG_DEBUG, "Instance: %#X\n", entry.instance);
+        TRACELOG(LOG_DEBUG, "Chunk Offset: %u\n", entry.chunkOffset);
+        TRACELOG(LOG_DEBUG, "Disk Size: %u\n", entry.diskSize);
+        TRACELOG(LOG_DEBUG, "Mem Size: %u\n", entry.memSize);
+        TRACELOG(LOG_DEBUG, "Compressed? %s\n", entry.isCompressed?"yes":"no");
 
         pkgEntry.type = entry.type;
         pkgEntry.group = entry.group;
@@ -509,7 +511,7 @@ Package LoadPackageFile(FILE *f)
         pkg.entries[i] = pkgEntry;
     }
 
-    printf("\nData Cycle.\n");
+    TRACELOG(LOG_DEBUG, "\nData Cycle.\n");
 
     InitThreadpool(-1);
     pthread_mutex_t fmutex;
@@ -531,6 +533,7 @@ Package LoadPackageFile(FILE *f)
 
     WaitForThreadpoolTasksDone();
     CloseThreadpool();
+    pthread_mutex_destroy(&fmutex);
 
     free(entries);
 
@@ -604,4 +607,9 @@ void MergePackages(Package *dest, Package src)
     dest->entries = realloc(dest->entries, dest->entryCount * sizeof(PackageEntry));
 
     memcpy(dest->entries + startIndex, src.entries, src.entryCount * sizeof(PackageEntry));
+}
+
+void SetWriteCorrutedPackageEntries(bool val)
+{
+    writeCorrupted = val;
 }

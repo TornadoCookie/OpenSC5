@@ -23,7 +23,7 @@ WWRiff *WWRiff_Create(const char *name, const char *codebooks_name, bool inline_
 
 void WWRiff_PrintInfo(WWRiff *wwriff);
 
-void WWRiff_GenerateOGG(WWRiff *wwriff, const char *outfilename);
+bool WWRiff_GenerateOGG(WWRiff *wwriff, const char *outfilename);
 
 #ifdef __cplusplus
 }

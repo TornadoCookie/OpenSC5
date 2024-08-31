@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cwwriff.h>
+#include <cpl_raylib.h>
 
 typedef struct BnkHeader {
     char signature[4]; // BKHD
@@ -37,7 +38,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
             BnkHeader *header = (BnkHeader*)data;
             bnkData.pointsTo = header->pointsTo;
 
-            printf("Version: %d\n", header->version);
+            TRACELOG(LOG_DEBUG, "Version: %d\n", header->version);
 
             data += header->size + 8;
         }
@@ -63,7 +64,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
                 {
                     default:
                     {
-                        printf("Unrecognized HIRC type %#x.\n", type);
+                        TRACELOG(LOG_DEBUG, "Unrecognized HIRC type %#x.\n", type);
                         bnkData.corrupted = true;
                         return bnkData;
                     } break;
@@ -83,14 +84,14 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
 
             data += size;
 
-            printf("Content Index Count: %d\n", contentIndexCount);
+            TRACELOG(LOG_DEBUG, "Content Index Count: %d\n", contentIndexCount);
 
             for (int i = 0; i < contentIndexCount; i++)
             {
-                printf("Index %d:\n", i);
-                printf("Id: %#x\n", contentIndices[i].id);
-                printf("Offset: %d\n", contentIndices[i].offset);
-                printf("Size: %d\n", contentIndices[i].size);
+                TRACELOG(LOG_DEBUG, "Index %d:\n", i);
+                TRACELOG(LOG_DEBUG, "Id: %#x\n", contentIndices[i].id);
+                TRACELOG(LOG_DEBUG, "Offset: %d\n", contentIndices[i].offset);
+                TRACELOG(LOG_DEBUG, "Size: %d\n", contentIndices[i].size);
             }
         }
         else if (!strncmp(signature, "DATA", 4))
@@ -105,7 +106,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
         }
         else
         {
-            printf("Unrecognized signature %.4s\n", signature);
+            TRACELOG(LOG_WARNING, "Unrecognized signature %.4s\n", signature);
             bnkData.corrupted = true;
             return bnkData;
         }
@@ -113,7 +114,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
 
     if (contentIndices == NULL)
     {
-        printf("Error: BNK has no content indices.\n");
+        TRACELOG(LOG_ERROR, "Error: BNK has no content indices.\n");
         bnkData.corrupted = true;
         return bnkData;
     }
@@ -128,13 +129,18 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
         data = soundDataOffset + index.offset;
 
         {
+            TRACELOG(LOG_INFO, "BNK: Loading %#X (%d/%d)", index.id, i, contentIndexCount);
             FILE *f = fopen(TextFormat("corrupted/BNK_%#X.wem", index.id), "wb");
             fwrite(data, 1, index.size, f);
+            fflush(f);
             fclose(f);
 
             WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/BNK_%#X.wem", index.id), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
-            WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/BNK_%#X.ogg", index.id));
-            remove(TextFormat("corrupted/BNK_%#X.wem", index.id));
+            if (wwriff)
+            {
+                WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/BNK_%#X.ogg", index.id));
+                remove(TextFormat("corrupted/BNK_%#X.wem", index.id));
+            }
         }
     }
 

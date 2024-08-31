@@ -1,7 +1,7 @@
 #include "threadpool.h"
 #include <cpl_pthread.h>
 #include <stdlib.h>
-#include <raylib.h>
+#include <cpl_raylib.h>
 #include <stdio.h>
 
 #ifdef __linux__
@@ -62,11 +62,11 @@ void InitThreadpool(int nproc)
 
     if (nproc > nproc_true)
     {
-        printf("decreasing actual threads used from %d to %d.\n", nproc, nproc_true);
+        TRACELOG(LOG_WARNING, "decreasing actual threads used from %d to %d.", nproc, nproc_true);
         nproc = nproc_true;
     }
 
-    printf("Initialized threadpool with %d threads.\n", nproc);
+    TRACELOG(LOG_INFO, "Initialized threadpool with %d threads.", nproc);
 
     threadpoolCount = nproc;
     threadpool = malloc(sizeof(pthread_t) * threadpoolCount);
@@ -94,12 +94,12 @@ void WaitForThreadpoolTasksDone(void)
     while (taskCount) {
         if (taskCount != prevTaskCount)
         {
-            printf("%d tasks left...\n", taskCount);
+            TRACELOG(LOG_INFO, "%d tasks left...", taskCount);
             prevTaskCount = taskCount;
         }
         WaitTime(1.0f/60);
     }
-    printf("done.\n");
+    TRACELOG(LOG_INFO, "done.");
 }
 
 int GetThreadpoolTasksLeft(void)
