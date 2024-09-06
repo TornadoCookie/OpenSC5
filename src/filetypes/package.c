@@ -367,7 +367,7 @@ static void datacycle(void *param)
 
             for (int i = 0; i < toPrint; i++)
             {
-                TRACELOG(LOG_DEBUG, "%#x\n", uncompressed[i]);
+                //TRACELOG(LOG_DEBUG, "%#x\n", uncompressed[i]);
             }
         }
         free(data);
@@ -386,7 +386,7 @@ static void datacycle(void *param)
 
         for (int i = 0; i < toPrint; i++)
         {
-            TRACELOG(LOG_DEBUG, "%#x\n", data[i]);
+            //TRACELOG(LOG_DEBUG, "%#x\n", data[i]);
         }
     }
 }

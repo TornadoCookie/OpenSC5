@@ -21,6 +21,7 @@ typedef struct ThreadpoolTask {
 static ThreadpoolTask *tasks;
 static int taskCount;
 static pthread_mutex_t task_mutex;
+static bool running;
 
 void *threadpool_runner(void *__unused_arg)
 {
@@ -28,6 +29,7 @@ void *threadpool_runner(void *__unused_arg)
     {
         if (!taskCount)
         {
+            if (!running) return NULL;
             WaitTime(1.0f/60);
             continue;
         }
@@ -71,6 +73,8 @@ void InitThreadpool(int nproc)
     threadpoolCount = nproc;
     threadpool = malloc(sizeof(pthread_t) * threadpoolCount);
 
+    running = true;
+
     pthread_mutex_init(&task_mutex, NULL);
 
     for (int i = 0; i < threadpoolCount; i++)
@@ -109,9 +113,10 @@ int GetThreadpoolTasksLeft(void)
 
 void CloseThreadpool(void)
 {
+    running = false;
     for (int i = 0; i < threadpoolCount; i++)
     {
-        pthread_cancel(threadpool[i]);
+        pthread_join(threadpool[i], NULL);
     }
     free(tasks);
     free(threadpool);

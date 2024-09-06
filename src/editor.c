@@ -437,7 +437,7 @@ static void *loadPackageFile_async(void *param)
 typedef enum {
     EXPORT_PACKAGE_ENTRY,
     EXPORT_PACKAGE,
-    IMPORT_FILE
+    IMPORT_FILE_OVERWRITE,
 } FileDialogReason;
 
 static FileDialogReason fileDialogReason;
@@ -531,15 +531,23 @@ int main(int argc, char **argv)
 
         if (fileDialogState.SelectFilePressed)
         {
-            if (fileDialogReason == EXPORT_PACKAGE)
+            switch (fileDialogReason)
             {
-                ExportPackage(loadedPkg, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-                fileDialogState.SelectFilePressed = false;
-            }
-            else
-            {
-                ExportPackageEntry(loadedPkg.entries[selectedPkgEntry], TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-                fileDialogState.SelectFilePressed = false;
+                case EXPORT_PACKAGE:
+                {
+                    ExportPackage(loadedPkg, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+                    fileDialogState.SelectFilePressed = false;
+                } break;
+                case EXPORT_PACKAGE_ENTRY:
+                {
+                    ExportPackageEntry(loadedPkg.entries[selectedPkgEntry], TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+                    fileDialogState.SelectFilePressed = false;
+                } break;
+                case IMPORT_FILE_OVERWRITE:
+                {
+                    const char *fname = TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText);
+                    loadedPkg.entries[selectedPkgEntry].dataRaw = LoadFileData(fname, &loadedPkg.entries[selectedPkgEntry].dataRawSize);
+                } break;
             }
         }
 
@@ -635,9 +643,16 @@ int main(int argc, char **argv)
                     DrawPackageEntry(entry);
                 }
 
-                if (GuiButton((Rectangle){56, 0, 100, 24}, "Export Entry"))
+                if (GuiButton((Rectangle){132, 0, 100, 24}, "Export Entry"))
                 {
                     fileDialogReason = EXPORT_PACKAGE_ENTRY;
+                    fileDialogState.saveFileMode = true;
+                    fileDialogState.windowActive = true;
+                }
+
+                if (GuiButton((Rectangle){232, 0, 100, 24}, "Overwrite Entry"))
+                {
+                    fileDialogReason = IMPORT_FILE_OVERWRITE;
                     fileDialogState.saveFileMode = true;
                     fileDialogState.windowActive = true;
                 }
