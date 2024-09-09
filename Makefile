@@ -1,7 +1,7 @@
-# Generated using Helium v1.3.2 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.0.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
-DISTDIR?=.
+DISTDIR?=build
 
 .PHONY: all
 
@@ -30,22 +30,24 @@ CFLAGS+=-D LIB_EXTENSION=\".dll\"
 CFLAGS+=-lws2_32
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor opensc5
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor opensc5 test_dbpf
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
 CFLAGS+=-Ilib/$(curl_NAME)/include
-CFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
 LDFLAGS+=-Llib/$(curl_NAME)/lib
 LDFLAGS+=-lcurl
+LDFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
+
 
 wwriff_NAME=libwwriff-$(PLATFORM)
 CFLAGS+=-Ilib/$(wwriff_NAME)/include
-CFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
 LDFLAGS+=-Llib/$(wwriff_NAME)/lib
 LDFLAGS+=-lwwriff
+LDFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
 
-all: $(DISTDIR) $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION)) deps
+
+all: $(DISTDIR) $(DISTDIR)/src/filetypes $(DISTDIR)/src $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
@@ -62,6 +64,15 @@ else
 deps:
 endif
 
+$(DISTDIR)/src/filetypes:
+	mkdir -p $@
+
+$(DISTDIR)/src:
+	mkdir -p $@
+
+$(DISTDIR)/src/../tests:
+	mkdir -p $@
+
 $(DISTDIR):
 	mkdir -p $@
 
@@ -69,101 +80,141 @@ CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
 CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
 
+
 CFLAGS+=-Ilib/$(RAYLIB_NAME)/include
-CFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
 LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
+LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
-dbpf_all_SOURCES+=src/filetypes/package.c
-dbpf_all_SOURCES+=src/filetypes/prop.c
-dbpf_all_SOURCES+=src/filetypes/rules.c
-dbpf_all_SOURCES+=src/filetypes/rast.c
-dbpf_all_SOURCES+=src/filetypes/bnk.c
-dbpf_all_SOURCES+=src/threadpool.c
-dbpf_all_SOURCES+=src/hash.c
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/package.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rast.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/bnk.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/hash.o
 
-test_package_SOURCES+=src/../tests/test_package.c
+test_package_SOURCES+=$(DISTDIR)/src/../tests/test_package.o
 test_package_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_package$(EXEC_EXTENSION): $(test_package_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_update_SOURCES+=src/../tests/test_update.c
+test_update_SOURCES+=$(DISTDIR)/src/../tests/test_update.o
 
 $(DISTDIR)/test_update$(EXEC_EXTENSION): $(test_update_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_crcbin_SOURCES+=src/../tests/test_crcbin.c
-test_crcbin_SOURCES+=src/filetypes/crcbin.c
-test_crcbin_SOURCES+=src/crc32.c
+test_crcbin_SOURCES+=$(DISTDIR)/src/../tests/test_crcbin.o
+test_crcbin_SOURCES+=$(DISTDIR)/src/filetypes/crcbin.o
+test_crcbin_SOURCES+=$(DISTDIR)/src/crc32.o
 
 $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_prop_SOURCES+=src/../tests/test_prop.c
-test_prop_SOURCES+=src/filetypes/prop.c
-test_prop_SOURCES+=src/hash.c
+test_prop_SOURCES+=$(DISTDIR)/src/../tests/test_prop.o
+test_prop_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
+test_prop_SOURCES+=$(DISTDIR)/src/hash.o
 
 $(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_rast_SOURCES+=src/../tests/test_rast.c
-test_rast_SOURCES+=src/filetypes/rast.c
+test_rast_SOURCES+=$(DISTDIR)/src/../tests/test_rast.o
+test_rast_SOURCES+=$(DISTDIR)/src/filetypes/rast.o
 
 $(DISTDIR)/test_rast$(EXEC_EXTENSION): $(test_rast_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_rw4_SOURCES+=src/../tests/test_rw4.c
-test_rw4_SOURCES+=src/filetypes/rw4.c
+test_rw4_SOURCES+=$(DISTDIR)/src/../tests/test_rw4.o
+test_rw4_SOURCES+=$(DISTDIR)/src/filetypes/rw4.o
 
 $(DISTDIR)/test_rw4$(EXEC_EXTENSION): $(test_rw4_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_sdelta_SOURCES+=src/../tests/test_sdelta.c
-test_sdelta_SOURCES+=src/filetypes/sdelta.c
+test_sdelta_SOURCES+=$(DISTDIR)/src/../tests/test_sdelta.o
+test_sdelta_SOURCES+=$(DISTDIR)/src/filetypes/sdelta.o
 
 $(DISTDIR)/test_sdelta$(EXEC_EXTENSION): $(test_sdelta_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_heightmap_SOURCES+=src/../tests/test_heightmap.c
-test_heightmap_SOURCES+=src/filetypes/heightmap.c
+test_heightmap_SOURCES+=$(DISTDIR)/src/../tests/test_heightmap.o
+test_heightmap_SOURCES+=$(DISTDIR)/src/filetypes/heightmap.o
 
 $(DISTDIR)/test_heightmap$(EXEC_EXTENSION): $(test_heightmap_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_rules_SOURCES+=src/../tests/test_rules.c
-test_rules_SOURCES+=src/filetypes/rules.c
+test_rules_SOURCES+=$(DISTDIR)/src/../tests/test_rules.o
+test_rules_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
 
 $(DISTDIR)/test_rules$(EXEC_EXTENSION): $(test_rules_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-opensc5_editor_SOURCES+=src/editor.c
-opensc5_editor_SOURCES+=src/getopt.c
+opensc5_editor_SOURCES+=$(DISTDIR)/src/editor.o
+opensc5_editor_SOURCES+=$(DISTDIR)/src/getopt.o
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-opensc5_SOURCES+=src/game.c
+opensc5_SOURCES+=$(DISTDIR)/src/game.o
 opensc5_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+test_dbpf_SOURCES+=$(DISTDIR)/src/../tests/test_dbpf.o
+test_dbpf_SOURCES+=$(dbpf_all_SOURCES)
+
+$(DISTDIR)/test_dbpf$(EXEC_EXTENSION): $(test_dbpf_SOURCES)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(DISTDIR)/%.o: %.c
+	$(CC) -c $^ $(CFLAGS) -o $@
 
 clean:
+	rm -f $(DISTDIR)/src/filetypes/package.o
+	rm -f $(DISTDIR)/src/filetypes/prop.o
+	rm -f $(DISTDIR)/src/filetypes/rules.o
+	rm -f $(DISTDIR)/src/filetypes/rast.o
+	rm -f $(DISTDIR)/src/filetypes/bnk.o
+	rm -f $(DISTDIR)/src/threadpool.o
+	rm -f $(DISTDIR)/src/hash.o
+	rm -f $(DISTDIR)/src/../tests/test_package.o
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_update.o
 	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_crcbin.o
+	rm -f $(DISTDIR)/src/filetypes/crcbin.o
+	rm -f $(DISTDIR)/src/crc32.o
 	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_prop.o
+	rm -f $(DISTDIR)/src/filetypes/prop.o
+	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/test_prop$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_rast.o
+	rm -f $(DISTDIR)/src/filetypes/rast.o
 	rm -f $(DISTDIR)/test_rast$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_rw4.o
+	rm -f $(DISTDIR)/src/filetypes/rw4.o
 	rm -f $(DISTDIR)/test_rw4$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_sdelta.o
+	rm -f $(DISTDIR)/src/filetypes/sdelta.o
 	rm -f $(DISTDIR)/test_sdelta$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_heightmap.o
+	rm -f $(DISTDIR)/src/filetypes/heightmap.o
 	rm -f $(DISTDIR)/test_heightmap$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_rules.o
+	rm -f $(DISTDIR)/src/filetypes/rules.o
 	rm -f $(DISTDIR)/test_rules$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/editor.o
+	rm -f $(DISTDIR)/src/getopt.o
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/game.o
 	rm -f $(DISTDIR)/opensc5$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_dbpf.o
+	rm -f $(DISTDIR)/test_dbpf$(EXEC_EXTENSION)
 
 all_dist:
 	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)

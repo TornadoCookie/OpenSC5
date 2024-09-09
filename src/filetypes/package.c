@@ -184,7 +184,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
     return true;
 }
 
-static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize)
+unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize)
 {
     unsigned char *ret = malloc(outDataSize);
     unsigned char *initData = data;
@@ -215,14 +215,14 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
         int numPlainText = 0;
         int numToCopy = 0;
         int copyOffset = 0;
-        //printf("Control character: %#x\n", byte0);
+        //printf("Control character: %#x ", byte0);
         if (byte0 < 0x80)
         {
             uint8_t byte1 = *data;
             data++;
             numPlainText = byte0 & 0x03;
             numToCopy = ((byte0 & 0x1C) >> 2) + 3;
-            copyOffset = (((byte0 & 0x60) << 3) | byte1) + 1;
+            copyOffset = ((byte0 & 0x60) << 3) + byte1 + 1;
         }
         else if (byte0 < 0xC0)
         {
@@ -262,7 +262,7 @@ static unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outD
             TRACELOG(LOG_WARNING, "Unrecognized control character %#x.\n", byte0);
             return NULL;
         }
-
+        //printf("@ %#x (%#x)\n", retCursor - ret, data - initData);
         memcpy(retCursor, data, numPlainText);
         retCursor += numPlainText;
         data += numPlainText;
@@ -370,7 +370,8 @@ static void datacycle(void *param)
                 //TRACELOG(LOG_DEBUG, "%#x\n", uncompressed[i]);
             }
         }
-        free(data);
+        pkg.entries[i].dataCompressed = data;
+        pkg.entries[i].dataCompressedSize = entry.diskSize;
     }
     else
     {

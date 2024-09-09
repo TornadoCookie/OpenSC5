@@ -97,4 +97,6 @@ void SetWriteCorruptedPackageEntries(bool val);
 
 void ExportPackage(Package pkg, const char *filename);
 
+unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize);
+
 #endif

@@ -1,4 +1,5 @@
 DefaultPlatform linux64-debug
+DefaultDistDir build
 RaylibVersion 5
 UseRaylib
 
@@ -64,4 +65,8 @@ Source getopt.c
 
 Program opensc5
 Source game.c
+UseSourceGroup dbpf_all
+
+Program test_dbpf
+Source ../tests/test_dbpf.c
 UseSourceGroup dbpf_all

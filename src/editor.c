@@ -438,6 +438,7 @@ typedef enum {
     EXPORT_PACKAGE_ENTRY,
     EXPORT_PACKAGE,
     IMPORT_FILE_OVERWRITE,
+    EXPORT_PACKAGE_ENTRY_COMPRESSED,
 } FileDialogReason;
 
 static FileDialogReason fileDialogReason;
@@ -547,6 +548,12 @@ int main(int argc, char **argv)
                 {
                     const char *fname = TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText);
                     loadedPkg.entries[selectedPkgEntry].dataRaw = LoadFileData(fname, &loadedPkg.entries[selectedPkgEntry].dataRawSize);
+                    fileDialogState.SelectFilePressed = false;
+                } break;
+                case EXPORT_PACKAGE_ENTRY_COMPRESSED:
+                {
+                    SaveFileData(TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText), loadedPkg.entries[selectedPkgEntry].dataCompressed, loadedPkg.entries[selectedPkgEntry].dataCompressedSize);
+                    fileDialogState.SelectFilePressed = false;
                 } break;
             }
         }
@@ -653,6 +660,12 @@ int main(int argc, char **argv)
                 if (GuiButton((Rectangle){232, 0, 100, 24}, "Overwrite Entry"))
                 {
                     fileDialogReason = IMPORT_FILE_OVERWRITE;
+                    fileDialogState.windowActive = true;
+                }
+
+                if (entry.compressed && GuiButton((Rectangle){332, 0, 100, 24}, "Export Compressed"))
+                {
+                    fileDialogReason = EXPORT_PACKAGE_ENTRY_COMPRESSED;
                     fileDialogState.saveFileMode = true;
                     fileDialogState.windowActive = true;
                 }
