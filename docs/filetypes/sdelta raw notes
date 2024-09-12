@@ -1,0 +1,46 @@
+
+file header: 20 37 02 00
+
+<3x this>
+
+4 bytes: FF 01 03 01
+big endian 32: 00 00 00 B4
+big endian 32: 00 00 00 01
+some uint32 offset: 6D E2 8X XX
+two 16s?: 00 00 48 B1
+many 69 (0x10 to be exact): 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69
+big endian 32: 00 00 00 04
+big endian 32: 00 00 00 01
+some uint32 offset: 6D E2 8X XX, same as previous
+many zeroes (0x13 to be exact): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+random data (length 0x61): 18 05 AF D6 7D 0B A0 35 0E 1A EA A4 16 23 C0 A4 50 23 DF
+86 E0 29 B6 3B D1 30 98 71 0F 42 2F 50 24 4A 0A 59 92 50
+35 C9 B6 53 82 37 B7 5B 8A 5E 5F 5D 6A 76 01 70 31 04 97
+7A 8F F2 CB 7B 9D 5B A4 8A 65 F1 50 AC 1B 3E 61 C8 3F 00
+64 C9 00 3F 87 C9 0A B2 FA CA 34 18 30 E1 9A DF 62 FD A8
+C7 F5
+many 96 (0x10 to be exact): 96 96 96 96 96 96 96 96 96 96 96 96 96 96 96 96
+
+</3x this>
+
+then:
+4 bytes: FF 01 03 01
+big endian 32 but different this time: 00 00 08 94
+big endian 32: 00 00 00 01
+some uint32 offset: 6D E2 8X XX
+two 16s?: 00 00 48 B1
+many 69 (0x10 to be exact): 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69
+big endian 32: 00 00 00 04
+big endian 32: 00 00 00 01
+some uint32 offset: 6D E2 8X XX, same as previous
+many zeroes (0x8 to be exact): 00 00 00 00 00 00 00 00
+some uint32: 00 00 00 58
+
+
+then, we have a new kind of thing. this pattern repeats.
+signature?: B1 11 11 12
+32-bit null: 00 00 00 00
+32-bit one: 00 00 00 01
+4 random bytes
+2 null bytes: 00 00
+2 random bytes

@@ -57,6 +57,7 @@ Because we are dealing with packages for SimCity 5, we can make some assumptions
 - `minorVersion` will always be 0.
 - `indexMajorVersion` will always be 1.
 - `indexMinorVersion` will always be 3.
+*Interestingly, it seems that DBPF files created at runtime have their major version set to 2.0...*
 
 ## The Index
 The index is the database of the database packed file. It can be found at the offset `indexOffset`. It is very frequently at the end of the file, which unfortunately prevents us from reading the entire database in one linear read.<br>
@@ -114,3 +115,9 @@ If you saw the above section, you probable read that a `compressionType` of 0xFF
 ## What do the codes mean
 - Look [here](../../include/filetypes/package.h) for a list of type codes and their meanings.
 - Look [here](../../Properties.txt) for a partial list of instance IDs taken from SimCity.
+
+A list of group codes listed here:
+| Code | Description |
+| ----------- | ----------- |
+| 0x40490000 | Music |
+| 0xB074E5A | MUiLE layouts |

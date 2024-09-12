@@ -35,7 +35,7 @@
 #define PKGENTRY_EXIF 0x3F8662EA // EXIF image. Unable to be viewed in-editor.
 #define PKGENTRY_FLR  0x438F6347 // Unknown. Found in a property file enumerating type codes.
 #define PKGENTRY_UFO  0x476A98C7 // Unknown. (Spore UFO?) Found in a property file enumerating type codes.
-#define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii), most commonly a SCRUI design.
+#define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii), most commonly a MUiLE design.
 #define PKGENTRY_HTML 0xDD6233D6 // HyperText Markup Language
 #define PKGENTRY_SWB  0xEA5118B0 // SWarm Binary file, particles. Unable to be viewed in-editor.
 
