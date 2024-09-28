@@ -30,7 +30,7 @@ CFLAGS+=-D LIB_EXTENSION=\".dll\"
 CFLAGS+=-lws2_32
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules opensc5_editor opensc5 test_dbpf
+PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile opensc5_editor opensc5 test_dbpf
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -151,6 +151,12 @@ test_rules_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
 $(DISTDIR)/test_rules$(EXEC_EXTENSION): $(test_rules_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+test_statefile_SOURCES+=$(DISTDIR)/src/../tests/test_statefile.o
+test_statefile_SOURCES+=$(DISTDIR)/src/filetypes/statefile.o
+
+$(DISTDIR)/test_statefile$(EXEC_EXTENSION): $(test_statefile_SOURCES)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
 opensc5_editor_SOURCES+=$(DISTDIR)/src/editor.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/getopt.o
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
@@ -208,6 +214,9 @@ clean:
 	rm -f $(DISTDIR)/src/../tests/test_rules.o
 	rm -f $(DISTDIR)/src/filetypes/rules.o
 	rm -f $(DISTDIR)/test_rules$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/../tests/test_statefile.o
+	rm -f $(DISTDIR)/src/filetypes/statefile.o
+	rm -f $(DISTDIR)/test_statefile$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/editor.o
 	rm -f $(DISTDIR)/src/getopt.o
 	rm -f $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION)

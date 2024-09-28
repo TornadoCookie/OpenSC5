@@ -58,6 +58,10 @@ Program test_rules
 Source ../tests/test_rules.c
 Source filetypes/rules.c
 
+Program test_statefile
+Source ../tests/test_statefile.c
+Source filetypes/statefile.c
+
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all

@@ -1,0 +1,66 @@
+
+the archive is gzip compressed based on the signature at the start.
+
+Documents/SimCity/Games/9a3b6720ade6224b/3/1031/state_file_0_1660943219581.egb
+once gzip decompressed we get this data:
+
+16384 words is 0x10000 bytes
+
+00 00 00 14 uint32be: 20
+
+62 2B 9C D7
+19 88 AF BD
+00 00 00 00 uint32 null
+
+BC 73 12 13
+00 00 00 01 uint32be: 1
+
+FD 8D 10 22
+10 88 AF BD
+00 00 00 00 uint32 null
+
+00 00 04 30 uint32be: 1072
+00 00 00 23 uint32be: 35
+00 00 00 04 uint32be: 4
+D7 79 C9 76
+00 00 40 00 uint32be: 16384
+[16384 words of data]
+
+00 00 00 00 uint32 null
+05 1F 31 1F
+D7 4A F2 2B
+00 00 40 00 uint32be: 16384
+[16384 words of data]
+
+00 00 00 00 uint32 null
+04 40 D8 05
+9F C1 CE 21
+00 00 40 00 uint32be: 16384
+[16384 words of data]
+
+00 00 00 00
+00 00 00 00
+7C 4E B5 D6
+00 00 40 00 uint32be: 16384
+[16384 words of data]
+
+00 00 00 00
+00 00 00 00
+E3 BF CD DD
+00 00 40 00
+[16384 words of data]
+
+i think you see a pattern here,
+so the next ones will be a rapid fire of the unique ids (entries 2 and 3 which seem to be random.)
+
+00 00 00 00 F6 9D F1 C6
+
+02 63 71 2B 26 70 74 8D
+
+00 00 00 00 E5 D6 6D F5
+
+00 00 00 00 0F 92 DC 56
+
+08 00 44 3E 76 D1 0F F2
+
+00 00 00 00 BC 19 50 00
