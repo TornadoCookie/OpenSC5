@@ -1,0 +1,49 @@
+
+Type: FF 02 03 01
+
+File Example SLDelta2_1 2:
+00 00 00 00 uint32 null
+00 00 00 27 uint32be: 39
+00 00 01 78 uint32be: 376
+00 00 00 01 uint32be: 1
+00 00 01 82 uint32be: 386
+B7 E2
+[1314 bytes of encrypted? data]
+
+File Example SLDelta2_1 2:
+00 00 00 00 uint32 null
+00 00 00 2D uint32be: 45
+00 00 01 78 uint32be: 376
+00 00 00 01 uint32be: 1
+00 00 01 82 uint32be: 386
+B7 E2
+[114 bytes of encrypted? data]
+
+File Example SLDelta13_1 1:
+00 00 00 00 uint32 null
+00 00 00 0B uint32be: 11
+00 00 00 00 uint32 null
+00 00 00 0C uint32be: 12
+00 00 01 82 uint32be: 386
+B7 EE
+[90 bytes of encrypted? data]
+
+File Example SLDelta13_1 2:
+00 00 00 00 uint32 null
+00 00 00 13 uint32be: 19
+00 00 00 00 uint32 null
+00 00 00 0C uint32be: 12
+00 00 01 82 uint32be: 386
+B7 F1
+[90 bytes of encrypted? data]
+
+File Example SLDelta13_1 541:
+00 00 00 00 uint32 null
+00 00 26 92 uint32be: 9874
+00 00 00 00 uint32 null
+00 00 00 0C uint32be: 12
+00 00 01 82 uint32be: 386
+BC 80
+
+
+
