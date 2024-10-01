@@ -64,3 +64,99 @@ so the next ones will be a rapid fire of the unique ids (entries 2 and 3 which s
 08 00 44 3E 76 D1 0F F2
 
 00 00 00 00 BC 19 50 00
+
+...
+...
+
+in our code testing it came to be that there is more.
+
+1F 9D 00 00 you might think lzw compression but this appears not to be the case.
+00 00 00 31 uint32be: 49
+00 00 00 31 uint32be: 49
+00 00 00 0D uint32be: 13
+00 00
+
+00 00 uint32 null
+E9 70 8D A6
+00 00 04 00 uint32be: 1024
+00 00 00 00 00 00 00 00
+3F 00 00 00 uint32le: 63
+3F 00 00 00 uint32le: 63
+00 0C 00 00 uint32le: 3072, uint16be: 12
+[16 null bytes]
+00 00 FF FF
+FF FF 00 00
+[12 null bytes]
+
+00 01 uint16be: 1
+48 4E 6E 46 text: "HNnF"
+00 00 04 01
+00 00 00 00 00 00 00 00
+3F 00 00 00 uint32le: 63
+3F 00 00 00 uint32le: 63
+00 0C 00 00 uint32le: 3072, uint16be: 12
+[16 null bytes]
+00 00 FF FF
+FF FF 00 00
+[12 null bytes]
+
+00 02 uint16be: 2
+EA D3 8A 03
+00 00 04 02
+00 00 00 00 00 00 00 00
+3F 00 00 00
+3F 00 00 00
+00 0E 3F 80
+[12 null bytes]
+00 00 3F 80
+[12 null bytes]
+00 00 3F 80
+00 00 00 00 00 00 00 00
+00 00
+C4 16 5D 71
+[8 null bytes]
+00 FF FF 00
+00 00 00 00
+00 00
+
+00 02 uint32be: 2
+29 BF E5 83
+00 00 04 02
+CD D9 BB B7
+
+[ break to new file start ]
+00 00 00 14
+
+62 6B 9C D7
+11 23 38 9E
+00 00 00 0F
+[0x3c bytes (0xf * 4) of random?]
+
+11 23 38 9E
+[0x38 bytes (0xe * 4) of semi-repeating int32]
+
+AE AD 75 81
+00 00 00 01 uint32be: 1
+
+FD 8D 10 22
+0F 57 16 BC
+00 00 00 00 uint32 null
+00 00 04 13 uint32be: 1043
+00 00 00 24 uint32be: 36
+00 00 00 04 uint32be: 4
+
+[... skip to the other part.]
+
+00 00 00 00 uint32 null
+00 00 00 13 uint32be: 19
+00 00 00 13 uint32be: 19
+00 00 00 0D uint32be: 13
+00 00
+
+00 00 uint32 null
+E9 70 8D A6
+00 00 40 00 uint32be: 1024
+00 00 00 00 00 00 00 00
+3F 00 00 00 uint32le: 63
+3F 00 00 00 uint32le: 63
+
