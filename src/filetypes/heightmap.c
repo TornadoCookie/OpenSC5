@@ -5,15 +5,18 @@
 #include <stdio.h>
 #include <cpl_endian.h>
 
-typedef struct HeightmapHeader {
-    uint32_t unknown1;
+typedef struct __attribute__ ((packed)) HeightmapHeader {
+    char unknown[7];
+    uint32_t height; // may be width
+    uint32_t width;  // may be height
     uint16_t unknown2;
-    uint16_t width;
     uint16_t unknown3;
-    uint16_t height;
-    uint32_t unknown4;
-    uint32_t unknown5;
 } HeightmapHeader;
+
+Color eight2col(uint8_t d)
+{
+    return (Color){d, d, d, 255};
+}
 
 HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
 {
@@ -22,31 +25,44 @@ HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
     HeightmapHeader *header = data;
     data += 0x14;
 
-    header->height = htobe32(header->height);
-    header->width = htobe32(header->width);
+    Color *imgDatas[4];
 
-    Color *imgData = malloc(0x8000 * sizeof(Color));
-
-    uint16_t *data16 = data;
-
-    for (int i = 0; i < 0x8000; i++)
+    for (int i = 0; i < 4; i++)
     {
-        uint16_t as16 = htobe16(data16[i]);
-        uint8_t as8 = as16 & 0xFF;
-        Color col = {
-            as8, as8, as8, 255
-        };
-        imgData[i] = col;
+        imgDatas[i] = malloc(0x4000 * sizeof(Color));
     }
 
-    Image img = { 0 };
-    img.width = 128;
-    img.height = 256;
-    img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-    img.data = imgData;
-    img.mipmaps = 1;
 
-    heightmapData.heightmap = img;
+    uint32_t *data32 = data;
+    printf("w %d h %d\n", header->height, header->width);
+
+    for (int i = 0; i < 0x4000; i++)
+    {
+        uint32_t asint = data32[i];
+        printf("%08x ", asint);
+        uint8_t *as8s = &asint;
+
+        imgDatas[0][i] = eight2col(as8s[0]);
+        imgDatas[1][i] = eight2col(as8s[1]);
+        imgDatas[2][i] = eight2col(as8s[2]);
+        imgDatas[3][i] = eight2col(as8s[3]);
+    }
+
+    Image imgs[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+        imgs[i].width = header->width;
+        imgs[i].height = header->height;
+        imgs[i].format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+        imgs[i].data = imgDatas[i];
+        imgs[i].mipmaps = 1;
+        ExportImage(imgs[i], TextFormat("heightmap_%d.png", i));
+    }
+
+    
+
+    heightmapData.heightmap = imgs[0];
     heightmapData.corrupted = true;
 
     return heightmapData;

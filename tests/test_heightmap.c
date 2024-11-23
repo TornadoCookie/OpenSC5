@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
 
     InitWindow(1280, 720, "heightmap Viewer");
-    Mesh heightmapMesh = GenMeshHeightmap(heightmapData.heightmap, (Vector3){128, 64, 256});
+    Mesh heightmapMesh = GenMeshHeightmap(heightmapData.heightmap, (Vector3){heightmapData.heightmap.height, 16, heightmapData.heightmap.width});
     Material mat = LoadMaterialDefault();
 
     Texture2D tex = LoadTextureFromImage(heightmapData.heightmap);
@@ -44,6 +44,7 @@ int main(int argc, char **argv)
         UpdateCamera(&camera, CAMERA_FREE);
 
         DrawTexture(tex, 0, 0, WHITE);
+        DrawRectangle(camera.position.x, camera.position.z, 2, 2, WHITE);
         EndDrawing();
     }
 
