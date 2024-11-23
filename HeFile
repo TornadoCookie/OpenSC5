@@ -1,6 +1,6 @@
 DefaultPlatform linux64-debug
 DefaultDistDir build
-RaylibVersion 5
+RaylibVersion 5.5
 UseRaylib
 
 NativeDependency curl

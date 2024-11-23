@@ -5,7 +5,7 @@ DISTDIR?=build
 
 .PHONY: all
 
-RAYLIB_NAME=raylib5-$(PLATFORM)
+RAYLIB_NAME=raylib5.5-$(PLATFORM)
 
 ifeq ($(PLATFORM), linux64-debug)
 EXEC_EXTENSION=-debug

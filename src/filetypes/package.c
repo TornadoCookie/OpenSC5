@@ -70,9 +70,6 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
-#define LOAD_IMAGE_ANIM_FROM_MEMORY_IMPL
-#include "image_anim_from_memory.h"
-
 static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType, PackageEntry *pkgEntry)
 {
     switch (dataType)
@@ -128,7 +125,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_PNG: // PNG file.
         {
             pkgEntry->data.imgData.img = LoadImageFromMemory(".png", data, dataSize);
-            pkgEntry->corrupted = !IsImageReady(pkgEntry->data.imgData.img);
+            pkgEntry->corrupted = !IsImageValid(pkgEntry->data.imgData.img);
             //if (!pkgEntry->corrupted)
             //{
             //    pkgEntry->data.imgData.tex = LoadTextureFromImage(pkgEntry->data.imgData.img);
@@ -151,7 +148,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         case PKGENTRY_GIF:
         {
             pkgEntry->data.gifData.img = LoadImageAnimFromMemory(".gif", data, dataSize, &pkgEntry->data.gifData.frameCount);
-            pkgEntry->corrupted = !IsImageReady(pkgEntry->data.gifData.img);
+            pkgEntry->corrupted = !IsImageValid(pkgEntry->data.gifData.img);
             //if (!pkgEntry->corrupted)
             //{
             //    pkgEntry->data.gifData.tex = LoadTextureFromImage(pkgEntry->data.gifData.img);
