@@ -12,14 +12,19 @@ DistData LICENSE
 DistData Properties.txt
 DistData launcher.bat
 
+ExtraCFlag -Isrc/ww2ogg
+
 SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c
 Source filetypes/rules.c
 Source filetypes/rast.c
 Source filetypes/bnk.c
+CxxSource filetypes/wwriff.cpp
+CxxSource ww2ogg/wwriff.cpp
 Source threadpool.c
 Source hash.c
+Source memstream.c
 
 Program test_package
 Source ../tests/test_package.c
@@ -45,6 +50,7 @@ Source filetypes/rast.c
 Program test_rw4
 Source ../tests/test_rw4.c
 Source filetypes/rw4.c
+Source memstream.c
 
 Program test_sdelta
 Source ../tests/test_sdelta.c
@@ -61,6 +67,10 @@ Source filetypes/rules.c
 Program test_statefile
 Source ../tests/test_statefile.c
 Source filetypes/statefile.c
+
+Program test_hash
+Source ../tests/test_hash.c
+Source hash.c
 
 Program opensc5_editor
 Source editor.c
