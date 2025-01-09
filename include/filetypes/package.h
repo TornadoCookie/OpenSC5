@@ -7,6 +7,7 @@
 #include "rules.h"
 #include "rast.h"
 #include "bnk.h"
+#include "rw4.h"
 
 #define PKGENTRY_PROP 0x00B1B104 // PROPerties file
 #define PKGENTRY_GMDL 0x00E6BCE5 // Unknown. Found in a property file enumerating type codes.
@@ -30,6 +31,7 @@
 #define PKGENTRY_RAST 0x2F4E681C // renderware RASTer image
 #define PKGENTRY_JPEG 0x2F7D0002 // JPEG image.
 #define PKGENTRY_PNG  0x2F7D0004 // PNG file
+#define PKGENTRY_TGA  0x2F7D0006 // TGA image.
 #define PKGENTRY_GIF  0x2F7D0007 // GIF image.
 #define PKGENTRY_MOV  0x376840D7 // MOV file. Unable to be played in-editor.
 #define PKGENTRY_EXIF 0x3F8662EA // EXIF image. Unable to be viewed in-editor.
@@ -67,6 +69,7 @@ typedef struct PackageEntry {
             int currentFrame;
         } gifData;
         BnkData bnkData;
+        RW4Data rw4Data;
     } data;
 } PackageEntry;
 

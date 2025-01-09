@@ -413,6 +413,13 @@ static void DrawPackageEntry(PackageEntry entry)
                 }
             }
         } break;
+        case PKGENTRY_RW4:
+        {
+           if (entry.data.rw4Data.type == RW4_TEXTURE)
+           {
+               DrawTexture(entry.data.rw4Data.data.texData.tex, 0, 0, WHITE);
+           }
+        } break;
         default:
         {
             DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
@@ -512,6 +519,11 @@ int main(int argc, char **argv)
                         if (entry.type == PKGENTRY_RAST || entry.type == PKGENTRY_PNG || entry.type == PKGENTRY_GIF && !entry.corrupted)
                         {
                             loadedPkg.entries[i].data.imgData.tex = LoadTextureFromImage(entry.data.imgData.img);
+                        }
+
+                        if (entry.type == PKGENTRY_RW4 || !entry.corrupted && entry.data.rw4Data.type == RW4_TEXTURE)
+                        {
+                            loadedPkg.entries[i].data.rw4Data.data.texData.tex = LoadTextureFromImage(entry.data.rw4Data.data.texData.img);
                         }
                         
                         for (int j = 0; j < nameList.propCount; j++)

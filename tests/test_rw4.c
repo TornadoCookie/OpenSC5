@@ -28,7 +28,7 @@ int main(int argc, char **argv)
         Material mat = LoadMaterialDefault();
         mat.maps[MATERIAL_MAP_DIFFUSE].color = BLACK;
 
-        UploadMesh(&rw4data.model.meshes[0], false);
+        //UploadMesh(&rw4data.model.meshes[0], false);
 
         while (!WindowShouldClose())
         {
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
             BeginMode3D(camera);
 
-            DrawMesh(rw4data.model.meshes[0], mat, MatrixTranslate(0, 0, 0));
+            //DrawMesh(rw4data.model.meshes[0], mat, MatrixTranslate(0, 0, 0));
 
             EndMode3D();
 

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <cpl_endian.h>
+#include "memstream.h"
 
 typedef struct RWHeader {
     char magic[28];
@@ -130,6 +131,21 @@ typedef struct RWVertexDescription {
     uint32_t field14;
     RWVertexElement *elements;
 } RWVertexDescription;
+
+typedef struct RWRaster {
+    int32_t textureFormat;
+    uint16_t textureFlags;
+    uint16_t volumeDepth;
+    int32_t dxBaseTexture;
+    uint16_t width;
+    uint16_t height;
+    uint8_t field10;
+    uint8_t mipmapLevels;
+    uint16_t skipped;
+    int32_t field14;
+    int32_t field18;
+    int32_t textureData;
+} RWRaster;
 
 unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, char *initData, int *dataSize)
 {
@@ -333,9 +349,9 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 }
 
-                rw4data.model.meshCount++;
-                rw4data.model.meshes = realloc(rw4data.model.meshes, rw4data.model.meshCount * sizeof(Mesh));
-                rw4data.model.meshes[rw4data.model.meshCount - 1] = mesh;
+                //rw4data.model.meshCount++;
+                //rw4data.model.meshes = realloc(rw4data.model.meshes, rw4data.model.meshCount * sizeof(Mesh));
+                //rw4data.model.meshes[rw4data.model.meshCount - 1] = mesh;
             } break;
             case 0x20005: // VertexBuffer
             {
@@ -397,6 +413,93 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     printf("Usage index: %d\n", element.usageIndex);
                     printf("Type Code: %#x\n", element.typeCode);
                 }
+            } break;
+            case 0x20003: // Raster
+            {
+                RWRaster raster;
+                memcpy(&raster, data, sizeof(RWRaster));
+                data += sizeof(RWRaster);
+
+                printf("Raster info:\n");
+                printf("Texture Format: %d\n", raster.textureFormat);
+                printf("Texture Flags: %#x\n", raster.textureFlags);
+                printf("Volume Depth: %d\n", raster.volumeDepth);
+                //printf("dxBaseTexture: %#x\n", raster.dxBaseTexture);
+                printf("width: %d\n", raster.width);
+                printf("height: %d\n", raster.height);
+                printf("mipmaps: %d\n", raster.mipmapLevels);
+                printf("textureData: [Section %d]\n", raster.textureData);
+
+                if (raster.textureFormat != 21)
+                {
+                    printf("Unimplemented texture format %d.\n", raster.textureFormat);
+                    rw4data.corrupted = true;
+                }
+
+                if (raster.textureFlags & 0x1000)
+                {
+                    printf("Cubemaps not supported.\n");
+                    rw4data.corrupted = true;
+                }
+
+                int textureDataSize;
+                unsigned char *textureData = LoadSectionData(sectionInfos, raster.textureData, initData, &textureDataSize);
+
+                int blockSize = 0;
+                int rgbBitCount = 0;
+                int pfFlags = 0;
+                
+                if (raster.textureFormat == 21)
+                {
+                    // A8R8G8B8
+                    pfFlags |= 0x40 | 0x1; // RGB | ALPHAPIXELS
+                    rgbBitCount = 32;
+                }
+
+                int pitchOrLinearSize = raster.width * raster.height * rgbBitCount / 8;
+
+                MemStream ddsStream = { 0 };
+
+                char padding[256] = { 0 }; // 0-filled padding
+
+                memstream_write32(&ddsStream, 0x20534444L); // signature
+                memstream_write32(&ddsStream, 0x7c); // size (default 0x7c)
+                const int DEFAULT_FLAGS = 0x80000 | 0x20000 | 0x1000 | 0x4 | 0x2 | 0x1; // LINEARSIZE | MIPMAPCOUNT | PIXELFORMAT | WIDTH | HEIGHT | CAPS
+                                                                                
+                memstream_write32(&ddsStream, DEFAULT_FLAGS); // flags
+                memstream_write32(&ddsStream, raster.height); // height
+                memstream_write32(&ddsStream, raster.width); // width
+                memstream_write32(&ddsStream, pitchOrLinearSize); // pitchOrLinearSize
+                memstream_write32(&ddsStream, 0); // depth
+                memstream_write32(&ddsStream, raster.mipmapLevels); // mipmapCount
+                memstream_write(&ddsStream, padding, 44); // padding
+
+                // PixelFormat
+                memstream_write32(&ddsStream, 32); // size (default 32)
+                memstream_write32(&ddsStream, pfFlags); // flags
+                memstream_write32(&ddsStream, 0); // FourCC (not compressed so 0)
+                memstream_write32(&ddsStream, rgbBitCount); // rgbBitCount
+                memstream_write32(&ddsStream, 0x00FF0000); // maskRed
+                memstream_write32(&ddsStream, 0x0000FF00); // maskGreen
+                memstream_write32(&ddsStream, 0x000000FF); // maskBlue
+                memstream_write32(&ddsStream, 0xFF000000); // maskAlpha
+
+                memstream_write32(&ddsStream, 0); // caps
+                memstream_write32(&ddsStream, 0); // caps2
+                memstream_write32(&ddsStream, 0); // caps3
+                memstream_write32(&ddsStream, 0); // caps4
+                memstream_write32(&ddsStream, 0); // padding 4 bytes
+
+                // DDS Data
+                memstream_write(&ddsStream, textureData, textureDataSize);
+
+                Image img = LoadImageFromMemory(".dds", ddsStream.buf, ddsStream.size);
+                
+                rw4data.type = RW4_TEXTURE;
+                rw4data.data.texData.img = img;
+
+                ExportImage(img, "rw4_out.png");
+
             } break;
             default:
             {
