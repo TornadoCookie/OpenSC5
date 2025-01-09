@@ -1,4 +1,5 @@
 #include "filetypes/bnk.h"
+#include "filetypes/wwriff.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -130,17 +131,8 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
 
         {
             TRACELOG(LOG_INFO, "BNK: Loading %#X (%d/%d)", index.id, i, contentIndexCount);
-            FILE *f = fopen(TextFormat("corrupted/BNK_%#X.wem", index.id), "wb");
-            fwrite(data, 1, index.size, f);
-            fflush(f);
-            fclose(f);
-
-            WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/BNK_%#X.wem", index.id), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
-            if (wwriff)
-            {
-                WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/BNK_%#X.ogg", index.id));
-                remove(TextFormat("corrupted/BNK_%#X.wem", index.id));
-            }
+            
+            bnkData.waves[index.id] = LoadWWRiffWave(data, index.size);
         }
     }
 
