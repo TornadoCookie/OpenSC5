@@ -147,6 +147,22 @@ typedef struct RWRaster {
     int32_t textureData;
 } RWRaster;
 
+typedef struct RWSectionTypes {
+
+} RWSectionTypes;
+
+typedef struct RWSectionExternalArenas {
+
+} RWSectionExternalArenas;
+
+typedef struct RWSectionSubReferences {
+
+} RWSectionSubReferences;
+
+typedef struct RWSectionAtoms {
+
+} RWSectionAtoms;
+
 unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, char *initData, int *dataSize)
 {
     if (dataSize) *dataSize = sectionInfos[section].size;
@@ -178,6 +194,8 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     printf("Offset 3: %d\n", header.offset3);
     printf("Offset 4: %d\n", header.offset4);
 
+    rw4data.corrupted = true;
+
     RWSectionInfo *sectionInfos = malloc(sizeof(RWSectionInfo) * header.sectionCount);
 
     printf("Section info:\n");
@@ -194,6 +212,12 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
         printf("Alignment: %d\n", sectionInfo.alignment);
         printf("Type Code Index: %d\n", sectionInfo.typeCodeIndex);
         printf("Type Code: %#x\n", sectionInfo.typeCode);
+
+        if (sectionInfo.typeCode == 0x10030)
+        {
+            sectionInfo.dataOffset += header.bufferDataOffset;
+        }
+
 
         sectionInfos[i] = sectionInfo;
     }
@@ -329,20 +353,20 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                     float *positions = malloc(3 * vertexCount * sizeof(float));
 
-                    SaveFileData("helpme.bin", vertexData, sectionInfos[vertexBuffer->vertexData].size);
+                    //SaveFileData("helpme.bin", vertexData, sectionInfos[vertexBuffer->vertexData].size);
 
                     for (int k = 0; k < vertexCount; k++)
                     {
-                        printf("Load vertex %d: ", k);
+                        //printf("Load vertex %d: ", k);
                         vertexData = vertexInitData + (8 * vertexBuffer->vertexSize + vertexCount) + 0x10 *k; //((vertexStart+k) * vertexBuffer->vertexSize + positionElement->offset);
-                        printf("vertexData %p, off %#x, ", vertexData, vertexData - vertexInitData);
+                        //printf("vertexData %p, off %#x, ", vertexData, vertexData - vertexInitData);
                         positions[k*3+0] = *(float*)vertexData;
                         vertexData += sizeof(float);
                         positions[k*3+1] = *(float*)vertexData;
                         vertexData += sizeof(float);
                         positions[k*3+2] = *(float*)vertexData;
                         vertexData += sizeof(float);
-                        printf("{%f, %f, %f}.\n", positions[k*3+0], positions[k*3+1], positions[k*3+2]);
+                        //printf("{%f, %f, %f}.\n", positions[k*3+0], positions[k*3+1], positions[k*3+2]);
                     }
 
                     mesh.vertices = positions;
@@ -429,17 +453,19 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 printf("height: %d\n", raster.height);
                 printf("mipmaps: %d\n", raster.mipmapLevels);
                 printf("textureData: [Section %d]\n", raster.textureData);
-
-                if (raster.textureFormat != 21)
-                {
-                    printf("Unimplemented texture format %d.\n", raster.textureFormat);
-                    rw4data.corrupted = true;
-                }
+                
+                rw4data.corrupted = false;
 
                 if (raster.textureFlags & 0x1000)
                 {
                     printf("Cubemaps not supported.\n");
                     rw4data.corrupted = true;
+                }
+
+                if (raster.width % 4 != 0 || raster.height % 4 != 0)
+                {
+                    printf("Invalid size.\n");
+                    //rw4data.corrupted = true;
                 }
 
                 int textureDataSize;
@@ -448,6 +474,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 int blockSize = 0;
                 int rgbBitCount = 0;
                 int pfFlags = 0;
+                bool isCompressed = false;
                 
                 if (raster.textureFormat == 21)
                 {
@@ -455,8 +482,36 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     pfFlags |= 0x40 | 0x1; // RGB | ALPHAPIXELS
                     rgbBitCount = 32;
                 }
+                else if (!memcmp(&raster.textureFormat, "DXT1", 4))
+                {
+                    blockSize = 8;
+                }
+                else
+                {
+                    printf("Unimplemented texture format %d.\n", raster.textureFormat);
+                    rw4data.corrupted = true;
+                }
 
-                int pitchOrLinearSize = raster.width * raster.height * rgbBitCount / 8;
+                int pitchOrLinearSize = 0;
+
+                if (blockSize == 0)
+                {
+                    pitchOrLinearSize = raster.width * raster.height * rgbBitCount / 8;
+                }
+                else
+                {
+#define max(x, y) (((x)>(y))?(x):(y))
+                    pitchOrLinearSize = max(1, ((raster.width + 3) / 4) * max(1, (raster.height + 3) / 4)) * blockSize;
+                    isCompressed = true;
+                }
+
+                int fourCC = 0;
+
+                if (isCompressed)
+                {
+                    pfFlags |= 0x4; //FOURCC
+                    fourCC = raster.textureFormat;
+                }
 
                 MemStream ddsStream = { 0 };
 
@@ -477,7 +532,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 // PixelFormat
                 memstream_write32(&ddsStream, 32); // size (default 32)
                 memstream_write32(&ddsStream, pfFlags); // flags
-                memstream_write32(&ddsStream, 0); // FourCC (not compressed so 0)
+                memstream_write32(&ddsStream, fourCC); // FourCC
                 memstream_write32(&ddsStream, rgbBitCount); // rgbBitCount
                 memstream_write32(&ddsStream, 0x00FF0000); // maskRed
                 memstream_write32(&ddsStream, 0x0000FF00); // maskGreen
@@ -493,12 +548,12 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 // DDS Data
                 memstream_write(&ddsStream, textureData, textureDataSize);
 
+                SaveFileData("rw4_out.dds", ddsStream.buf, ddsStream.size);
+
                 Image img = LoadImageFromMemory(".dds", ddsStream.buf, ddsStream.size);
                 
                 rw4data.type = RW4_TEXTURE;
                 rw4data.data.texData.img = img;
-
-                ExportImage(img, "rw4_out.png");
 
             } break;
             default:
