@@ -5,11 +5,12 @@
 #include <string.h>
 #include <cpl_endian.h>
 #include <raylib.h>
-#include <cwwriff.h>
+#include "filetypes/wwriff.h"
 #include <threadpool.h>
 #include <cpl_pthread.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include "memstream.h"
 
 #ifdef __linux__
 #define mkdir(x) mkdir(x, 0777)
@@ -157,19 +158,7 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
         } break;
         case PKGENTRY_WEM:
         {
-            FILE *f = fopen(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance), "wb");
-            fwrite(data, 1, dataSize, f);
-            fclose(f);
-
-            WWRiff *wwriff = WWRiff_Create(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance), "packed_codebooks_aoTuV_603.bin", false, false, NO_FORCE_PACKET_FORMAT);
-            
-            if (!wwriff) return false;
-            
-            WWRiff_PrintInfo(wwriff);
-            bool res = WWRiff_GenerateOGG(wwriff, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
-            remove(TextFormat("corrupted/%#X-%#X-%#X.wem", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
-
-            return res;
+            ExportWWRiffToFile(data, dataSize, TextFormat("corrupted/%#X-%#X-%#X.ogg", pkgEntry->type, pkgEntry->group, pkgEntry->instance));
         } break;
         default:
         {
@@ -181,101 +170,128 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
     return true;
 }
 
+/**
+ * @brief Decompress a RefPack bitstream
+ * @param indata - (optional) Pointer to the input RefPack bitstream; may be
+ *	NULL
+ * @param bytes_read_out - (optional) Pointer to a size_t which will be filled
+ *	with the total number of bytes read from the RefPack bitstream; may be
+ *	NULL
+ * @param outdata - Pointer to the output buffer which will be filled with the
+ *	decompressed data; outdata may be NULL only if indata is also NULL
+ * @return The value of the "decompressed size" field in the RefPack bitstream,
+ *	or 0 if indata is NULL
+ *
+ * This function is a verbatim translation from x86 assembly into C (with
+ * new names and comments supplied) of the RefPack decompression function
+ * located at TSOServiceClientD_base+0x724fd in The Sims Online New & Improved
+ * Trial.
+ *
+ * This function ***does not*** perform any bounds-checking on reading or
+ * writing. It is inappropriate to use this function on untrusted data obtained
+ * from the internet (even though that is exactly what The Sims Online does...).
+ * Here are the potential problems:
+ * - This function will read past the end of indata if the last command in
+ *   indata tells it to.
+ * - This function will write past the end of outdata if indata tells it to.
+ * - This function will read before the beginning of outdata if indata tells
+ *   it to.
+ */
+size_t refpack_decompress_unsafe(const uint8_t *indata, size_t *bytes_read_out,
+	uint8_t *outdata)
+{
+	const uint8_t *in_ptr;
+	uint8_t *out_ptr;
+	uint16_t signature;
+	uint32_t decompressed_size = 0;
+	uint8_t byte_0, byte_1, byte_2, byte_3;
+	uint32_t proc_len, ref_len;
+	uint8_t *ref_ptr;
+	uint32_t i;
+ 
+	in_ptr = indata, out_ptr = outdata;
+	if (!in_ptr)
+		goto done;
+ 
+	signature = ((in_ptr[0] << 8) | in_ptr[1]), in_ptr += 2;
+	if (signature & 0x0100)
+		in_ptr += 3; /* skip over the compressed size field */
+ 
+	decompressed_size = ((in_ptr[0] << 16) | (in_ptr[1] << 8) | in_ptr[2]);
+	in_ptr += 3;
+ 
+	while (1) {
+		byte_0 = *in_ptr++;
+		if (!(byte_0 & 0x80)) {
+			/* 2-byte command: 0DDRRRPP DDDDDDDD */
+			byte_1 = *in_ptr++;
+ 
+			proc_len = byte_0 & 0x03;
+			for (i = 0; i < proc_len; i++)
+				*out_ptr++ = *in_ptr++;
+ 
+			ref_ptr = out_ptr - ((byte_0 & 0x60) << 3) - byte_1 - 1;
+			ref_len = ((byte_0 >> 2) & 0x07) + 3;
+			for (i = 0; i < ref_len; i++)
+				*out_ptr++ = *ref_ptr++;
+		} else if(!(byte_0 & 0x40)) {
+			/* 3-byte command: 10RRRRRR PPDDDDDD DDDDDDDD */
+			byte_1 = *in_ptr++;
+			byte_2 = *in_ptr++;
+ 
+			proc_len = byte_1 >> 6;
+			for (i = 0; i < proc_len; i++)
+				*out_ptr++ = *in_ptr++;
+ 
+			ref_ptr = out_ptr - ((byte_1 & 0x3f) << 8) - byte_2 - 1;
+			ref_len = (byte_0 & 0x3f) + 4;
+			for (i = 0; i < ref_len; i++)
+				*out_ptr++ = *ref_ptr++;
+		} else if(!(byte_0 & 0x20)) {
+			/* 4-byte command: 110DRRPP DDDDDDDD DDDDDDDD RRRRRRRR*/
+			byte_1 = *in_ptr++;
+			byte_2 = *in_ptr++;
+			byte_3 = *in_ptr++;
+ 
+			proc_len = byte_0 & 0x03;
+			for (i = 0; i < proc_len; i++)
+				*out_ptr++ = *in_ptr++;
+ 
+			ref_ptr = out_ptr - ((byte_0 & 0x10) << 12)
+				- (byte_1 << 8) - byte_2 - 1;
+			ref_len = ((byte_0 & 0x0c) << 6) + byte_3 + 5;
+			for (i = 0; i < ref_len; i++)
+				*out_ptr++ = *ref_ptr++;
+		} else {
+			/* 1-byte command: 111PPPPP */
+			proc_len = (byte_0 & 0x1f) * 4 + 4;
+			if (proc_len <= 0x70) {
+				/* no stop flag */
+				for (i = 0; i < proc_len; i++)
+					*out_ptr++ = *in_ptr++;
+			} else {
+				/* stop flag */
+				proc_len = byte_0 & 0x3;
+				for (i = 0; i < proc_len; i++)
+					*out_ptr++ = *in_ptr++;
+ 
+				break;
+			}
+		}
+	}
+ 
+done:
+	if (bytes_read_out)
+		*bytes_read_out = in_ptr - indata;
+	return decompressed_size;
+}
+
 unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize)
 {
     unsigned char *ret = malloc(outDataSize);
     unsigned char *initData = data;
 
-    uint8_t compressionType = data[0];
-    uint32_t uncompressedSize;
-
-    TRACELOG(LOG_DEBUG, "Compression Type: %#x\n", compressionType);
-
-    if (compressionType & 0x80)
-    {
-        TRACELOG(LOG_ERROR, "Unrecognized compression type %#x.\n", compressionType);
-        free(ret);
-        return NULL;
-    }
-
-    memcpy(&uncompressedSize, data + 2, 3);
-    //printf("Uncompressed Size: %d\n", uncompressedSize);
-
-    data += 5;
-
-    unsigned char *retCursor = ret;
-
-    while (initData - data <= dataSize)
-    {
-        uint8_t byte0 = *data;
-        data++;
-        int numPlainText = 0;
-        int numToCopy = 0;
-        int copyOffset = 0;
-        //printf("Control character: %#x ", byte0);
-        if (byte0 < 0x80)
-        {
-            uint8_t byte1 = *data;
-            data++;
-            numPlainText = byte0 & 0x03;
-            numToCopy = ((byte0 & 0x1C) >> 2) + 3;
-            copyOffset = ((byte0 & 0x60) << 3) + byte1 + 1;
-        }
-        else if (byte0 < 0xC0)
-        {
-            uint8_t byte1 = *data;
-            data++;
-            uint8_t byte2 = *data;
-            data++;
-
-            numPlainText = (byte1 >> 6);
-            numToCopy = (byte0 & 0x3F) + 4;
-            copyOffset = (((byte1 & 0x3F) << 8) | byte2) + 1;
-        }
-        else if (byte0 < 0xE0)
-        {
-            uint8_t byte1 = *data;
-            data++;
-            uint8_t byte2 = *data;
-            data++;
-            uint8_t byte3 = *data;
-            data++;
-
-            numPlainText = byte0 & 0x03;
-            numToCopy = (((byte0 & 0x0C) << 6) | byte3) + 5;
-            copyOffset = ((((byte0 & 0x10) << 4) | byte1 << 8) | byte2) + 1;
-        }
-        else if (byte0 < 0xFC)
-        {
-            numPlainText = ((byte0 & 0x1F) + 1) * 4;
-        }
-        else if (byte0 <= 0xFF)
-        {
-            numPlainText = byte0 & 0x03;
-            numToCopy = 0; 
-        }
-        else
-        {
-            TRACELOG(LOG_WARNING, "Unrecognized control character %#x.\n", byte0);
-            return NULL;
-        }
-        //printf("@ %#x (%#x)\n", retCursor - ret, data - initData);
-        memcpy(retCursor, data, numPlainText);
-        retCursor += numPlainText;
-        data += numPlainText;
-
-        if (retCursor - copyOffset < ret)
-        {
-            TRACELOG(LOG_ERROR, "Invalid copyOffset. Ret=%p, retCursor - copyOffset = %p.\n", ret, retCursor - copyOffset - 1);
-        }
-
-        memcpy(retCursor, retCursor - copyOffset, numToCopy);
-        retCursor += numToCopy;
-
-        if (byte0 >= 0xFC & byte0 <= 0xFF) break;
-    }
-
-    if (retCursor - ret != outDataSize) TRACELOG(LOG_ERROR, "Decompression Sanity Error: RetCursor: %ld; RetLength: %d.\n", retCursor - ret, outDataSize);
+    refpack_decompress_unsafe(data, NULL, ret);
 
     return ret;
 }
@@ -610,19 +626,6 @@ void MergePackages(Package *dest, Package src)
 void SetWriteCorruptedPackageEntries(bool val)
 {
     writeCorrupted = val;
-}
-
-typedef struct MemStream {
-    void *buf;
-    int size;
-} MemStream;
-
-void memstream_write(MemStream *stream, void *buf, int size)
-{
-    int oldSize = stream->size;
-    stream->size += size;
-    stream->buf = realloc(stream->buf, stream->size);
-    memcpy(stream->buf + oldSize, buf, size);
 }
 
 void ExportPackage(Package pkg, const char *filename)
