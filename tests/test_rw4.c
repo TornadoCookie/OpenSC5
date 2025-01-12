@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 
     RW4Data rw4data =  LoadRW4Data(data, dataSize);
 
-    if (!rw4data.corrupted)
+    //if (!rw4data.corrupted)
     {
 
         // Define the camera to look into our 3d world
@@ -28,22 +28,39 @@ int main(int argc, char **argv)
         Material mat = LoadMaterialDefault();
         mat.maps[MATERIAL_MAP_DIFFUSE].color = BLACK;
 
-        //UploadMesh(&rw4data.model.meshes[0], false);
+        if (rw4data.type == RW4_TEXTURE)
+        {
+            rw4data.data.texData.tex = LoadTextureFromImage(rw4data.data.texData.img);
+        }
+        else if (rw4data.type == RW4_MODEL)
+        {
+            UploadMesh(&rw4data.data.mdlData.mdl.meshes[0], false);
+        }
 
         while (!WindowShouldClose())
         {
             BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            rlEnableWireMode();
+            if (rw4data.type == RW4_TEXTURE)
+            {
+                DrawTexture(rw4data.data.texData.tex, 0, 0, WHITE);
+            }
+            else if (rw4data.type == RW4_MODEL)
+            {
 
-            BeginMode3D(camera);
+                rlEnableWireMode();
 
-            //DrawMesh(rw4data.model.meshes[0], mat, MatrixTranslate(0, 0, 0));
+                BeginMode3D(camera);
 
-            EndMode3D();
+                DrawModel(rw4data.data.mdlData.mdl, (Vector3){0, 0, 0}, 1.0f, WHITE);
 
-            UpdateCamera(&camera, CAMERA_ORBITAL);
+                //DrawMesh(rw4data.data.mdlData.mdl.meshes[0], mat, MatrixTranslate(0, 0, 0));
+
+                EndMode3D();
+
+                UpdateCamera(&camera, CAMERA_ORBITAL);
+            }
 
             EndDrawing();
         }

@@ -6,6 +6,7 @@
 typedef enum {
     RW4_INVALID,
     RW4_TEXTURE,
+    RW4_MODEL,
 } RW4DataType;
 
 typedef struct RW4Data {
@@ -17,6 +18,9 @@ typedef struct RW4Data {
             Image img;
             Texture2D tex;
         } texData;
+        struct {
+            Model mdl;
+        } mdlData;
     } data;
 
     //Model model;

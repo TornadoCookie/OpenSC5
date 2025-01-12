@@ -417,7 +417,7 @@ static void DrawPackageEntry(PackageEntry entry)
         {
            if (entry.data.rw4Data.type == RW4_TEXTURE)
            {
-               DrawTexture(entry.data.rw4Data.data.texData.tex, 0, 0, WHITE);
+               DrawTexture(entry.data.rw4Data.data.texData.tex, GetScreenWidth()/2, 0, WHITE);
            }
         } break;
         default:
@@ -497,6 +497,7 @@ int main(int argc, char **argv)
                     LoadPackageFileAsyncArgs args;
                     args.f = f;
                     args.pkg = &loadedPkg;
+                    args.done = false;
                     pthread_t thread;
                     pthread_create(&thread, NULL, loadPackageFile_async, &args);
 

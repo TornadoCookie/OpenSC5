@@ -20,6 +20,7 @@ Source filetypes/prop.c
 Source filetypes/rules.c
 Source filetypes/rast.c
 Source filetypes/bnk.c
+Source filetypes/rw4.c
 CxxSource filetypes/wwriff.cpp
 CxxSource ww2ogg/wwriff.cpp
 Source threadpool.c

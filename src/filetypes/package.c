@@ -134,6 +134,11 @@ static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataT
             return !pkgEntry->corrupted;
         } break;
         case PKGENTRY_RW4:
+        {
+            RW4Data rw4Data = LoadRW4Data(data, dataSize);
+            pkgEntry->data.rw4Data = rw4Data;
+            return !rw4Data.corrupted;
+        } break;
         case PKGENTRY_TTF:
         case PKGENTRY_SWB:
         case PKGENTRY_MOV:

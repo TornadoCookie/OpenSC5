@@ -100,6 +100,7 @@ dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rast.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/bnk.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rw4.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/filetypes/wwriff.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/wwriff.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
@@ -209,6 +210,7 @@ clean:
 	rm -f $(DISTDIR)/src/filetypes/rules.o
 	rm -f $(DISTDIR)/src/filetypes/rast.o
 	rm -f $(DISTDIR)/src/filetypes/bnk.o
+	rm -f $(DISTDIR)/src/filetypes/rw4.o
 	rm -f $(DISTDIR)/src/filetypes/wwriff.o
 	rm -f $(DISTDIR)/src/ww2ogg/wwriff.o
 	rm -f $(DISTDIR)/src/threadpool.o

@@ -6,6 +6,11 @@
 #include <cpl_endian.h>
 #include "memstream.h"
 
+// All of this adapted from
+// SporeModder-FX
+// /src/sporemodder/file/rw4/*.java
+//               ||/view/editors/RWModelViewer.java
+
 typedef struct RWHeader {
     char magic[28];
     uint32_t type;
@@ -156,24 +161,177 @@ typedef struct RWSectionExternalArenas {
 } RWSectionExternalArenas;
 
 typedef struct RWSectionSubReferences {
-
+    uint32_t count;
+    uint32_t field4;
+    uint32_t field8;
+    uint32_t fieldc;
+    uint32_t offset;
+    uint32_t countAgain;
 } RWSectionSubReferences;
 
 typedef struct RWSectionAtoms {
 
 } RWSectionAtoms;
 
-unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, char *initData, int *dataSize)
+typedef struct RWTriangleKDTreeProcedural {
+    RWBBox bbox;
+    int32_t field20;
+    int32_t field24;
+    int32_t triangleCount;
+    int32_t field2c;
+    int32_t vertexCount;
+    uint32_t pTriangles;
+    uint32_t pVertices;
+    uint32_t p4;
+    uint32_t p3;
+} RWTriangleKDTreeProcedural;
+
+typedef struct RWCompiledState {
+    uint32_t size;
+    int32_t primitiveType;
+    int32_t flags1;
+    int32_t flags2;
+    int32_t flags3;
+    int32_t field14;
+    int32_t rendererID;
+    uint32_t padding;
+} RWCompiledState;
+
+typedef struct RWMeshCompiledStateLink {
+    int32_t mesh;
+    int32_t count;
+} RWMeshCompiledStateLink;
+
+unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, const char *initData, int *dataSize)
 {
+    printf("LoadSectionData %d\n", section);
     if (dataSize) *dataSize = sectionInfos[section].size;
     return sectionInfos[section].dataOffset + initData;
+}
+
+Mesh LoadMeshRW4(RWMesh rwmesh, unsigned char *data, RWSectionInfo *sectionInfos, const unsigned char *initData)
+{
+    Mesh mesh = { 0 };
+
+    mesh.triangleCount = rwmesh.triangleCount;
+    mesh.vertexCount = rwmesh.vertexCount;
+
+    for (int j = 0; j < rwmesh.bufferCount; j++)
+    {
+        uint32_t buffer = *(uint32_t*)data;
+        data += sizeof(uint32_t);
+        printf("Buffer %d: [Section %d]\n", j, buffer);
+
+        RWVertexBuffer *vertexBuffer = (RWVertexBuffer*)LoadSectionData(sectionInfos, buffer, initData, NULL);
+                    
+        unsigned char *vertexData = LoadSectionData(sectionInfos, vertexBuffer->vertexData, initData, NULL);
+        unsigned char *vertexInitData = vertexData;
+
+        int vertexCount = rwmesh.vertexCount;
+        int vertexStart = rwmesh.firstVertex;
+
+        RWVertexElement *positionElement = NULL;
+        RWVertexElement *texcoordElement = NULL;
+        RWVertexElement *normalElement = NULL;
+
+        RWVertexDescription *description = (RWVertexDescription*)LoadSectionData(sectionInfos, vertexBuffer->vertexDescription, initData, NULL);
+                    
+        for (int k = 0; k < description->count; k++)
+        {
+            unsigned char *descData = (unsigned char *)description + sizeof(RWVertexDescription) - sizeof(void*);
+            descData += sizeof(RWVertexElement) * k;
+            RWVertexElement *element = (RWVertexElement*)descData;
+            if (element->typeCode == 0)
+            {
+                positionElement = element;
+            }
+            else if (element->typeCode == 2)
+            {
+                normalElement = element;
+            }
+            else if (element->typeCode == 6)
+            {
+                texcoordElement = element;
+            }
+        }
+
+        float *positions = malloc(3 * vertexCount * sizeof(float));
+        float *normals   = malloc(3 * vertexCount * sizeof(float));
+        float *texcoords = malloc(2 * vertexCount * sizeof(float));
+
+        for (int k = 0; k < vertexCount; k++)
+        {
+            vertexData = vertexInitData + ((vertexStart+k) * vertexBuffer->vertexSize + positionElement->offset);
+            positions[k*3+0] = *(float*)vertexData;
+            vertexData += sizeof(float);
+            positions[k*3+1] = *(float*)vertexData;
+            vertexData += sizeof(float);
+            positions[k*3+2] = *(float*)vertexData;
+            vertexData += sizeof(float);
+
+            vertexData = vertexInitData + ((vertexStart+k) * vertexBuffer->vertexSize + normalElement->offset);
+            normals[k*3+0] = *(float*)vertexData;
+            vertexData += sizeof(float);
+            normals[k*3+1] = *(float*)vertexData;
+            vertexData += sizeof(float);
+            normals[k*3+2] = *(float*)vertexData;
+            vertexData += sizeof(float);
+
+            vertexData = vertexInitData + ((vertexStart+k) * vertexBuffer->vertexSize + texcoordElement->offset);
+            texcoords[k*2+0] = *(float*)vertexData;
+            vertexData += sizeof(float);
+            texcoords[k*2+1] = *(float*)vertexData;
+            vertexData += sizeof(float);
+        }
+
+        mesh.vertices = positions;
+        mesh.normals = normals;
+        mesh.texcoords = texcoords;
+
+    }
+
+    if (rwmesh.indexBuffer)
+    {
+        RWIndexBuffer *indexBuffer = LoadSectionData(sectionInfos, rwmesh.indexBuffer, initData, NULL);
+
+        int indexComponents = 1;
+        //if (!mesh.normals) indexComponents = 2;
+
+        uint16_t *indices = malloc(mesh.triangleCount * 3 * sizeof(uint16_t));
+        unsigned char *indexData = LoadSectionData(sectionInfos, indexBuffer->indexData, initData, NULL);
+
+        data = indexData + rwmesh.firstIndex * 2;
+        
+        for (int j = 0; j < mesh.triangleCount-1; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                uint16_t index = *(uint16_t*)data;
+                data += sizeof(uint16_t);
+
+                index += indexBuffer->startIndex;
+                index -= rwmesh.firstVertex;
+
+                indices[j*indexComponents*3 + indexComponents*k] = index;
+                //indices[j*indexComponents*3 + indexComponents*k + 1] = index;
+                //if (mesh.normals)
+                //{
+                //    indices[j*indexComponents*3 + indexComponents*k + 2] = index;
+                //}
+            }
+        }
+
+        mesh.indices = indices;
+    }
+
+    return mesh;
 }
 
 RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 {
     RW4Data rw4data = { 0 };
 
-    unsigned char *initData = data;
+    const unsigned char *initData = data;
 
     printf("RW4 Info:\n");
 
@@ -184,6 +342,16 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     header.sectionCount &= 0xFF;
 
     printf("Type: %#x\n", header.type);
+
+    if (header.type == 0x1)
+    {
+        rw4data.type = RW4_MODEL;
+    }
+    else
+    {
+        rw4data.type = RW4_TEXTURE;
+    }
+
     printf("Section Count: %#x\n", header.sectionCount);
     printf("Section Info Offset: %d\n", header.sectionInfoOffset);
     printf("Buffer Data Offset: %d\n", header.bufferDataOffset);
@@ -193,6 +361,12 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
     printf("Offset 2: %d\n", header.offset2);
     printf("Offset 3: %d\n", header.offset3);
     printf("Offset 4: %d\n", header.offset4);
+
+    data = initData + header.offset3;
+    RWSectionSubReferences *subRefs = (RWSectionSubReferences*)data;
+    printf("Subreference info:\n");
+    printf("Count: %d\n", subRefs->count);
+    printf("Offset: %d\n", subRefs->offset);
 
     rw4data.corrupted = true;
 
@@ -307,10 +481,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 Mesh mesh = { 0 };
 
                 memcpy(&rwmesh, data, sizeof(RWMesh));
-                data += sizeof(RWMesh);
-
-                mesh.triangleCount = rwmesh.triangleCount;
-                mesh.vertexCount = rwmesh.vertexCount;
+                data += sizeof(RWMesh); 
                 
                 printf("Mesh Info:\n");
                 printf("Primitive Type: %d\n", rwmesh.primitiveType);
@@ -322,60 +493,11 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 printf("First Vertex: %d\n", rwmesh.firstVertex);
                 printf("Vertex Count: %d\n", rwmesh.vertexCount);
 
-                for (int j = 0; j < rwmesh.bufferCount; j++)
-                {
-                    uint32_t buffer = *(uint32_t*)data;
-                    data += sizeof(uint32_t);
-                    printf("Buffer %d: [Section %d]\n", j, buffer);
+                
 
-                    RWVertexBuffer *vertexBuffer = (RWVertexBuffer*)LoadSectionData(sectionInfos, buffer, initData, NULL);
-                    
-                    unsigned char *vertexData = LoadSectionData(sectionInfos, vertexBuffer->vertexData, initData, NULL);
-                    unsigned char *vertexInitData = vertexData;
-
-                    int vertexCount = rwmesh.vertexCount;
-                    int vertexStart = rwmesh.firstVertex;
-
-                    RWVertexElement *positionElement = NULL;
-
-                    RWVertexDescription *description = (RWVertexDescription*)LoadSectionData(sectionInfos, vertexBuffer->vertexDescription, initData, NULL);
-                    
-                    for (int k = 0; k < description->count; k++)
-                    {
-                        unsigned char *descData = (unsigned char *)description + sizeof(RWVertexDescription) - sizeof(void*);
-                        descData += sizeof(RWVertexElement) * k;
-                        RWVertexElement *element = (RWVertexElement*)descData;
-                        if (element->typeCode == 0)
-                        {
-                            positionElement = element;
-                        }
-                    }
-
-                    float *positions = malloc(3 * vertexCount * sizeof(float));
-
-                    //SaveFileData("helpme.bin", vertexData, sectionInfos[vertexBuffer->vertexData].size);
-
-                    for (int k = 0; k < vertexCount; k++)
-                    {
-                        //printf("Load vertex %d: ", k);
-                        vertexData = vertexInitData + (8 * vertexBuffer->vertexSize + vertexCount) + 0x10 *k; //((vertexStart+k) * vertexBuffer->vertexSize + positionElement->offset);
-                        //printf("vertexData %p, off %#x, ", vertexData, vertexData - vertexInitData);
-                        positions[k*3+0] = *(float*)vertexData;
-                        vertexData += sizeof(float);
-                        positions[k*3+1] = *(float*)vertexData;
-                        vertexData += sizeof(float);
-                        positions[k*3+2] = *(float*)vertexData;
-                        vertexData += sizeof(float);
-                        //printf("{%f, %f, %f}.\n", positions[k*3+0], positions[k*3+1], positions[k*3+2]);
-                    }
-
-                    mesh.vertices = positions;
-
-                }
-
-                //rw4data.model.meshCount++;
-                //rw4data.model.meshes = realloc(rw4data.model.meshes, rw4data.model.meshCount * sizeof(Mesh));
-                //rw4data.model.meshes[rw4data.model.meshCount - 1] = mesh;
+                //rw4data.data.mdlData.mdl.meshCount++;
+                //rw4data.data.mdlData.mdl.meshes = realloc(rw4data.data.mdlData.mdl.meshes, rw4data.data.mdlData.mdl.meshCount * sizeof(Mesh));
+                //rw4data.data.mdlData.mdl.meshes[rw4data.data.mdlData.mdl.meshCount - 1] = mesh;
             } break;
             case 0x20005: // VertexBuffer
             {
@@ -438,6 +560,190 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     printf("Type Code: %#x\n", element.typeCode);
                 }
             } break;
+            case 0x80003: // TriangleKDTreeProcedural
+            {
+                RWTriangleKDTreeProcedural kdt;
+                memcpy(&kdt, data, sizeof(RWTriangleKDTreeProcedural));
+
+                printf("TriangleKDTreeProcedural info:\n");
+                printf("Triangle count: %d\n", kdt.triangleCount);
+                printf("Vertex count: %d\n", kdt.vertexCount);
+                printf("Triangle offset: %d\n", kdt.pTriangles);
+                printf("Vertex offset: %d\n", kdt.pVertices);
+                printf("p4: %d\n", kdt.p4);
+                printf("p3: %d\n", kdt.p3);
+
+                printf("TODO\n");
+            } break;
+            case 0x2001a: // MeshCompiledStateLink
+            {
+                RWMeshCompiledStateLink csl;
+                memcpy(&csl, data, sizeof(RWMeshCompiledStateLink));
+                data += sizeof(RWMeshCompiledStateLink);
+
+                printf("MeshCompiledStateLink info:\n");
+                printf("Mesh: [Section %d]\n", csl.mesh);
+                printf("Count: %d\n", csl.count);
+
+                for (int j = 0; j < csl.count; j++)
+                {
+                    int32_t compiledState = *(int32_t*)data;
+                    data += sizeof(int32_t);
+
+                    printf("Compiled State %d: [Section %d]\n", j, compiledState);
+                } 
+            } break;
+            case 0x2000b: //CompiledState
+            {
+                RWCompiledState compiledState;
+                memcpy(&compiledState, data, sizeof(RWCompiledState));
+                data += sizeof(RWCompiledState);
+
+                const int FLAG_MODELTOWORLD       = 0x000001;
+                const int FLAG_SHADER_DATA        = 0x000008;
+                const int FLAG_MATERIAL_COLOR     = 0x000010;
+                const int FLAG_AMBIENT_COLOR      = 0x000020;
+                const int FLAG_USE_BOOLEANS       = 0x008000;
+                const int FLAG_VERTEX_DESCRIPTION = 0x100000;
+
+                const int FLAG3_TEXTURE_SLOTS   = 0x01FFFF;
+                const int FLAG3_RENDER_STATES   = 0x020000;
+                const int FLAG3_PALETTE_ENTRIES = 0x100000;
+                
+                printf("CompiledState info:\n");
+                printf("Size: %d\n", compiledState.size);
+                printf("Primitive Type: %d\n", compiledState.primitiveType);
+                printf("Flags 1: %#x\n", compiledState.flags1);
+                printf("Flags 2: %#x\n", compiledState.flags2);
+                printf("Flags 3: %#x\n", compiledState.flags3);
+                printf("Renderer ID: %#x\n", compiledState.rendererID);
+
+                if (compiledState.flags1 & FLAG_MODELTOWORLD)
+                {
+                    printf("TODO FLAG_MODELTOWORLD\n");
+                    rw4data.corrupted = true;
+                }
+
+                RWVertexDescription *vertexDescription;
+
+                if (compiledState.flags1 & FLAG_VERTEX_DESCRIPTION)
+                {
+                    vertexDescription = data;
+                    data += sizeof(RWVertexDescription) - sizeof(void*);
+                    data += sizeof(RWVertexElement) * vertexDescription->count;
+                }
+
+                if (compiledState.flags1 & FLAG_MATERIAL_COLOR)
+                {
+                    printf("TODO FLAG_MATERIAL_COLOR\n");
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.flags1 & FLAG_AMBIENT_COLOR)
+                {
+                    printf("TODO FLAG_AMBIENT_COLOR\n");
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.flags1 & 0x3FC0)
+                {
+                    printf("TODO 0x3FC0\n");
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.flags1 & FLAG_USE_BOOLEANS)
+                {
+                    data += 17; // 17 unknown booleans
+                }
+
+                if (compiledState.flags1 & 0xF0000)
+                {
+                    printf("TODO 0xF0000\n");
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.field14)
+                {
+                    printf("TODO field14 %#x\n", compiledState.field14);
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.flags3 & FLAG3_RENDER_STATES)
+                {
+                    printf("TODO FLAG3_RENDER_STATES\n");
+                    rw4data.corrupted = true;
+                }
+
+                int32_t paletteEntriesIndex = *(int32_t*)data;
+                data += sizeof(int32_t);
+
+                if (compiledState.flags3 & FLAG3_PALETTE_ENTRIES)
+                {
+                    printf("TODO FLAG3_PALETTE_ENTRIES\n");
+                    rw4data.corrupted = true;
+                }
+
+                if (compiledState.flags3 & FLAG3_TEXTURE_SLOTS)
+                {
+                    int32_t samplerIndex = *(int32_t*)data;
+                    data += sizeof(int32_t);
+
+                    printf("Texture Slot info:\n");
+
+                    while (samplerIndex != -1)
+                    {
+                        int32_t raster = *(int32_t*)data;
+                        data += sizeof(int32_t);
+                        
+                        int32_t stageStatesMask = *(int32_t*)data;
+                        data += sizeof(int32_t);
+
+                        printf("Sampler Index: %d\n", samplerIndex);
+                        printf("Raster: [Section %#x]\n", raster);
+                        printf("Stage States Mask: %d\n", stageStatesMask);
+
+                        if (stageStatesMask)
+                        {
+                            int32_t state = *(int32_t*)data;
+                            data += sizeof(int32_t);
+
+                            while (state != -1)
+                            {
+                                int unkn = *(int32_t*)data;
+                                data += sizeof(int32_t);
+
+                                // clogs output
+                                //printf("State=%#x, data=%#x\n", state, unkn);
+                                
+                                state = *(int32_t*)data;
+                                data += sizeof(int32_t);
+                            }
+                        }
+
+                        int32_t samplerStatesMask = *(int32_t*)data;
+                        data += sizeof(int32_t);
+
+                        if (samplerStatesMask)
+                        {
+                            int state = *(int32_t*)data;
+                            data += sizeof(int32_t);
+
+                            while (state != -1)
+                            {
+                                int unkn = *(int32_t*)data;
+                                data += sizeof(int32_t);
+
+                                state = *(int32_t*)data;
+                                data += sizeof(int32_t);
+                            }
+                        }
+
+                        samplerIndex = *(int32_t*)data;
+                        data += sizeof(int32_t);
+                    }
+                }
+
+            } break;
             case 0x20003: // Raster
             {
                 RWRaster raster;
@@ -465,7 +771,8 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 if (raster.width % 4 != 0 || raster.height % 4 != 0)
                 {
                     printf("Invalid size.\n");
-                    //rw4data.corrupted = true;
+                    rw4data.corrupted = true;
+                    return rw4data;
                 }
 
                 int textureDataSize;
@@ -486,6 +793,16 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 {
                     blockSize = 8;
                 }
+                else if (!memcmp(&raster.textureFormat, "DXT5", 4))
+                {
+                    blockSize = 16;
+                }
+                else if (raster.textureFormat == 0x74)
+                {
+                    // TODO not supported by ANYTHING bro
+                    // D3DFMT_A32B32G32R32F
+                    blockSize = 16;
+                }
                 else
                 {
                     printf("Unimplemented texture format %d.\n", raster.textureFormat);
@@ -502,6 +819,10 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 {
 #define max(x, y) (((x)>(y))?(x):(y))
                     pitchOrLinearSize = max(1, ((raster.width + 3) / 4) * max(1, (raster.height + 3) / 4)) * blockSize;
+                    if (raster.textureFormat == 0x74)
+                    {
+                        pitchOrLinearSize = raster.width * raster.height * raster.volumeDepth * blockSize;
+                    }
                     isCompressed = true;
                 }
 
@@ -552,8 +873,17 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 Image img = LoadImageFromMemory(".dds", ddsStream.buf, ddsStream.size);
                 
-                rw4data.type = RW4_TEXTURE;
-                rw4data.data.texData.img = img;
+                if (rw4data.type == RW4_TEXTURE)
+                {
+                    rw4data.data.texData.img = img;
+                }
+                else if (rw4data.type == RW4_MODEL)
+                {
+                    
+                }
+
+                //rw4data.type = RW4_TEXTURE;
+                //rw4data.data.texData.img = img;
 
             } break;
             default:
