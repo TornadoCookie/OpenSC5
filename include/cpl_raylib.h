@@ -3,6 +3,10 @@
 
 #ifdef _WIN32
 
+#define _THREADPOOLAPISET_H_ // Disable threadpoolapiset.h as we have our own threadpool system that conflicts with it
+
+
+
 #define NOGDI
 #define NOUSER
 #define MMNOSOUND

@@ -1,8 +1,8 @@
 #include "filetypes/sdelta.h"
 #include <stdio.h>
-#include <cpl_endian.h>
 #include <stdint.h>
 #include <cpl_raylib.h>
+#include <cpl_endian.h>
 
 typedef struct SDelta2 {
 

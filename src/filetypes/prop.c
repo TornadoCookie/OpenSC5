@@ -123,10 +123,14 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             return propData;
         }*/
 
+        void *arrayInitData = data;
+
        if (arrayNumber & 0x40)
        {
             continue;
        }
+
+       if (type == 0x38) arraySize -= 6;
 
         propData.variables[i].count = arrayNumber;
         propData.variables[i].values = malloc(sizeof(*propData.variables[i].values) * arrayNumber);
@@ -361,6 +365,8 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     TRACELOG(LOG_DEBUG, "Unknown 1: %#x\n", unknown1);
 
+                    if (unknown1 == 0xf00 && j == 0) arraySize += 4;
+
                     float unknown2[12];
 
                     for (int i = 0; i < 12; i++)
@@ -416,6 +422,11 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                     return propData;
                 } break;
             }
+        }
+
+        if (arraySize > 0)
+        {
+            //data = arrayInitData + arraySize * arrayNumber;
         }
     }
 

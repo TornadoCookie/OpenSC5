@@ -4,7 +4,6 @@ RaylibVersion 5.5
 UseRaylib
 
 NativeDependency curl
-NativeDependency wwriff
 
 DistData packed_codebooks_aoTuV_603.bin
 DistData README.md
@@ -23,6 +22,8 @@ Source filetypes/bnk.c
 Source filetypes/rw4.c
 CxxSource filetypes/wwriff.cpp
 CxxSource ww2ogg/wwriff.cpp
+CxxSource ww2ogg/codebook.cpp
+Source ww2ogg/crc.c
 Source threadpool.c
 Source hash.c
 Source memstream.c

@@ -1,4 +1,4 @@
-# Generated using Helium v2.1.0 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.1.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=build
@@ -24,12 +24,15 @@ EXEC_EXTENSION=.exe
 LIB_EXTENSION=.dll
 LIB_EXTENSION_STATIC=(null)
 CC=x86_64-w64-mingw32-gcc
+CXX=x86_64-w64-mingw32-g++
 RAYLIB_DLL=-lraylibdll
 CFLAGS+=-O2
 CFLAGS+=-D RELEASE
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
-CFLAGS+=-lws2_32
+LDFLAGS+=-lws2_32
+LDFLAGS+=-static-libstdc++
+LDFLAGS+=-static-libgcc
 endif
 
 PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor opensc5 test_dbpf
@@ -42,20 +45,12 @@ LDFLAGS+=-lcurl
 LDFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
 
 
-wwriff_NAME=libwwriff-$(PLATFORM)
-CFLAGS+=-Ilib/$(wwriff_NAME)/include
-LDFLAGS+=-Llib/$(wwriff_NAME)/lib
-LDFLAGS+=-lwwriff
-LDFLAGS+=-Wl,-rpath,lib/$(wwriff_NAME)/lib
-
-
 all: $(DISTDIR) $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
-	if [ -d lib/$(wwriff_NAME) ] && [ ! -d $(DISTDIR)/lib/$(wwriff_NAME) ]; then cp -r lib/$(wwriff_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
@@ -94,7 +89,6 @@ LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
-LDFLAGS+=-lstdc++
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/package.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
@@ -103,6 +97,8 @@ dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/bnk.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rw4.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/filetypes/wwriff.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/wwriff.o
+dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/codebook.o
+dbpf_all_SOURCES+=$(DISTDIR)/src/ww2ogg/crc.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/hash.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/memstream.o
@@ -112,7 +108,7 @@ test_package_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 test_package_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_package$(EXEC_EXTENSION): $(test_package_SOURCES) $(test_package_CXX_SOURCES)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 test_update_SOURCES+=$(DISTDIR)/src/../tests/test_update.o
 
@@ -182,21 +178,21 @@ opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES) $(opensc5_editor_CXX_SOURCES)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 opensc5_SOURCES+=$(DISTDIR)/src/game.o
 opensc5_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES) $(opensc5_CXX_SOURCES)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 test_dbpf_SOURCES+=$(DISTDIR)/src/../tests/test_dbpf.o
 test_dbpf_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 test_dbpf_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_dbpf$(EXEC_EXTENSION): $(test_dbpf_SOURCES) $(test_dbpf_CXX_SOURCES)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(DISTDIR)/%.o: %.c
 	$(CC) -c $^ $(CFLAGS) -o $@
@@ -213,6 +209,8 @@ clean:
 	rm -f $(DISTDIR)/src/filetypes/rw4.o
 	rm -f $(DISTDIR)/src/filetypes/wwriff.o
 	rm -f $(DISTDIR)/src/ww2ogg/wwriff.o
+	rm -f $(DISTDIR)/src/ww2ogg/codebook.o
+	rm -f $(DISTDIR)/src/ww2ogg/crc.o
 	rm -f $(DISTDIR)/src/threadpool.o
 	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/src/memstream.o

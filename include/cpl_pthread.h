@@ -16,8 +16,10 @@ static DWORD WINAPI _threadproc(void *param)
 {
     _ThreadProcArgs *args = param;
 
-    args->func(args->arg);
+    void *ret = args->func(args->arg);
     free(args);
+
+    return ret;
 }
 
 static void pthread_create(pthread_t *newThread, void *unused, void *(*func)(void *), void *arg)
@@ -32,6 +34,16 @@ static void pthread_cancel(pthread_t thread)
 {
     TerminateThread(thread, 0);
     CloseHandle(thread);
+}
+
+static void pthread_join(pthread_t thread, void **ret)
+{
+    DWORD exitCode = 0;
+
+    WaitForSingleObject(thread, INFINITE);
+    GetExitCodeThread(thread, &exitCode);
+
+    *ret = exitCode;
 }
 
 typedef HANDLE pthread_mutex_t;
