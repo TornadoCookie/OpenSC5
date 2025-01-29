@@ -17,7 +17,7 @@ SDelta LoadSDeltaFile(const char *filename)
     uint32_t headerVal;
     fread(&headerVal, 4, 1, f);
 
-    if (headerVal != 4) printf("Header value is %#x\n", headerVal);
+    if (headerVal != 4) TRACELOG(LOG_WARN, "Header value is %#x\n", headerVal);
 
     int index = 0;
 
@@ -35,9 +35,9 @@ SDelta LoadSDeltaFile(const char *filename)
         size = be32toh(size);
         if (!size) break;
 
-        printf("File %d:\n", index);
-        printf("Signature: %#x\n", signature);
-        printf("Size: %#x\n", size);
+        TRACELOG(LOG_DEBUG, "File %d:\n", index);
+        TRACELOG(LOG_DEBUG, "Signature: %#x\n", signature);
+        TRACELOG(LOG_DEBUG, "Size: %#x\n", size);
 
         uint8_t *data = malloc(size - 8);
         fread(data, 1, size - 8, f);
