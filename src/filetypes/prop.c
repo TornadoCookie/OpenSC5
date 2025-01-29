@@ -461,7 +461,7 @@ PropertyNameList LoadPropertyNameList(const char *filename)
 
         if (!TextStartsWith(buf, "property"))
         {
-            printf("%s: unknown token on line %d (%#x)\n", filename, lineNo, *buf);
+            TRACELOG(LOG_ERROR, "%s: unknown token on line %d (%#x)\n", filename, lineNo, *buf);
         }
 
         //printf("%s", buf);
@@ -501,8 +501,10 @@ PropertyNameList LoadPropertyNameList(const char *filename)
 
         nameList.propIds[nameList.propCount - 1] = id;
 
-        printf("property name %s with id %#lX\n", nameCopy, nameList.propIds[nameList.propCount - 1]);
+        TRACELOG(LOG_DEBUG, "property name %s with id %#lX\n", nameCopy, nameList.propIds[nameList.propCount - 1]);
     }
+
+    TRACELOG(LOG_INFO, "Loaded %d properties\n", nameList.propCount);
 
     fclose(f);
 
