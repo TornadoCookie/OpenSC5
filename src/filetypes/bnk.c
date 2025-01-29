@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cwwriff.h>
 #include <cpl_raylib.h>
 
 typedef struct BnkHeader {

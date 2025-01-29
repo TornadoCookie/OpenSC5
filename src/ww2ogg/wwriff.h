@@ -26,7 +26,7 @@ class Wwise_RIFF_Vorbis
 {
     string _file_name;
     string _codebooks_name;
-    istream *_infile;
+    istream &_infile;
     long _file_size;
 
     bool _little_endian;
@@ -69,6 +69,7 @@ class Wwise_RIFF_Vorbis
 
 public:
     Wwise_RIFF_Vorbis(
+      std::ifstream& i,
       const string& name,
       const string& _codebooks_name,
       bool inline_codebooks,
@@ -77,7 +78,7 @@ public:
       );
 
     Wwise_RIFF_Vorbis(
-    std::istream *stream,
+      std::istream &stream,
       const string& _codebooks_name,
       bool inline_codebooks,
       bool full_setup,

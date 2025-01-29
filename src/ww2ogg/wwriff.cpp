@@ -115,15 +115,15 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
 {
     if (!_infile) throw File_open_error(_file_name);
 
-    _infile->seekg(0, ios::end);
-    _file_size = _infile->tellg();
+    _infile.seekg(0, ios::end);
+    _file_size = _infile.tellg();
 
 
     // check RIFF header
     {
         unsigned char riff_head[4], wave_head[4];
-        _infile->seekg(0, ios::beg);
-        _infile->read(reinterpret_cast<char *>(riff_head), 4);
+        _infile.seekg(0, ios::beg);
+        _infile.read(reinterpret_cast<char *>(riff_head), 4);
 
         if (memcmp(&riff_head[0],"RIFX",4))
         {
@@ -152,11 +152,11 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
             _read_32 = read_32_be;
         }
 
-        _riff_size = _read_32(*_infile) + 8;
+        _riff_size = _read_32(_infile) + 8;
 
         if (_riff_size > _file_size) throw Parse_error_str("RIFF truncated");
 
-        _infile->read(reinterpret_cast<char *>(wave_head), 4);
+        _infile.read(reinterpret_cast<char *>(wave_head), 4);
         if (memcmp(&wave_head[0],"WAVE",4)) throw Parse_error_str("missing WAVE");
     }
 
@@ -164,15 +164,15 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
     long chunk_offset = 12;
     while (chunk_offset < _riff_size)
     {
-        _infile->seekg(chunk_offset, ios::beg);
+        _infile.seekg(chunk_offset, ios::beg);
 
         if (chunk_offset + 8 > _riff_size) throw Parse_error_str("chunk header truncated");
 
         char chunk_type[4];
-        _infile->read(chunk_type, 4);
+        _infile.read(chunk_type, 4);
         uint32_t chunk_size;
         
-        chunk_size = _read_32(*_infile);
+        chunk_size = _read_32(_infile);
 
         if (!memcmp(chunk_type,"fmt ",4))
         {
@@ -224,20 +224,20 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         _vorb_offset = _fmt_offset + 0x18;
     }
 
-    _infile->seekg(_fmt_offset, ios::beg);
-    if (UINT16_C(0xFFFF) != _read_16(*_infile)) throw Parse_error_str("bad codec id");
-    _channels = _read_16(*_infile);
-    _sample_rate = _read_32(*_infile);
-    _avg_bytes_per_second = _read_32(*_infile);
-    if (0U != _read_16(*_infile)) throw Parse_error_str("bad block align");
-    if (0U != _read_16(*_infile)) throw Parse_error_str("expected 0 bps");
-    if (_fmt_size-0x12 != _read_16(*_infile)) throw Parse_error_str("bad extra fmt length");
+    _infile.seekg(_fmt_offset, ios::beg);
+    if (UINT16_C(0xFFFF) != _read_16(_infile)) throw Parse_error_str("bad codec id");
+    _channels = _read_16(_infile);
+    _sample_rate = _read_32(_infile);
+    _avg_bytes_per_second = _read_32(_infile);
+    if (0U != _read_16(_infile)) throw Parse_error_str("bad block align");
+    if (0U != _read_16(_infile)) throw Parse_error_str("expected 0 bps");
+    if (_fmt_size-0x12 != _read_16(_infile)) throw Parse_error_str("bad extra fmt length");
 
     if (_fmt_size-0x12 >= 2) {
       // read extra fmt
-      _ext_unk = _read_16(*_infile);
+      _ext_unk = _read_16(_infile);
       if (_fmt_size-0x12 >= 6) {
-        _subtype = _read_32(*_infile);
+        _subtype = _read_32(_infile);
       }
     }
 
@@ -245,7 +245,7 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
     {
         char whoknowsbuf[16];
         const unsigned char whoknowsbuf_check[16] = {1,0,0,0, 0,0,0x10,0, 0x80,0,0,0xAA, 0,0x38,0x9b,0x71};
-        _infile->read(whoknowsbuf, 16);
+        _infile.read(whoknowsbuf, 16);
         if (memcmp(whoknowsbuf, whoknowsbuf_check, 16)) throw Parse_error_str("expected signature in extra fmt?");
     }
 
@@ -255,9 +255,9 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
 #if 0
         if (0x1c != _cue_size) throw Parse_error_str("bad cue size");
 #endif
-        _infile->seekg(_cue_offset);
+        _infile.seekg(_cue_offset);
 
-        _cue_count = _read_32(*_infile);
+        _cue_count = _read_32(_infile);
     }
     
     // read LIST
@@ -267,8 +267,8 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         if ( 4 != _LIST_size ) throw Parse_error_str("bad LIST size");
         char adtlbuf[4];
         const char adtlbuf_check[4] = {'a','d','t','l'};
-        _infile->seekg(_LIST_offset);
-        _infile->read(adtlbuf, 4);
+        _infile.seekg(_LIST_offset);
+        _infile.read(adtlbuf, 4);
         if (memcmp(adtlbuf, adtlbuf_check, 4)) throw Parse_error_str("expected only adtl in LIST");
 #endif
     }
@@ -276,14 +276,14 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
     // read smpl
     if (-1 != _smpl_offset)
     {
-        _infile->seekg(_smpl_offset+0x1C);
-        _loop_count = _read_32(*_infile);
+        _infile.seekg(_smpl_offset+0x1C);
+        _loop_count = _read_32(_infile);
 
         if (1 != _loop_count) throw Parse_error_str("expected one loop");
 
-        _infile->seekg(_smpl_offset+0x2c);
-        _loop_start = _read_32(*_infile);
-        _loop_end = _read_32(*_infile);
+        _infile.seekg(_smpl_offset+0x2c);
+        _loop_start = _read_32(_infile);
+        _loop_end = _read_32(_infile);
     }
 
     // read vorb
@@ -295,7 +295,7 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         case 0x2C:
         case 0x32:
         case 0x34:
-            _infile->seekg(_vorb_offset+0x00, ios::beg);
+            _infile.seekg(_vorb_offset+0x00, ios::beg);
             break;
 
         default:
@@ -303,7 +303,7 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
             break;
     }
 
-    _sample_count = _read_32(*_infile);
+    _sample_count = _read_32(_infile);
 
     switch (_vorb_size)
     {
@@ -312,8 +312,8 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         {
             _no_granule = true;
 
-            _infile->seekg(_vorb_offset + 0x4, ios::beg);
-            uint32_t mod_signal = _read_32(*_infile);
+            _infile.seekg(_vorb_offset + 0x4, ios::beg);
+            uint32_t mod_signal = _read_32(_infile);
 
             // set
             // D9     11011001
@@ -333,12 +333,12 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
             {
                 _mod_packets = true;
             }
-            _infile->seekg(_vorb_offset + 0x10, ios::beg);
+            _infile.seekg(_vorb_offset + 0x10, ios::beg);
             break;
         }
 
         default:
-            _infile->seekg(_vorb_offset + 0x18, ios::beg);
+            _infile.seekg(_vorb_offset + 0x18, ios::beg);
             break;
     }
 
@@ -351,19 +351,19 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         _mod_packets = true;
     }
 
-    _setup_packet_offset = _read_32(*_infile);
-    _first_audio_packet_offset = _read_32(*_infile);
+    _setup_packet_offset = _read_32(_infile);
+    _first_audio_packet_offset = _read_32(_infile);
 
     switch (_vorb_size)
     {
         case -1:
         case 0x2A:
-            _infile->seekg(_vorb_offset + 0x24, ios::beg);
+            _infile.seekg(_vorb_offset + 0x24, ios::beg);
             break;
 
         case 0x32:
         case 0x34:
-            _infile->seekg(_vorb_offset + 0x2C, ios::beg);
+            _infile.seekg(_vorb_offset + 0x2C, ios::beg);
             break;
     } 
 
@@ -380,9 +380,9 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
         case 0x2A:
         case 0x32:
         case 0x34:
-            _uid = _read_32(*_infile);
-            _blocksize_0_pow = _infile->get();
-            _blocksize_1_pow = _infile->get();
+            _uid = _read_32(_infile);
+            _blocksize_0_pow = _infile.get();
+            _blocksize_1_pow = _infile.get();
             break;
     }
 
@@ -421,13 +421,14 @@ void Wwise_RIFF_Vorbis::Init(const string& codebooks_name, bool inline_codebooks
 }
 
 Wwise_RIFF_Vorbis::Wwise_RIFF_Vorbis(
+    ifstream& i,
     const string& name,
     const string& codebooks_name,
     bool inline_codebooks,
     bool full_setup,
     ForcePacketFormat force_packet_format
     )
-  :
+    :
     _file_name(name),
     _codebooks_name(codebooks_name),
     _file_size(-1),
@@ -467,17 +468,14 @@ Wwise_RIFF_Vorbis::Wwise_RIFF_Vorbis(
     _no_granule(false),
     _mod_packets(false),
     _read_16(NULL),
-    _read_32(NULL)
+    _read_32(NULL),
+    _infile(i)
 {
-    std::ifstream *ifs = new ifstream(name.c_str(), ios::binary); 
-
-    _infile = ifs;
-
     Init(codebooks_name, inline_codebooks, full_setup, force_packet_format);
 }
 
 Wwise_RIFF_Vorbis::Wwise_RIFF_Vorbis(
-    istream *i,
+    istream &i,
     const string& codebooks_name,
     bool inline_codebooks,
     bool full_setup,
@@ -523,9 +521,9 @@ Wwise_RIFF_Vorbis::Wwise_RIFF_Vorbis(
     _no_granule(false),
     _mod_packets(false),
     _read_16(NULL),
-    _read_32(NULL)
+    _read_32(NULL),
+    _infile(i)
 {
-    _infile = i;
 
     Init(codebooks_name, inline_codebooks, full_setup, force_packet_format);
 }
@@ -712,9 +710,9 @@ void Wwise_RIFF_Vorbis::generate_ogg_header(Bit_oggstream& os, bool * & mode_blo
 
         Packet setup_packet(_infile, _data_offset + _setup_packet_offset, _little_endian, _no_granule);
 
-        _infile->seekg(setup_packet.offset());
+        _infile.seekg(setup_packet.offset());
         if (setup_packet.granule() != 0) throw Parse_error_str("setup packet granule != 0");
-        Bit_stream ss(*_infile);
+        Bit_stream ss(_infile);
 
         // codebook count
         Bit_uint<8> codebook_count_less1;
@@ -1144,7 +1142,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
 
             offset = packet_payload_offset;
 
-            _infile->seekg(offset);
+            _infile.seekg(offset);
             // HACK: don't know what to do here
             if (granule == UINT32_C(0xFFFFFFFF))
             {
@@ -1175,7 +1173,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
                 {
                     // collect mode number from first byte
 
-                    Bit_stream ss(*_infile);
+                    Bit_stream ss(_infile);
 
                     // IN/OUT: N bit mode number (max 6 bits)
                     mode_number_p = new Bit_uintv(mode_bits);
@@ -1191,7 +1189,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
                 {
                     // long window, peek at next frame
 
-                    _infile->seekg(next_offset);
+                    _infile.seekg(next_offset);
                     bool next_blockflag = false;
                     if (next_offset + packet_header_size <= _data_offset + _data_size)
                     {
@@ -1201,9 +1199,9 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
                         uint32_t next_packet_size = audio_packet.size();
                         if (next_packet_size > 0)
                         {
-                            _infile->seekg(audio_packet.offset());
+                            _infile.seekg(audio_packet.offset());
 
-                            Bit_stream ss(*_infile);
+                            Bit_stream ss(_infile);
                             Bit_uintv next_mode_number(mode_bits);
 
                             ss >> next_mode_number;
@@ -1221,7 +1219,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
                     os << next_window_type;
 
                     // fix seek for rest of stream
-                    _infile->seekg(offset + 1);
+                    _infile.seekg(offset + 1);
                 }
 
                 prev_blockflag = mode_blockflag[*mode_number_p];
@@ -1234,7 +1232,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
             else
             {
                 // nothing unusual for first byte
-                int v = _infile->get();
+                int v = _infile.get();
                 if (v < 0)
                 {
                     throw Parse_error_str("file truncated");
@@ -1246,7 +1244,7 @@ void Wwise_RIFF_Vorbis::generate_ogg(ostream& of)
             // remainder of packet
             for (unsigned int i = 1; i < size; i++)
             {
-                int v = _infile->get();
+                int v = _infile.get();
                 if (v < 0)
                 {
                     throw Parse_error_str("file truncated");
@@ -1280,9 +1278,9 @@ void Wwise_RIFF_Vorbis::generate_ogg_header_with_triad(Bit_oggstream& os)
                 throw Parse_error_str("information packet granule != 0");
             }
 
-            _infile->seekg(information_packet.offset());
+            _infile.seekg(information_packet.offset());
 
-            Bit_uint<8> c(_infile->get());
+            Bit_uint<8> c(_infile.get());
             if (1 != c)
             {
                 throw Parse_error_str("wrong type for information packet");
@@ -1292,7 +1290,7 @@ void Wwise_RIFF_Vorbis::generate_ogg_header_with_triad(Bit_oggstream& os)
 
             for (unsigned int i = 1; i < size; i++)
             {
-                c = _infile->get();
+                c = _infile.get();
                 os << c;
             }
 
@@ -1312,9 +1310,9 @@ void Wwise_RIFF_Vorbis::generate_ogg_header_with_triad(Bit_oggstream& os)
                 throw Parse_error_str("comment packet granule != 0");
             }
 
-            _infile->seekg(comment_packet.offset());
+            _infile.seekg(comment_packet.offset());
 
-            Bit_uint<8> c(_infile->get());
+            Bit_uint<8> c(_infile.get());
             if (3 != c)
             {
                 throw Parse_error_str("wrong type for comment packet");
@@ -1324,7 +1322,7 @@ void Wwise_RIFF_Vorbis::generate_ogg_header_with_triad(Bit_oggstream& os)
 
             for (unsigned int i = 1; i < size; i++)
             {
-                c = _infile->get();
+                c = _infile.get();
                 os << c;
             }
 
@@ -1338,9 +1336,9 @@ void Wwise_RIFF_Vorbis::generate_ogg_header_with_triad(Bit_oggstream& os)
         {
             Packet_8 setup_packet(_infile, offset, _little_endian);
 
-            _infile->seekg(setup_packet.offset());
+            _infile.seekg(setup_packet.offset());
             if (setup_packet.granule() != 0) throw Parse_error_str("setup packet granule != 0");
-            Bit_stream ss(*_infile);
+            Bit_stream ss(_infile);
 
             Bit_uint<8> c;
             ss >> c;
