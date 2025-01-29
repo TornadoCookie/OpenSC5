@@ -45,7 +45,7 @@ LDFLAGS+=-lcurl
 LDFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
 
 
-all: $(DISTDIR) $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
+all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
@@ -61,13 +61,13 @@ else
 deps:
 endif
 
+$(DISTDIR)/src:
+	mkdir -p $@
+
 $(DISTDIR)/src/filetypes:
 	mkdir -p $@
 
 $(DISTDIR)/src/ww2ogg:
-	mkdir -p $@
-
-$(DISTDIR)/src:
 	mkdir -p $@
 
 $(DISTDIR)/src/../tests:
@@ -89,6 +89,9 @@ LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
+shared_SOURCES+=$(DISTDIR)/src/tracelog.o
+shared_SOURCES+=$(DISTDIR)/src/hash.o
+
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/package.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/rules.o
@@ -100,8 +103,9 @@ dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/wwriff.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/codebook.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/ww2ogg/crc.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
-dbpf_all_SOURCES+=$(DISTDIR)/src/hash.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/memstream.o
+dbpf_all_CXX_SOURCES+=$(shared_CXX_SOURCES)
+dbpf_all_SOURCES+=$(shared_SOURCES)
 
 test_package_SOURCES+=$(DISTDIR)/src/../tests/test_package.o
 test_package_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
@@ -124,7 +128,7 @@ $(DISTDIR)/test_crcbin$(EXEC_EXTENSION): $(test_crcbin_SOURCES)
 
 test_prop_SOURCES+=$(DISTDIR)/src/../tests/test_prop.o
 test_prop_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
-test_prop_SOURCES+=$(DISTDIR)/src/hash.o
+test_prop_SOURCES+=$(shared_SOURCES)
 
 $(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -201,6 +205,8 @@ $(DISTDIR)/%.o: %.cpp
 	$(CXX) -c $^ $(CFLAGS) -o $@
 
 clean:
+	rm -f $(DISTDIR)/src/tracelog.o
+	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/src/filetypes/package.o
 	rm -f $(DISTDIR)/src/filetypes/prop.o
 	rm -f $(DISTDIR)/src/filetypes/rules.o
@@ -212,7 +218,6 @@ clean:
 	rm -f $(DISTDIR)/src/ww2ogg/codebook.o
 	rm -f $(DISTDIR)/src/ww2ogg/crc.o
 	rm -f $(DISTDIR)/src/threadpool.o
-	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/src/memstream.o
 	rm -f $(DISTDIR)/src/../tests/test_package.o
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
@@ -224,7 +229,6 @@ clean:
 	rm -f $(DISTDIR)/test_crcbin$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_prop.o
 	rm -f $(DISTDIR)/src/filetypes/prop.o
-	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/test_prop$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_rast.o
 	rm -f $(DISTDIR)/src/filetypes/rast.o

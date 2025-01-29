@@ -22,10 +22,7 @@ typedef struct tagMSG *LPMSG;
 
 #include <raylib.h>
 #include "textformat_ng.h"
-
-#ifndef TRACELOG
-#define TRACELOG TraceLog
-#endif
+#include "tracelog.h"
 
 #endif
 

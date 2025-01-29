@@ -13,6 +13,10 @@ DistData launcher.bat
 
 ExtraCFlag -Isrc/ww2ogg
 
+SourceGroup shared
+Source tracelog.c
+Source hash.c
+
 SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c
@@ -25,8 +29,8 @@ CxxSource ww2ogg/wwriff.cpp
 CxxSource ww2ogg/codebook.cpp
 Source ww2ogg/crc.c
 Source threadpool.c
-Source hash.c
 Source memstream.c
+UseSourceGroup shared
 
 Program test_package
 Source ../tests/test_package.c
@@ -43,7 +47,7 @@ Source crc32.c
 Program test_prop
 Source ../tests/test_prop.c
 Source filetypes/prop.c
-Source hash.c
+UseSourceGroup shared
 
 Program test_rast
 Source ../tests/test_rast.c
