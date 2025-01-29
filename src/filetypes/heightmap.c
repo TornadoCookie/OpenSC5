@@ -34,12 +34,12 @@ HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
 
 
     uint32_t *data32 = data;
-    printf("w %d h %d\n", header->height, header->width);
+    TRACELOG(LOG_DEBUG, "w %d h %d\n", header->height, header->width);
 
     for (int i = 0; i < 0x4000; i++)
     {
         uint32_t asint = data32[i];
-        printf("%08x ", asint);
+        TRACELOGNONL(LOG_DEBUG, "%08x ", asint);
         uint8_t *as8s = &asint;
 
         imgDatas[0][i] = eight2col(as8s[0]);
