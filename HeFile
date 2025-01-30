@@ -16,6 +16,7 @@ ExtraCFlag -Isrc/ww2ogg
 SourceGroup shared
 Source tracelog.c
 Source hash.c
+Source memstream.c
 
 SourceGroup dbpf_all
 Source filetypes/package.c
@@ -29,7 +30,6 @@ CxxSource ww2ogg/wwriff.cpp
 CxxSource ww2ogg/codebook.cpp
 Source ww2ogg/crc.c
 Source threadpool.c
-Source memstream.c
 UseSourceGroup shared
 
 Program test_package
@@ -52,19 +52,22 @@ UseSourceGroup shared
 Program test_rast
 Source ../tests/test_rast.c
 Source filetypes/rast.c
+UseSourceGroup shared
 
 Program test_rw4
 Source ../tests/test_rw4.c
 Source filetypes/rw4.c
-Source memstream.c
+UseSourceGroup shared
 
 Program test_sdelta
 Source ../tests/test_sdelta.c
 Source filetypes/sdelta.c
+UseSourceGroup shared
 
 Program test_heightmap
 Source ../tests/test_heightmap.c
 Source filetypes/heightmap.c
+UseSourceGroup shared
 
 Program test_rules
 Source ../tests/test_rules.c

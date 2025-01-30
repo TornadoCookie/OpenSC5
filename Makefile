@@ -91,6 +91,7 @@ LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
 shared_SOURCES+=$(DISTDIR)/src/tracelog.o
 shared_SOURCES+=$(DISTDIR)/src/hash.o
+shared_SOURCES+=$(DISTDIR)/src/memstream.o
 
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/package.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
@@ -103,7 +104,6 @@ dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/wwriff.o
 dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/codebook.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/ww2ogg/crc.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
-dbpf_all_SOURCES+=$(DISTDIR)/src/memstream.o
 dbpf_all_CXX_SOURCES+=$(shared_CXX_SOURCES)
 dbpf_all_SOURCES+=$(shared_SOURCES)
 
@@ -135,25 +135,28 @@ $(DISTDIR)/test_prop$(EXEC_EXTENSION): $(test_prop_SOURCES)
 
 test_rast_SOURCES+=$(DISTDIR)/src/../tests/test_rast.o
 test_rast_SOURCES+=$(DISTDIR)/src/filetypes/rast.o
+test_rast_SOURCES+=$(shared_SOURCES)
 
 $(DISTDIR)/test_rast$(EXEC_EXTENSION): $(test_rast_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_rw4_SOURCES+=$(DISTDIR)/src/../tests/test_rw4.o
 test_rw4_SOURCES+=$(DISTDIR)/src/filetypes/rw4.o
-test_rw4_SOURCES+=$(DISTDIR)/src/memstream.o
+test_rw4_SOURCES+=$(shared_SOURCES)
 
 $(DISTDIR)/test_rw4$(EXEC_EXTENSION): $(test_rw4_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_sdelta_SOURCES+=$(DISTDIR)/src/../tests/test_sdelta.o
 test_sdelta_SOURCES+=$(DISTDIR)/src/filetypes/sdelta.o
+test_sdelta_SOURCES+=$(shared_SOURCES)
 
 $(DISTDIR)/test_sdelta$(EXEC_EXTENSION): $(test_sdelta_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_heightmap_SOURCES+=$(DISTDIR)/src/../tests/test_heightmap.o
 test_heightmap_SOURCES+=$(DISTDIR)/src/filetypes/heightmap.o
+test_heightmap_SOURCES+=$(shared_SOURCES)
 
 $(DISTDIR)/test_heightmap$(EXEC_EXTENSION): $(test_heightmap_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -207,6 +210,7 @@ $(DISTDIR)/%.o: %.cpp
 clean:
 	rm -f $(DISTDIR)/src/tracelog.o
 	rm -f $(DISTDIR)/src/hash.o
+	rm -f $(DISTDIR)/src/memstream.o
 	rm -f $(DISTDIR)/src/filetypes/package.o
 	rm -f $(DISTDIR)/src/filetypes/prop.o
 	rm -f $(DISTDIR)/src/filetypes/rules.o
@@ -218,7 +222,6 @@ clean:
 	rm -f $(DISTDIR)/src/ww2ogg/codebook.o
 	rm -f $(DISTDIR)/src/ww2ogg/crc.o
 	rm -f $(DISTDIR)/src/threadpool.o
-	rm -f $(DISTDIR)/src/memstream.o
 	rm -f $(DISTDIR)/src/../tests/test_package.o
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_update.o
@@ -235,7 +238,6 @@ clean:
 	rm -f $(DISTDIR)/test_rast$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_rw4.o
 	rm -f $(DISTDIR)/src/filetypes/rw4.o
-	rm -f $(DISTDIR)/src/memstream.o
 	rm -f $(DISTDIR)/test_rw4$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_sdelta.o
 	rm -f $(DISTDIR)/src/filetypes/sdelta.o

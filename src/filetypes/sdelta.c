@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <cpl_raylib.h>
 #include <cpl_endian.h>
+#include <stdlib.h>
 
 typedef struct SDelta2 {
 
@@ -17,7 +18,7 @@ SDelta LoadSDeltaFile(const char *filename)
     uint32_t headerVal;
     fread(&headerVal, 4, 1, f);
 
-    if (headerVal != 4) TRACELOG(LOG_WARN, "Header value is %#x\n", headerVal);
+    if (headerVal != 4) TRACELOG(LOG_WARNING, "Header value is %#x\n", headerVal);
 
     int index = 0;
 
