@@ -20,9 +20,12 @@ typedef struct tagMSG *LPMSG;
 
 #endif
 
+#include "tracelog.h"
 #include <raylib.h>
 #include "textformat_ng.h"
-#include "tracelog.h"
+
+#define SetTraceLogLevel OpenSC5_SetTraceLogLevel
+
 
 #endif
 

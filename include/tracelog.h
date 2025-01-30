@@ -13,8 +13,6 @@ void OpenSC5_SetTraceLogLevel(int logLevel);
 #define TRACELOG OpenSC5_TraceLog
 #define TRACELOGNONL OpenSC5_TraceLogNoNL
 
-#define SetTraceLogLevel OpenSC5_SetTraceLogLevel
-
 #endif
 
 
