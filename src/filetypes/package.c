@@ -348,7 +348,7 @@ static void datacycle(void *param)
 
     TRACELOG(LOG_DEBUG, "\nEntry %d:\n", i);
 
-    printf("Locking fmutex.\n");
+    TRACELOG(LOG_DEBUG, "Locking fmutex.\n");
     pthread_mutex_lock(args->fmutex);
 
     if (fseek(f, entry.chunkOffset, SEEK_SET) == -1)
@@ -364,7 +364,7 @@ static void datacycle(void *param)
         TRACELOG(LOG_ERROR, "Unexpected end of file.\n");
     }
 
-    printf("Unlocking fmutex.\n");
+    TRACELOG(LOG_DEBUG, "Unlocking fmutex.\n");
     pthread_mutex_unlock(args->fmutex);
 
     if (entry.isCompressed)
