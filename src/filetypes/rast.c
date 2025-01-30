@@ -27,7 +27,7 @@ typedef struct RasterFile {
 RastData LoadRastData(unsigned char *data, int dataSize)
 {
     RastData rastData = { 0 };
-    printf("Raster info:\n");
+    TRACELOG(LOG_DEBUG, "Raster info:\n");
     RasterFile file = { 0 };
 
     unsigned char *initData = data;
@@ -42,23 +42,23 @@ RastData LoadRastData(unsigned char *data, int dataSize)
     file.header.pixelwidth = htobe32(file.header.pixelwidth) & 0xFF;
     file.header.pixelformat = htobe32(file.header.pixelformat) & 0xFF;
 
-    printf("Type: %d\n", file.header.type);
-    printf("Width: %d\n", file.header.width);
-    printf("Height: %d\n", file.header.height);
-    printf("Mipmap Count: %d\n", file.header.mipmapct);
-    printf("PixelWidth: %d\n", file.header.pixelwidth);
-    printf("PixelFormat: %#x\n", file.header.pixelformat);
+    TRACELOG(LOG_DEBUG, "Type: %d\n", file.header.type);
+    TRACELOG(LOG_DEBUG, "Width: %d\n", file.header.width);
+    TRACELOG(LOG_DEBUG, "Height: %d\n", file.header.height);
+    TRACELOG(LOG_DEBUG, "Mipmap Count: %d\n", file.header.mipmapct);
+    TRACELOG(LOG_DEBUG, "PixelWidth: %d\n", file.header.pixelwidth);
+    TRACELOG(LOG_DEBUG, "PixelFormat: %#x\n", file.header.pixelformat);
 
     if (file.header.pixelwidth != 8)
     {
-        printf("I don't know how to deal with any other pixelwidth other than 8.\n");
+        TRACELOG(LOG_ERROR, "I don't know how to deal with any other pixelwidth other than 8.\n");
         rastData.corrupted = true;
         return rastData;
     }
 
     if (file.header.pixelformat != 0x15)
     {
-        printf("I don't know how to deal with any other pixelformat other than 0x15.\n");
+        TRACELOG(LOG_ERROR, "I don't know how to deal with any other pixelformat other than 0x15.\n");
         rastData.corrupted = true;
         return rastData;
     }
@@ -78,7 +78,7 @@ RastData LoadRastData(unsigned char *data, int dataSize)
 
         if (4*file.header.width*file.header.height > dataSize)
         {
-            printf("{Corruption Detected.}\n");
+            TRACELOG(LOG_WARNING, "{Corruption Detected.}\n");
             rastData.corrupted = true;
             return rastData;
         }
@@ -86,7 +86,7 @@ RastData LoadRastData(unsigned char *data, int dataSize)
         rastImg.blocksize = htobe32(*(uint32_t*)data);
         data += sizeof(uint32_t);
 
-        printf("Image %d: Blocksize %d\n", i, rastImg.blocksize);
+        TRACELOG(LOG_DEBUG, "Image %d: Blocksize %d\n", i, rastImg.blocksize);
 
         for (int j = 0; j < file.header.width*file.header.height; j++)
         {
@@ -106,7 +106,7 @@ RastData LoadRastData(unsigned char *data, int dataSize)
     }
 
     img.data = imgData;
-    printf("Loaded.\n");
+    TRACELOG(LOG_DEBUG, "Loaded.\n");
 
     rastData.img = img;
 
