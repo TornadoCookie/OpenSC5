@@ -465,10 +465,11 @@ int main(int argc, char **argv)
     GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
     GuiWindowFindDialogState findDialogState = InitGuiWindowFindDialog();
 
-    PropertyNameList nameList = LoadPropertyNameList("Properties.txt");
-    const char **names = NULL;
+    if (argc > 1 && !strcmp(argv[1], "-debug")) SetTraceLogLevel(LOG_DEBUG); // bit of a hack but as we have only one command-line option it should be fine
+                                                                             // too lazy to use getopt
 
-    SetTraceLogLevel(LOG_DEBUG);
+    PropertyNameList nameList = LoadPropertyNameList("Properties.txt");
+    const char **names = NULL; 
 
     while (!WindowShouldClose())
     {
