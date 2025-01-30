@@ -204,7 +204,7 @@ typedef struct RWMeshCompiledStateLink {
 
 unsigned char *LoadSectionData(RWSectionInfo *sectionInfos, int section, const char *initData, int *dataSize)
 {
-    printf("LoadSectionData %d\n", section);
+    TRACELOG(LOG_DEBUG, "LoadSectionData %d\n", section);
     if (dataSize) *dataSize = sectionInfos[section].size;
     return sectionInfos[section].dataOffset + initData;
 }
@@ -220,7 +220,7 @@ Mesh LoadMeshRW4(RWMesh rwmesh, unsigned char *data, RWSectionInfo *sectionInfos
     {
         uint32_t buffer = *(uint32_t*)data;
         data += sizeof(uint32_t);
-        printf("Buffer %d: [Section %d]\n", j, buffer);
+        TRACELOG(LOG_DEBUG, "Buffer %d: [Section %d]\n", j, buffer);
 
         RWVertexBuffer *vertexBuffer = (RWVertexBuffer*)LoadSectionData(sectionInfos, buffer, initData, NULL);
                     
@@ -333,7 +333,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
     const unsigned char *initData = data;
 
-    printf("RW4 Info:\n");
+    TRACELOG(LOG_DEBUG, "RW4 Info:\n");
 
     RWHeader header = { 0 };
     memcpy(&header, data, sizeof(RWHeader));
@@ -341,7 +341,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
     header.sectionCount &= 0xFF;
 
-    printf("Type: %#x\n", header.type);
+    TRACELOG(LOG_DEBUG, "Type: %#x\n", header.type);
 
     if (header.type == 0x1)
     {
@@ -352,27 +352,27 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
         rw4data.type = RW4_TEXTURE;
     }
 
-    printf("Section Count: %#x\n", header.sectionCount);
-    printf("Section Info Offset: %d\n", header.sectionInfoOffset);
-    printf("Buffer Data Offset: %d\n", header.bufferDataOffset);
+    TRACELOG(LOG_DEBUG, "Section Count: %#x\n", header.sectionCount);
+    TRACELOG(LOG_DEBUG, "Section Info Offset: %d\n", header.sectionInfoOffset);
+    TRACELOG(LOG_DEBUG, "Buffer Data Offset: %d\n", header.bufferDataOffset);
     
-    printf("Section manifest:\n");
-    printf("Offset 1: %d\n", header.offset1);
-    printf("Offset 2: %d\n", header.offset2);
-    printf("Offset 3: %d\n", header.offset3);
-    printf("Offset 4: %d\n", header.offset4);
+    TRACELOG(LOG_DEBUG, "Section manifest:\n");
+    TRACELOG(LOG_DEBUG, "Offset 1: %d\n", header.offset1);
+    TRACELOG(LOG_DEBUG, "Offset 2: %d\n", header.offset2);
+    TRACELOG(LOG_DEBUG, "Offset 3: %d\n", header.offset3);
+    TRACELOG(LOG_DEBUG, "Offset 4: %d\n", header.offset4);
 
     data = initData + header.offset3;
     RWSectionSubReferences *subRefs = (RWSectionSubReferences*)data;
-    printf("Subreference info:\n");
-    printf("Count: %d\n", subRefs->count);
-    printf("Offset: %d\n", subRefs->offset);
+    TRACELOG(LOG_DEBUG, "Subreference info:\n");
+    TRACELOG(LOG_DEBUG, "Count: %d\n", subRefs->count);
+    TRACELOG(LOG_DEBUG, "Offset: %d\n", subRefs->offset);
 
     rw4data.corrupted = true;
 
     RWSectionInfo *sectionInfos = malloc(sizeof(RWSectionInfo) * header.sectionCount);
 
-    printf("Section info:\n");
+    TRACELOG(LOG_DEBUG, "Section info:\n");
     data = initData + header.sectionInfoOffset;
     for (int i = 0; i < header.sectionCount; i++)
     {
@@ -380,12 +380,12 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
         memcpy(&sectionInfo, data, sizeof(RWSectionInfo));
         data += sizeof(RWSectionInfo);
 
-        printf("\nSection %d:\n", i);
-        printf("Data Offset: %d\n", sectionInfo.dataOffset);
-        printf("Size: %d\n", sectionInfo.size);
-        printf("Alignment: %d\n", sectionInfo.alignment);
-        printf("Type Code Index: %d\n", sectionInfo.typeCodeIndex);
-        printf("Type Code: %#x\n", sectionInfo.typeCode);
+        TRACELOG(LOG_DEBUG, "\nSection %d:\n", i);
+        TRACELOG(LOG_DEBUG, "Data Offset: %d\n", sectionInfo.dataOffset);
+        TRACELOG(LOG_DEBUG, "Size: %d\n", sectionInfo.size);
+        TRACELOG(LOG_DEBUG, "Alignment: %d\n", sectionInfo.alignment);
+        TRACELOG(LOG_DEBUG, "Type Code Index: %d\n", sectionInfo.typeCodeIndex);
+        TRACELOG(LOG_DEBUG, "Type Code: %#x\n", sectionInfo.typeCode);
 
         if (sectionInfo.typeCode == 0x10030)
         {
@@ -400,7 +400,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
         RWSectionInfo sectionInfo = sectionInfos[i];
         data = initData + sectionInfo.dataOffset;
 
-        printf("\nSection %d:\n", i);
+        TRACELOG(LOG_DEBUG, "\nSection %d:\n", i);
 
         switch (sectionInfo.typeCode)
         {
@@ -409,16 +409,16 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 RWKeyframeAnim keyframeAnim;
                 memcpy(&keyframeAnim, data, sizeof(RWKeyframeAnim));
 
-                printf("Keyframe Anim Info:\n");
-                printf("Channel name offset: %d\n", keyframeAnim.channelNameOffset);
-                printf("Channel count: %d\n", keyframeAnim.channelCount);
-                printf("Skeleton Id: %#x\n", keyframeAnim.skeletonId);
-                printf("Channel Data offset: %d\n", keyframeAnim.channelDataOffset);
-                printf("Padding end offset: %d\n", keyframeAnim.paddingEndOffset);
-                printf("Length: %f\n", keyframeAnim.length);
-                printf("Flags: %#x\n", keyframeAnim.flags);
-                printf("Channel Info Offset: %d\n", keyframeAnim.channelInfoOffset);
-                printf("TODO\n");
+                TRACELOG(LOG_DEBUG, "Keyframe Anim Info:\n");
+                TRACELOG(LOG_DEBUG, "Channel name offset: %d\n", keyframeAnim.channelNameOffset);
+                TRACELOG(LOG_DEBUG, "Channel count: %d\n", keyframeAnim.channelCount);
+                TRACELOG(LOG_DEBUG, "Skeleton Id: %#x\n", keyframeAnim.skeletonId);
+                TRACELOG(LOG_DEBUG, "Channel Data offset: %d\n", keyframeAnim.channelDataOffset);
+                TRACELOG(LOG_DEBUG, "Padding end offset: %d\n", keyframeAnim.paddingEndOffset);
+                TRACELOG(LOG_DEBUG, "Length: %f\n", keyframeAnim.length);
+                TRACELOG(LOG_DEBUG, "Flags: %#x\n", keyframeAnim.flags);
+                TRACELOG(LOG_DEBUG, "Channel Info Offset: %d\n", keyframeAnim.channelInfoOffset);
+                TRACELOG(LOG_DEBUG, "TODO\n");
             } break;
             case 0xff0001: // Animations
             {
@@ -426,15 +426,15 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 uint32_t count = *(uint32_t*)data;
                 data += sizeof(uint32_t);
 
-                printf("Animations Info:\n");
-                printf("Count: %d\n", count);
+                TRACELOG(LOG_DEBUG, "Animations Info:\n");
+                TRACELOG(LOG_DEBUG, "Count: %d\n", count);
                 for (int i = 0; i < count; i++)
                 {
                     uint32_t animationIndex = *(uint32_t*)data;
                     data += sizeof(uint32_t);
                     uint32_t section = *(uint32_t*)data;
                     data += sizeof(uint32_t);
-                    printf("Animation %#x: [Section %d]\n", animationIndex, section);
+                    TRACELOG(LOG_DEBUG, "Animation %#x: [Section %d]\n", animationIndex, section);
                 }
             } break;
             case 0x70002: // Skeleton
@@ -443,13 +443,13 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&skeleton, data, sizeof(RWSkeleton));
                 data += sizeof(RWSkeleton);
 
-                printf("Skeleton Info:\n");
-                printf("Bone Flag Offset: %d\n", skeleton.boneFlagOffset);
-                printf("Bone Parent Offset: %d\n", skeleton.boneParentOffset);
-                printf("Bone Name Offset: %d\n", skeleton.boneNameOffset);
-                printf("Bone Count: %d\n", skeleton.count);
-                printf("Skeleton Id: %#x\n", skeleton.skeletonId);
-                printf("TODO\n");
+                TRACELOG(LOG_DEBUG, "Skeleton Info:\n");
+                TRACELOG(LOG_DEBUG, "Bone Flag Offset: %d\n", skeleton.boneFlagOffset);
+                TRACELOG(LOG_DEBUG, "Bone Parent Offset: %d\n", skeleton.boneParentOffset);
+                TRACELOG(LOG_DEBUG, "Bone Name Offset: %d\n", skeleton.boneNameOffset);
+                TRACELOG(LOG_DEBUG, "Bone Count: %d\n", skeleton.count);
+                TRACELOG(LOG_DEBUG, "Skeleton Id: %#x\n", skeleton.skeletonId);
+                TRACELOG(LOG_DEBUG, "TODO\n");
             } break;
             case 0x7000b: // SkeletonsInK
             {
@@ -457,12 +457,12 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&skeletonsink, data, sizeof(RWSkeletonsInK));
                 data += sizeof(RWSkeletonsInK);
 
-                printf("SkeletonsInK Info:\n");
-                printf("Array Offset: %d\n", skeletonsink.arrayOffset);
-                printf("Skeleton: [Section %d]\n", skeletonsink.skeleton);
-                printf("Count: %d\n", skeletonsink.arrayCount);
+                TRACELOG(LOG_DEBUG, "SkeletonsInK Info:\n");
+                TRACELOG(LOG_DEBUG, "Array Offset: %d\n", skeletonsink.arrayOffset);
+                TRACELOG(LOG_DEBUG, "Skeleton: [Section %d]\n", skeletonsink.skeleton);
+                TRACELOG(LOG_DEBUG, "Count: %d\n", skeletonsink.arrayCount);
 
-                printf("TODO\n");
+                TRACELOG(LOG_DEBUG, "TODO\n");
 
             } break;
             case 0x80005: // BBox
@@ -471,9 +471,9 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&bbox, data, sizeof(RWBBox));
                 data += sizeof(RWBBox);
 
-                printf("Bounding Box Information:\n");
-                printf("Min: {%f, %f, %f}\n", bbox.min.x, bbox.min.y, bbox.min.z);
-                printf("Max: {%f, %f, %f}\n", bbox.max.x, bbox.max.y, bbox.max.z);
+                TRACELOG(LOG_DEBUG, "Bounding Box Information:\n");
+                TRACELOG(LOG_DEBUG, "Min: {%f, %f, %f}\n", bbox.min.x, bbox.min.y, bbox.min.z);
+                TRACELOG(LOG_DEBUG, "Max: {%f, %f, %f}\n", bbox.max.x, bbox.max.y, bbox.max.z);
             } break;
             case 0x20009: // Mesh
             {
@@ -483,15 +483,15 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&rwmesh, data, sizeof(RWMesh));
                 data += sizeof(RWMesh); 
                 
-                printf("Mesh Info:\n");
-                printf("Primitive Type: %d\n", rwmesh.primitiveType);
-                printf("Index buffer: [Section %d]\n", rwmesh.indexBuffer);
-                printf("Triangle Count: %d\n", rwmesh.triangleCount);
-                printf("Buffer Count: %d\n", rwmesh.bufferCount);
-                printf("First Index: %d\n", rwmesh.firstIndex);
-                printf("Primitive Count: %d\n", rwmesh.primitiveCount);
-                printf("First Vertex: %d\n", rwmesh.firstVertex);
-                printf("Vertex Count: %d\n", rwmesh.vertexCount);
+                TRACELOG(LOG_DEBUG, "Mesh Info:\n");
+                TRACELOG(LOG_DEBUG, "Primitive Type: %d\n", rwmesh.primitiveType);
+                TRACELOG(LOG_DEBUG, "Index buffer: [Section %d]\n", rwmesh.indexBuffer);
+                TRACELOG(LOG_DEBUG, "Triangle Count: %d\n", rwmesh.triangleCount);
+                TRACELOG(LOG_DEBUG, "Buffer Count: %d\n", rwmesh.bufferCount);
+                TRACELOG(LOG_DEBUG, "First Index: %d\n", rwmesh.firstIndex);
+                TRACELOG(LOG_DEBUG, "Primitive Count: %d\n", rwmesh.primitiveCount);
+                TRACELOG(LOG_DEBUG, "First Vertex: %d\n", rwmesh.firstVertex);
+                TRACELOG(LOG_DEBUG, "Vertex Count: %d\n", rwmesh.vertexCount);
 
                 
 
@@ -505,17 +505,17 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&vertexBuffer, data, sizeof(RWVertexBuffer));
                 data += sizeof(RWVertexBuffer);
 
-                printf("Vertex Buffer Info:\n");
-                printf("Vertex Description: [Section %d]\n", vertexBuffer.vertexDescription);
-                printf("Base Vertex Index: %d\n", vertexBuffer.baseVertexIndex);
-                printf("Vertex Count: %d\n", vertexBuffer.vertexCount);
-                printf("Vertex Size: %d\n", vertexBuffer.vertexSize);
-                printf("Vertex Data: [Section %d]\n", vertexBuffer.vertexData);
+                TRACELOG(LOG_DEBUG, "Vertex Buffer Info:\n");
+                TRACELOG(LOG_DEBUG, "Vertex Description: [Section %d]\n", vertexBuffer.vertexDescription);
+                TRACELOG(LOG_DEBUG, "Base Vertex Index: %d\n", vertexBuffer.baseVertexIndex);
+                TRACELOG(LOG_DEBUG, "Vertex Count: %d\n", vertexBuffer.vertexCount);
+                TRACELOG(LOG_DEBUG, "Vertex Size: %d\n", vertexBuffer.vertexSize);
+                TRACELOG(LOG_DEBUG, "Vertex Data: [Section %d]\n", vertexBuffer.vertexData);
             } break;
             case 0x10030: // BaseResource
             {
-                printf("Base Resource info:\n");
-                printf("Size: %d\n", sectionInfo.size);
+                TRACELOG(LOG_DEBUG, "Base Resource info:\n");
+                TRACELOG(LOG_DEBUG, "Size: %d\n", sectionInfo.size);
             } break;
             case 0x20007: // IndexBuffer
             {
@@ -523,14 +523,14 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&indexBuffer, data, sizeof(RWIndexBuffer));
                 data += sizeof(RWIndexBuffer);
 
-                printf("Index Buffer Info:\n");
-                printf("DirectX Index Buffer: %d\n", indexBuffer.dxIndexBuffer);
-                printf("Start Index: %d\n", indexBuffer.startIndex);
-                printf("Primitive Count: %d\n", indexBuffer.primitiveCount);
-                printf("Usage: %d\n", indexBuffer.usage);
-                printf("Format: %d\n", indexBuffer.format);
-                printf("Primitive Type: %d\n", indexBuffer.primitiveType);
-                printf("Index Data: [Section %d]\n", indexBuffer.indexData);
+                TRACELOG(LOG_DEBUG, "Index Buffer Info:\n");
+                TRACELOG(LOG_DEBUG, "DirectX Index Buffer: %d\n", indexBuffer.dxIndexBuffer);
+                TRACELOG(LOG_DEBUG, "Start Index: %d\n", indexBuffer.startIndex);
+                TRACELOG(LOG_DEBUG, "Primitive Count: %d\n", indexBuffer.primitiveCount);
+                TRACELOG(LOG_DEBUG, "Usage: %d\n", indexBuffer.usage);
+                TRACELOG(LOG_DEBUG, "Format: %d\n", indexBuffer.format);
+                TRACELOG(LOG_DEBUG, "Primitive Type: %d\n", indexBuffer.primitiveType);
+                TRACELOG(LOG_DEBUG, "Index Data: [Section %d]\n", indexBuffer.indexData);
             } break;
             case 0x20004: // VertexDescription
             {
@@ -538,11 +538,11 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&vertexDescription, data, sizeof(RWVertexDescription));
                 data += sizeof(RWVertexDescription);
 
-                printf("Vertex Description Info:\n");
-                printf("DirectX Vertex Declaration: %d\n", vertexDescription.dxVertexDeclaration);
-                printf("Count: %d\n", vertexDescription.count);
-                printf("Vertex Size: %d\n", vertexDescription.vertexSize);
-                printf("Element Flags: %#x\n", vertexDescription.elementFlags);
+                TRACELOG(LOG_DEBUG, "Vertex Description Info:\n");
+                TRACELOG(LOG_DEBUG, "DirectX Vertex Declaration: %d\n", vertexDescription.dxVertexDeclaration);
+                TRACELOG(LOG_DEBUG, "Count: %d\n", vertexDescription.count);
+                TRACELOG(LOG_DEBUG, "Vertex Size: %d\n", vertexDescription.vertexSize);
+                TRACELOG(LOG_DEBUG, "Element Flags: %#x\n", vertexDescription.elementFlags);
 
                 vertexDescription.elements = malloc(sizeof(RWVertexElement) * vertexDescription.count);
                 memcpy(vertexDescription.elements, data, sizeof(RWVertexElement) * vertexDescription.count);
@@ -550,14 +550,14 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 for (int j = 0; j < vertexDescription.count; j++)
                 {
                     RWVertexElement element = vertexDescription.elements[j];
-                    printf("\nElement %d:\n", j);
-                    printf("Stream: %d\n", element.stream);
-                    printf("Offset: %d\n", element.offset);
-                    printf("Type: %d\n", element.type);
-                    printf("Method: %d\n", element.method);
-                    printf("Usage: %d\n", element.usage);
-                    printf("Usage index: %d\n", element.usageIndex);
-                    printf("Type Code: %#x\n", element.typeCode);
+                    TRACELOG(LOG_DEBUG, "\nElement %d:\n", j);
+                    TRACELOG(LOG_DEBUG, "Stream: %d\n", element.stream);
+                    TRACELOG(LOG_DEBUG, "Offset: %d\n", element.offset);
+                    TRACELOG(LOG_DEBUG, "Type: %d\n", element.type);
+                    TRACELOG(LOG_DEBUG, "Method: %d\n", element.method);
+                    TRACELOG(LOG_DEBUG, "Usage: %d\n", element.usage);
+                    TRACELOG(LOG_DEBUG, "Usage index: %d\n", element.usageIndex);
+                    TRACELOG(LOG_DEBUG, "Type Code: %#x\n", element.typeCode);
                 }
             } break;
             case 0x80003: // TriangleKDTreeProcedural
@@ -565,15 +565,15 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 RWTriangleKDTreeProcedural kdt;
                 memcpy(&kdt, data, sizeof(RWTriangleKDTreeProcedural));
 
-                printf("TriangleKDTreeProcedural info:\n");
-                printf("Triangle count: %d\n", kdt.triangleCount);
-                printf("Vertex count: %d\n", kdt.vertexCount);
-                printf("Triangle offset: %d\n", kdt.pTriangles);
-                printf("Vertex offset: %d\n", kdt.pVertices);
-                printf("p4: %d\n", kdt.p4);
-                printf("p3: %d\n", kdt.p3);
+                TRACELOG(LOG_DEBUG, "TriangleKDTreeProcedural info:\n");
+                TRACELOG(LOG_DEBUG, "Triangle count: %d\n", kdt.triangleCount);
+                TRACELOG(LOG_DEBUG, "Vertex count: %d\n", kdt.vertexCount);
+                TRACELOG(LOG_DEBUG, "Triangle offset: %d\n", kdt.pTriangles);
+                TRACELOG(LOG_DEBUG, "Vertex offset: %d\n", kdt.pVertices);
+                TRACELOG(LOG_DEBUG, "p4: %d\n", kdt.p4);
+                TRACELOG(LOG_DEBUG, "p3: %d\n", kdt.p3);
 
-                printf("TODO\n");
+                TRACELOG(LOG_DEBUG, "TODO\n");
             } break;
             case 0x2001a: // MeshCompiledStateLink
             {
@@ -581,16 +581,16 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&csl, data, sizeof(RWMeshCompiledStateLink));
                 data += sizeof(RWMeshCompiledStateLink);
 
-                printf("MeshCompiledStateLink info:\n");
-                printf("Mesh: [Section %d]\n", csl.mesh);
-                printf("Count: %d\n", csl.count);
+                TRACELOG(LOG_DEBUG, "MeshCompiledStateLink info:\n");
+                TRACELOG(LOG_DEBUG, "Mesh: [Section %d]\n", csl.mesh);
+                TRACELOG(LOG_DEBUG, "Count: %d\n", csl.count);
 
                 for (int j = 0; j < csl.count; j++)
                 {
                     int32_t compiledState = *(int32_t*)data;
                     data += sizeof(int32_t);
 
-                    printf("Compiled State %d: [Section %d]\n", j, compiledState);
+                    TRACELOG(LOG_DEBUG, "Compiled State %d: [Section %d]\n", j, compiledState);
                 } 
             } break;
             case 0x2000b: //CompiledState
@@ -610,17 +610,17 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 const int FLAG3_RENDER_STATES   = 0x020000;
                 const int FLAG3_PALETTE_ENTRIES = 0x100000;
                 
-                printf("CompiledState info:\n");
-                printf("Size: %d\n", compiledState.size);
-                printf("Primitive Type: %d\n", compiledState.primitiveType);
-                printf("Flags 1: %#x\n", compiledState.flags1);
-                printf("Flags 2: %#x\n", compiledState.flags2);
-                printf("Flags 3: %#x\n", compiledState.flags3);
-                printf("Renderer ID: %#x\n", compiledState.rendererID);
+                TRACELOG(LOG_DEBUG, "CompiledState info:\n");
+                TRACELOG(LOG_DEBUG, "Size: %d\n", compiledState.size);
+                TRACELOG(LOG_DEBUG, "Primitive Type: %d\n", compiledState.primitiveType);
+                TRACELOG(LOG_DEBUG, "Flags 1: %#x\n", compiledState.flags1);
+                TRACELOG(LOG_DEBUG, "Flags 2: %#x\n", compiledState.flags2);
+                TRACELOG(LOG_DEBUG, "Flags 3: %#x\n", compiledState.flags3);
+                TRACELOG(LOG_DEBUG, "Renderer ID: %#x\n", compiledState.rendererID);
 
                 if (compiledState.flags1 & FLAG_MODELTOWORLD)
                 {
-                    printf("TODO FLAG_MODELTOWORLD\n");
+                    TRACELOG(LOG_ERROR, "TODO FLAG_MODELTOWORLD\n");
                     rw4data.corrupted = true;
                 }
 
@@ -635,19 +635,19 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 if (compiledState.flags1 & FLAG_MATERIAL_COLOR)
                 {
-                    printf("TODO FLAG_MATERIAL_COLOR\n");
+                    TRACELOG(LOG_ERROR, "TODO FLAG_MATERIAL_COLOR\n");
                     rw4data.corrupted = true;
                 }
 
                 if (compiledState.flags1 & FLAG_AMBIENT_COLOR)
                 {
-                    printf("TODO FLAG_AMBIENT_COLOR\n");
+                    TRACELOG(LOG_ERROR, "TODO FLAG_AMBIENT_COLOR\n");
                     rw4data.corrupted = true;
                 }
 
                 if (compiledState.flags1 & 0x3FC0)
                 {
-                    printf("TODO 0x3FC0\n");
+                    TRACELOG(LOG_ERROR, "TODO 0x3FC0\n");
                     rw4data.corrupted = true;
                 }
 
@@ -658,19 +658,19 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 if (compiledState.flags1 & 0xF0000)
                 {
-                    printf("TODO 0xF0000\n");
+                    TRACELOG(LOG_ERROR, "TODO 0xF0000\n");
                     rw4data.corrupted = true;
                 }
 
                 if (compiledState.field14)
                 {
-                    printf("TODO field14 %#x\n", compiledState.field14);
+                    TRACELOG(LOG_ERROR, "TODO field14 %#x\n", compiledState.field14);
                     rw4data.corrupted = true;
                 }
 
                 if (compiledState.flags3 & FLAG3_RENDER_STATES)
                 {
-                    printf("TODO FLAG3_RENDER_STATES\n");
+                    TRACELOG(LOG_ERROR, "TODO FLAG3_RENDER_STATES\n");
                     rw4data.corrupted = true;
                 }
 
@@ -679,7 +679,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 if (compiledState.flags3 & FLAG3_PALETTE_ENTRIES)
                 {
-                    printf("TODO FLAG3_PALETTE_ENTRIES\n");
+                    TRACELOG(LOG_ERROR, "TODO FLAG3_PALETTE_ENTRIES\n");
                     rw4data.corrupted = true;
                 }
 
@@ -688,7 +688,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     int32_t samplerIndex = *(int32_t*)data;
                     data += sizeof(int32_t);
 
-                    printf("Texture Slot info:\n");
+                    TRACELOG(LOG_DEBUG, "Texture Slot info:\n");
 
                     while (samplerIndex != -1)
                     {
@@ -698,9 +698,9 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                         int32_t stageStatesMask = *(int32_t*)data;
                         data += sizeof(int32_t);
 
-                        printf("Sampler Index: %d\n", samplerIndex);
-                        printf("Raster: [Section %#x]\n", raster);
-                        printf("Stage States Mask: %d\n", stageStatesMask);
+                        TRACELOG(LOG_DEBUG, "Sampler Index: %d\n", samplerIndex);
+                        TRACELOG(LOG_DEBUG, "Raster: [Section %#x]\n", raster);
+                        TRACELOG(LOG_DEBUG, "Stage States Mask: %d\n", stageStatesMask);
 
                         if (stageStatesMask)
                         {
@@ -713,7 +713,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                                 data += sizeof(int32_t);
 
                                 // clogs output
-                                //printf("State=%#x, data=%#x\n", state, unkn);
+                                //TRACELOG(LOG_DEBUG, "State=%#x, data=%#x\n", state, unkn);
                                 
                                 state = *(int32_t*)data;
                                 data += sizeof(int32_t);
@@ -750,27 +750,27 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 memcpy(&raster, data, sizeof(RWRaster));
                 data += sizeof(RWRaster);
 
-                printf("Raster info:\n");
-                printf("Texture Format: %d\n", raster.textureFormat);
-                printf("Texture Flags: %#x\n", raster.textureFlags);
-                printf("Volume Depth: %d\n", raster.volumeDepth);
-                //printf("dxBaseTexture: %#x\n", raster.dxBaseTexture);
-                printf("width: %d\n", raster.width);
-                printf("height: %d\n", raster.height);
-                printf("mipmaps: %d\n", raster.mipmapLevels);
-                printf("textureData: [Section %d]\n", raster.textureData);
+                TRACELOG(LOG_DEBUG, "Raster info:\n");
+                TRACELOG(LOG_DEBUG, "Texture Format: %d\n", raster.textureFormat);
+                TRACELOG(LOG_DEBUG, "Texture Flags: %#x\n", raster.textureFlags);
+                TRACELOG(LOG_DEBUG, "Volume Depth: %d\n", raster.volumeDepth);
+                //TRACELOG(LOG_DEBUG, "dxBaseTexture: %#x\n", raster.dxBaseTexture);
+                TRACELOG(LOG_DEBUG, "width: %d\n", raster.width);
+                TRACELOG(LOG_DEBUG, "height: %d\n", raster.height);
+                TRACELOG(LOG_DEBUG, "mipmaps: %d\n", raster.mipmapLevels);
+                TRACELOG(LOG_DEBUG, "textureData: [Section %d]\n", raster.textureData);
                 
                 rw4data.corrupted = false;
 
                 if (raster.textureFlags & 0x1000)
                 {
-                    printf("Cubemaps not supported.\n");
+                    TRACELOG(LOG_ERROR, "Cubemaps not supported.\n");
                     rw4data.corrupted = true;
                 }
 
                 if (raster.width % 4 != 0 || raster.height % 4 != 0)
                 {
-                    printf("Invalid size.\n");
+                    TRACELOG(LOG_ERROR, "Invalid size.\n");
                     rw4data.corrupted = true;
                     return rw4data;
                 }
@@ -805,7 +805,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 }
                 else
                 {
-                    printf("Unimplemented texture format %d.\n", raster.textureFormat);
+                    TRACELOG(LOG_ERROR, "Unimplemented texture format %d.\n", raster.textureFormat);
                     rw4data.corrupted = true;
                 }
 
@@ -888,7 +888,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
             } break;
             default:
             {
-                printf("Unrecognized type code %#x.\n", sectionInfo.typeCode);
+                TRACELOG(LOG_WARNING, "Unrecognized type code %#x.\n", sectionInfo.typeCode);
 
                 //FILE *f = fopen(TextFormat("corrupted/RW4-%#X-%#X.unkn", sectionInfo.typeCode, i), "wb");
                 //fwrite(data, 1, sectionInfo.size, f);
