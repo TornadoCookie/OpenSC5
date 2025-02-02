@@ -131,7 +131,7 @@ BnkData LoadBnkData(unsigned char *data, int dataSize)
         {
             TRACELOG(LOG_INFO, "BNK: Loading %#X (%d/%d)", index.id, i, contentIndexCount);
             
-            bnkData.waves[index.id] = LoadWWRiffWave(data, index.size);
+            bnkData.waves[i] = LoadWWRiffWave(data, index.size);
         }
     }
 
