@@ -11,7 +11,9 @@ int main(int argc, char **argv)
 
     InitWindow(1280, 720, "RW4 Test");
 
+    SetTraceLogLevel(LOG_DEBUG);
     RW4Data rw4data =  LoadRW4Data(data, dataSize);
+    SetTraceLogLevel(LOG_INFO);
 
     //if (!rw4data.corrupted)
     {
