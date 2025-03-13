@@ -281,6 +281,10 @@ static Vector2 srcScroll;
 
 static int currentGifFrame;
 
+static Rectangle bnkView;
+static Vector2 bnkScroll;
+static Sound bnkSound;
+
 static void DrawPackageEntry(PackageEntry entry)
 {
     switch (entry.type)
@@ -397,21 +401,43 @@ static void DrawPackageEntry(PackageEntry entry)
         } break;
         case PKGENTRY_BNK:
         {
-            const char *text = TextFormat("Points to: %#x", entry.data.bnkData.pointsTo);
-            DrawText(text, GetScreenWidth()/2, 0, 20, BLACK);
-            if (GuiButton((Rectangle){
-                GetScreenWidth()/2 + MeasureText(text, 20), 0, 20, 50
-            }, "Go To"))
+            GuiPanel((Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()}, "Soundbank entries");
+
+            GuiScrollPanel(
+                (Rectangle){GetScreenWidth()/2, 0, GetScreenWidth()/2, GetScreenHeight()},
+                "Soundbank entries",
+                (Rectangle){GetScreenWidth()/2,RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2,GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(entry.data.bnkData.waveCount+1)},
+                &bnkScroll,
+                &bnkView);
+
+            BeginScissorMode(bnkView.x, bnkView.y, bnkView.width, bnkView.height);
+
+            for (int i = 0; i < entry.data.bnkData.waveCount; i++)
             {
-                for (int i = 0; i < loadedPkg.entryCount; i++)
+                ListRow row = { 0 };
+                    
+                row.elementCount = 1;
+                row.elementWidth = (float[1]){1.0};
+                row.elementText = (const char *[1]){TextFormat("Entry %d", i)};
+                    
+                bool clicked = DrawListRow((Rectangle) {
+                    GetScreenWidth()/2, GetScreenHeight()/2 + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+1)+bnkScroll.y,
+                    GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT,
+                }, row, false, true);
+
+                if (clicked)
                 {
-                    if (loadedPkg.entries[i].group == entry.group && loadedPkg.entries[i].instance == entry.data.bnkData.pointsTo)
+                    if (IsSoundValid(bnkSound))
                     {
-                        selectedPkgEntry = i;
-                        return;
+                        UnloadSound(bnkSound);
                     }
+
+                    bnkSound = LoadSoundFromWave(entry.data.bnkData.waves[i]);
+                    PlaySound(bnkSound);
                 }
             }
+
+            EndScissorMode();
         } break;
         case PKGENTRY_RW4:
         {
@@ -422,7 +448,7 @@ static void DrawPackageEntry(PackageEntry entry)
         } break;
         default:
         {
-            DrawText("Unable to parse this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to parse this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
+            DrawText("Unable to render this data yet", GetScreenWidth()*3/4 - MeasureText("Unable to render this data yet", 20)/2, GetScreenHeight()/2 - 10, 20, GRAY);
         } break;
     }
 }
