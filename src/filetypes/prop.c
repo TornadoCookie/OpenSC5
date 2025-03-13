@@ -424,6 +424,19 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             }
         }
 
+        // Weird thing in older versions of the format
+        while (data - initData + 4 < dataSize)
+        {
+            if (*(uint32_t*)data == 0)
+            {
+                data += 4;
+            }
+            else
+            {
+                break;
+            }
+        }
+
         if (arraySize > 0)
         {
             //data = arrayInitData + arraySize * arrayNumber;
