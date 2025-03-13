@@ -59,6 +59,16 @@ void vTraceLog(int logType, const char *text, va_list args, bool newline)
     if (logType == LOG_FATAL) exit(EXIT_FAILURE);  // If fatal logging, exit program
 }
 
+static void tl_prep(void)
+{
+    printf("[%06x]:", gettid());
+}
+
+static void tl_end(void)
+{
+    
+}
+
 void OpenSC5_TraceLog(int logLevel, const char *text, ...)
 {
     // originally we used printf, so every log message ended with a newline
@@ -71,12 +81,18 @@ void OpenSC5_TraceLog(int logLevel, const char *text, ...)
         ourText[strlen(text) - 1] = 0;
     }
 
+    if (logLevel < logTypeLevel) return; 
+
+    tl_prep();
+
     va_list args;
     va_start(args, text);
 
     vTraceLog(logLevel, ourText, args, true);
 
     va_end(args);
+
+    tl_end();
 }
 
 void OpenSC5_TraceLogNoNL(int logLevel, const char *text, ...)
