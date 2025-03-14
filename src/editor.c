@@ -121,9 +121,9 @@ void GuiWindowFindDialog(GuiWindowFindDialogState *state)
         GuiCheckBox((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 64, 24, 24}, "Match Group ID", &state->searchGroup);
         GuiCheckBox((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 96, 24, 24}, "Match Type ID", &state->searchType);
 
-        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 32, 240, 24}, state->instanceIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->instanceEditMode)) state->instanceEditMode = !state->instanceEditMode;
-        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 64, 240, 24}, state->groupIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->groupEditMode)) state->groupEditMode = !state->groupEditMode;
-        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 96, 240, 24}, state->typeIdStr, GuiGetStyle(DEFAULT, TEXT_SIZE), state->typeEditMode)) state->typeEditMode = !state->typeEditMode;
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 32, 240, 24}, state->instanceIdStr, 256, state->instanceEditMode)) state->instanceEditMode = !state->instanceEditMode;
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 64, 240, 24}, state->groupIdStr, 256, state->groupEditMode)) state->groupEditMode = !state->groupEditMode;
+        if (GuiTextBox((Rectangle){state->windowBounds.x + 168, state->windowBounds.y + 96, 240, 24}, state->typeIdStr, 256, state->typeEditMode)) state->typeEditMode = !state->typeEditMode;
         
         if (GuiButton((Rectangle){state->windowBounds.x + 8, state->windowBounds.y + 280, 120, 24}, "FIND NEXT"))
         {
@@ -285,7 +285,7 @@ static Rectangle bnkView;
 static Vector2 bnkScroll;
 static Sound bnkSound;
 
-static void DrawPackageEntry(PackageEntry entry)
+static void DrawPackageEntry(PackageEntry entry, PropertyNameList nameList)
 {
     switch (entry.type)
     {
@@ -311,6 +311,14 @@ static void DrawPackageEntry(PackageEntry entry)
                 row.elementCount = 3;
                 row.elementWidth = (float[3]){0.333, 0.333, 0.333};
                 row.elementText = (const char *[3]){TextFormat("%#X", var.identifier), TextFormat("%#X (%s)", var.type, PropVarTypeToString(var.type)), TextFormat("%#X", var.count)};
+
+                for (int j = 0; j < nameList.propCount; j++)
+                {
+                    if (var.identifier == nameList.propIds[j])
+                    {
+                        row.elementText[0] = TextFormat("%#X (%s)", var.identifier, nameList.propNames[j]);
+                    }
+                }
 
                 bool shouldToggleSelect = DrawListRow((Rectangle){
                     GetScreenWidth()/2, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*(i+2)+propScroll.y,
@@ -687,7 +695,7 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    DrawPackageEntry(entry);
+                    DrawPackageEntry(entry, nameList);
                 }
 
                 if (GuiButton((Rectangle){132, 0, 100, 24}, "Export Entry"))
