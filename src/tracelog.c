@@ -61,7 +61,7 @@ void vTraceLog(int logType, const char *text, va_list args, bool newline)
 
 static void tl_prep(void)
 {
-#    printf("[%06x]:", gettid());
+//    printf("[%06x]:", gettid());
 }
 
 static void tl_end(void)
