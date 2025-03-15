@@ -40,7 +40,7 @@ HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
     {
         uint32_t asint = data32[i];
         TRACELOGNONL(LOG_DEBUG, "%08x ", asint);
-        uint8_t *as8s = &asint;
+        uint8_t *as8s = (uint8_t *)&asint;
 
         imgDatas[0][i] = eight2col(as8s[0]);
         imgDatas[1][i] = eight2col(as8s[1]);
