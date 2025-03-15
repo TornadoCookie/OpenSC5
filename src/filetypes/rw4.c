@@ -292,7 +292,7 @@ Mesh LoadMeshRW4(RWMesh rwmesh, unsigned char *data, RWSectionInfo *sectionInfos
 
     if (rwmesh.indexBuffer)
     {
-        RWIndexBuffer *indexBuffer = LoadSectionData(sectionInfos, rwmesh.indexBuffer, initData, NULL);
+        RWIndexBuffer *indexBuffer = (RWIndexBuffer*)LoadSectionData(sectionInfos, rwmesh.indexBuffer, initData, NULL);
 
         int indexComponents = 1;
         //if (!mesh.normals) indexComponents = 2;
@@ -628,7 +628,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 if (compiledState.flags1 & FLAG_VERTEX_DESCRIPTION)
                 {
-                    vertexDescription = data;
+                    vertexDescription = (RWVertexDescription*)data;
                     data += sizeof(RWVertexDescription) - sizeof(void*);
                     data += sizeof(RWVertexElement) * vertexDescription->count;
                 }
