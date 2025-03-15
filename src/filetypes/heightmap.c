@@ -21,8 +21,8 @@ Color eight2col(uint8_t d)
 HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
 {
     HeightmapData heightmapData = { 0 };
-
-    HeightmapHeader *header = data;
+    
+    HeightmapHeader *header = (HeightmapHeader *)data;
     data += 0x14;
 
     Color *imgDatas[4];
@@ -33,14 +33,14 @@ HeightmapData LoadHeightmapData(unsigned char *data, int dataSize)
     }
 
 
-    uint32_t *data32 = data;
+    uint32_t *data32 = (uint32_t *)data;
     TRACELOG(LOG_DEBUG, "w %d h %d\n", header->height, header->width);
 
     for (int i = 0; i < 0x4000; i++)
     {
         uint32_t asint = data32[i];
         TRACELOGNONL(LOG_DEBUG, "%08x ", asint);
-        uint8_t *as8s = &asint;
+        uint8_t *as8s = (uint8_t *)&asint;
 
         imgDatas[0][i] = eight2col(as8s[0]);
         imgDatas[1][i] = eight2col(as8s[1]);
