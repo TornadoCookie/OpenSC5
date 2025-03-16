@@ -2,6 +2,11 @@
 #include <cpl_raylib.h>
 #include <stdlib.h>
 
+#ifdef __linux__
+#include <sys/syscall.h>
+#include <unistd.h>
+#endif
+
 static int logTypeLevel = LOG_INFO;
 
 // Raylib's TraceLog, adapted to use va_list and whether or not to use a newline
@@ -61,7 +66,11 @@ void vTraceLog(int logType, const char *text, va_list args, bool newline)
 
 static void tl_prep(void)
 {
-//    printf("[%06x]:", gettid());
+#ifdef __linux__
+    printf("[%06x]:", (unsigned int)syscall(SYS_gettid));
+#else
+    printf("[%06x];", 0);
+#endif
 }
 
 static void tl_end(void)
