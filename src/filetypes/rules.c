@@ -140,7 +140,7 @@ RulesData LoadRulesData(unsigned char *data, int dataSize)
     if (globalRuleCount == -1)
         globalRuleCount = 0;
     data += sizeof(uint32_t);
-    RuleGlobalRuleInfo *globalRuleInfo = data;
+    RuleGlobalRuleInfo *globalRuleInfo = (RuleGlobalRuleInfo *)data;
 
     for (int i = 0; i < globalRuleCount; i++)
     {
@@ -208,7 +208,7 @@ RulesData LoadRulesData(unsigned char *data, int dataSize)
     {
         data = ruleOff + globalRuleInfo[i].start;
         
-        RuleHeader *ruleHeader = data;
+        RuleHeader *ruleHeader = (RuleHeader *)data;
         data += sizeof(RuleHeader);
 
         printf("\nglobalRule %#x @ %#x to %#x\n", globalRuleInfo[i].name, globalRuleInfo[i].start + ruleOff - initData, globalRuleInfo[i].endOff + ruleOff - initData);
