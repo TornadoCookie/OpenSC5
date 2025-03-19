@@ -23,21 +23,23 @@ static void ConvWWRiffToOGG(std::istream &in, std::ostream &out)
 {
     const static std::string packed_codebooks("packed_codebooks_aoTuV_603.bin");
 
-    Wwise_RIFF_Vorbis *wwrv = new Wwise_RIFF_Vorbis(in,
+    Wwise_RIFF_Vorbis *wwrv;
+
+    try {
+        wwrv = new Wwise_RIFF_Vorbis(in,
             packed_codebooks, /* codebooks_filename */
             false, /* inline_codebooks */
             false, /* full_setup */
             kNoForcePacketFormat /* force_packet_format */
     );
     
-    try {
         wwrv->generate_ogg(out);
     }
 #define err_handle(T) catch (T e) \
                       { \
                           std::cerr << e << '\n'; \
-                          throw e; \
-                      }
+                      }//throw e; \
+                      //}
     err_handle(Argument_error)
     err_handle(File_open_error)
     err_handle(Size_mismatch)
