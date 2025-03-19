@@ -9,7 +9,11 @@
 // All of this adapted from
 // SporeModder-FX
 // /src/sporemodder/file/rw4/*.java
-//               ||/view/editors/RWModelViewer.java
+//                "/view/editors/RWModelViewer.java
+
+// Note that the file format is not actually called RW4,
+// The engine is called RW4 (RenderWare 4)
+// The file format is actually called Rdx9
 
 typedef struct RWHeader {
     char magic[28];
@@ -625,6 +629,7 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                 }
 
                 RWVertexDescription *vertexDescription;
+                Color materialColor = WHITE;
 
                 if (compiledState.flags1 & FLAG_VERTEX_DESCRIPTION)
                 {
@@ -635,8 +640,9 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                 if (compiledState.flags1 & FLAG_MATERIAL_COLOR)
                 {
-                    TRACELOG(LOG_ERROR, "TODO FLAG_MATERIAL_COLOR\n");
-                    rw4data.corrupted = true;
+                    // ColorRGBA == raylib Color
+                    memcpy(&materialColor, data, sizeof(Color));
+                    data += sizeof(Color);
                 }
 
                 if (compiledState.flags1 & FLAG_AMBIENT_COLOR)
@@ -725,6 +731,9 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
 
                         if (samplerStatesMask)
                         {
+                            rw4data.corrupted = true;
+                            return rw4data;
+
                             int state = *(int32_t*)data;
                             data += sizeof(int32_t);
 
