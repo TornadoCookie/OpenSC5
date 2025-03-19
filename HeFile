@@ -4,6 +4,7 @@ RaylibVersion 5.5
 UseRaylib
 
 NativeDependency curl
+NativeDependency EAWebKitd
 
 DistData packed_codebooks_aoTuV_603.bin
 DistData README.md

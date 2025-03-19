@@ -14,3 +14,6 @@ HeroesAndVillains-Scripts
 
 dist
 build
+
+lib/libEAWebKitd-linux64-debug/lib/libEAWebKitd.so
+
