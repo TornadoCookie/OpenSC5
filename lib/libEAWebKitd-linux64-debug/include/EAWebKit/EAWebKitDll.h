@@ -43,7 +43,7 @@ namespace WebKit
 class EAWebKitLib;
 }
 }
-#if defined (EA_PLATFORM_OSX) 
+#if defined (EA_PLATFORM_OSX) || defined(__linux__)
 extern "C" __attribute__ ((visibility ("default"))) EA::WebKit::EAWebKitLib* CreateEAWebkitInstance(void);
 #endif
 

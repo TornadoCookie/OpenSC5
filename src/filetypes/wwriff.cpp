@@ -25,6 +25,19 @@ static void ConvWWRiffToOGG(std::istream &in, std::ostream &out)
 
     Wwise_RIFF_Vorbis *wwrv;
 
+#define err_handle(T) catch (T e) \
+                      { \
+                          std::cerr << e << '\n'; \
+                      }//throw e; \
+                      //}
+    #define e_hs \
+    err_handle(Argument_error) \
+    err_handle(File_open_error) \
+    err_handle(Size_mismatch) \
+    err_handle(Invalid_id) \
+    err_handle(Parse_error_str) \
+    err_handle(Parse_error)
+
     try {
         wwrv = new Wwise_RIFF_Vorbis(in,
             packed_codebooks, /* codebooks_filename */
@@ -32,20 +45,17 @@ static void ConvWWRiffToOGG(std::istream &in, std::ostream &out)
             false, /* full_setup */
             kNoForcePacketFormat /* force_packet_format */
     );
-    
+    } e_hs
+
+    if (!wwrv) return;
+
+    try {
         wwrv->generate_ogg(out);
-    }
-#define err_handle(T) catch (T e) \
-                      { \
-                          std::cerr << e << '\n'; \
-                      }//throw e; \
-                      //}
-    err_handle(Argument_error)
-    err_handle(File_open_error)
-    err_handle(Size_mismatch)
-    err_handle(Invalid_id)
-    err_handle(Parse_error_str)
-    err_handle(Parse_error)
+    } e_hs;
+
+#undef e_hs
+#undef err_handle
+
 }
 
 extern "C" void ExportWWRiffToFile(unsigned char *data, int dataSize, const char *filename)

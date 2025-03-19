@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <cpl_pthread.h>
 #include <threadpool.h>
+#include <rlWebKit.h>
 
 static int compar_alphabetize(const void *p1, const void *p2)
 {
@@ -61,15 +62,14 @@ int main(int argc, char **argv)
     InitWindow(1280, 720, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
 
-    for (int i = 0; i < simcityData.count; i++)
     {
-        if (!IsFileExtension(simcityData.paths[i], ".package")) continue;
-        printf("Loading %s...\n", simcityData.paths[i]);
-        FILE *f = fopen(simcityData.paths[i], "r");
+        const char *simcity_app_file = strdup(TextFormat("%s/SimCity_App.package", argv[1]));
+        printf("Loading SimCity_App...\n");
+        FILE *f = fopen(simcity_app_file, "r");
         if (!f)
         {
-            perror(simcityData.paths[i]);
-            continue;
+            perror(simcity_app_file);
+            return 1;
         }
         pthread_t thread;
         LoadPackageFileAsyncArgs args;
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         {
             BeginDrawing();
             ClearBackground(RAYWHITE);
-            DrawText(TextFormat("%s: %d left.\n", simcityData.paths[i], GetThreadpoolTasksLeft()), 0, 0, 20, BLACK);
+            DrawText(TextFormat("%s: %d left.\n", simcity_app_file, GetThreadpoolTasksLeft()), 0, 0, 20, BLACK);
             EndDrawing();
         }
         pthread_join(thread, NULL);
@@ -92,6 +92,9 @@ int main(int argc, char **argv)
     }
 
     printf("Loaded %d package entries.\n", allGameData.entryCount);
+
+    initWebkit();
+    shutdownWebKit();
 
     return 0;
 }

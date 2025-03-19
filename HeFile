@@ -19,6 +19,13 @@ Source tracelog.c
 Source hash.c
 Source memstream.c
 
+SourceGroup rlWebKit
+CxxSource rlWebKit/rlWebKit.cpp
+CxxSource rlWebKit/rlWebkitClient.cpp
+CxxSource rlWebKit/rlWebkitRenderer.cpp
+CxxSource rlWebKit/rlWebkitThreading.cpp
+CxxSource rlWebKit/rlWebkitUtils.cpp
+
 SourceGroup dbpf_all
 Source filetypes/package.c
 Source filetypes/prop.c
@@ -90,6 +97,7 @@ Source getopt.c
 Program opensc5
 Source game.c
 UseSourceGroup dbpf_all
+UseSourceGroup rlWebKit
 
 Program test_dbpf
 Source ../tests/test_dbpf.c

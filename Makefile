@@ -45,12 +45,20 @@ LDFLAGS+=-lcurl
 LDFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
 
 
-all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
+EAWebKitd_NAME=libEAWebKitd-$(PLATFORM)
+CFLAGS+=-Ilib/$(EAWebKitd_NAME)/include
+LDFLAGS+=-Llib/$(EAWebKitd_NAME)/lib
+LDFLAGS+=-lEAWebKitd
+LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
+
+
+all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(EAWebKitd_NAME) ] && [ ! -d $(DISTDIR)/lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
@@ -61,16 +69,8 @@ else
 deps:
 endif
 
-$(DISTDIR)/src:
-	mkdir -p $@
 
-$(DISTDIR)/src/filetypes:
-	mkdir -p $@
-
-$(DISTDIR)/src/ww2ogg:
-	mkdir -p $@
-
-$(DISTDIR)/src/../tests:
+$(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests:
 	mkdir -p $@
 
 $(DISTDIR):
@@ -92,6 +92,12 @@ LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 shared_SOURCES+=$(DISTDIR)/src/tracelog.o
 shared_SOURCES+=$(DISTDIR)/src/hash.o
 shared_SOURCES+=$(DISTDIR)/src/memstream.o
+
+rlWebKit_CXX_SOURCES+=$(DISTDIR)/src/rlWebKit/rlWebKit.o
+rlWebKit_CXX_SOURCES+=$(DISTDIR)/src/rlWebKit/rlWebkitClient.o
+rlWebKit_CXX_SOURCES+=$(DISTDIR)/src/rlWebKit/rlWebkitRenderer.o
+rlWebKit_CXX_SOURCES+=$(DISTDIR)/src/rlWebKit/rlWebkitThreading.o
+rlWebKit_CXX_SOURCES+=$(DISTDIR)/src/rlWebKit/rlWebkitUtils.o
 
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/package.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/filetypes/prop.o
@@ -190,6 +196,8 @@ $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES) $(opensc5_
 opensc5_SOURCES+=$(DISTDIR)/src/game.o
 opensc5_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_SOURCES+=$(dbpf_all_SOURCES)
+opensc5_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
+opensc5_SOURCES+=$(rlWebKit_SOURCES)
 
 $(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES) $(opensc5_CXX_SOURCES)
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -211,6 +219,11 @@ clean:
 	rm -f $(DISTDIR)/src/tracelog.o
 	rm -f $(DISTDIR)/src/hash.o
 	rm -f $(DISTDIR)/src/memstream.o
+	rm -f $(DISTDIR)/src/rlWebKit/rlWebKit.o
+	rm -f $(DISTDIR)/src/rlWebKit/rlWebkitClient.o
+	rm -f $(DISTDIR)/src/rlWebKit/rlWebkitRenderer.o
+	rm -f $(DISTDIR)/src/rlWebKit/rlWebkitThreading.o
+	rm -f $(DISTDIR)/src/rlWebKit/rlWebkitUtils.o
 	rm -f $(DISTDIR)/src/filetypes/package.o
 	rm -f $(DISTDIR)/src/filetypes/prop.o
 	rm -f $(DISTDIR)/src/filetypes/rules.o
