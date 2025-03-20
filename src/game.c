@@ -94,6 +94,74 @@ int main(int argc, char **argv)
     printf("Loaded %d package entries.\n", allGameData.entryCount);
 
     initWebkit();
+
+    void *v = createView(1280, 720);
+    setViewUrl(v, "Updater.html");
+
+    Image img = GenImageColor(1280, 720, BLANK);
+    Texture2D screenTex = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    while (!WindowShouldClose())
+    {
+        if (IsKeyPressed(KEY_F5))
+         {
+             reload(v);
+         }
+
+        mousemove(v, GetMouseDelta().x, GetMouseDelta().y);
+
+         int mouseButtonPressed = -1;
+         bool mouseButtonState;
+
+        // kMouseLeft = 0
+        // kMouseMiddle = 1
+        // kMouseRight = 2
+
+         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+         {
+             mouseButtonPressed = 0;
+             mouseButtonState = true;
+         }
+         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+         {
+             mouseButtonPressed = 0;
+             mouseButtonState = false;
+         }
+
+         if (mouseButtonPressed != -1)
+         {
+             mousebutton(v, GetMouseX(), GetMouseY(), mouseButtonPressed, mouseButtonState);
+         }
+
+         mousewheel(v, GetMouseX(), GetMouseY(), 0, GetMouseWheelMove()*60);
+
+
+      BeginDrawing();
+      ClearBackground(RAYWHITE);
+
+      //BeginMode3D(camera);
+
+      //DrawCubeWires((Vector3){0, 0, 0}, 1, 1, 1, RED);
+
+      //EndMode3D();
+
+      //update the things
+      updateWebkit(v);
+      updateView(v);
+
+      updateGLTexture(v, screenTex);
+      DrawTexture(screenTex, 0, 0, WHITE);
+     
+      //draw the things
+      //drawCube();
+      //drawInterface(v);      
+
+      //Update screen
+      EndDrawing();
+    }
+
+    destroyView(v);
     shutdownWebKit();
 
     return 0;

@@ -12,6 +12,7 @@
 #  define GLWEBKIT_API
 #endif
 
+#include <raylib.h>
 
 namespace EA
 {
@@ -48,7 +49,7 @@ extern "C" {
    GLWEBKIT_API void mousewheel(EA::WebKit::View* v, int x, int y, int keys, int delta);
    GLWEBKIT_API void keyboard(EA::WebKit::View* v, int id, bool ischar, bool depressed);
    GLWEBKIT_API void reload(EA::WebKit::View* v);
-   GLWEBKIT_API void updateGLTexture(EA::WebKit::View* v, unsigned int id);
+   GLWEBKIT_API void updateGLTexture(EA::WebKit::View* v, Texture2D tex);
    GLWEBKIT_API bool evaluateJavaScript(EA::WebKit::View* v, const char* src, EA::WebKit::JavascriptValue* result  = 0);
    GLWEBKIT_API void bindJavascriptObject(EA::WebKit::View* v, const char* name, EA::WebKit::IJSBoundObject* obj);
 

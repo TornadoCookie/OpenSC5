@@ -128,22 +128,29 @@ void cryptographicallyRandomValueCallback(unsigned char *buffer, size_t length)
     //return true;
 }
 
+#include <pthread.h>
+
 void *stackBaseCallback()
 {
-    // TODO this is a glibc-exclusive approach
-    // it is also slower than win32 as pthread_getattr_np() parses /proc/<pid>/maps
+    void* stackBase = 0;
+    size_t stackSize = 0;
 
-    pthread_attr_t attr;
-    void *result;
-    size_t stacksize;
-
-    pthread_getattr_np(pthread_self(), &attr);
-    
-    pthread_attr_getstack(&attr, &result, &stacksize);
-
-    pthread_attr_destroy(&attr);
-
-    return result;
+    pthread_t thread = pthread_self();
+    pthread_attr_t sattr;
+    pthread_attr_init(&sattr);
+//#if HAVE(PTHREAD_NP_H) || OS(NETBSD)
+    // e.g. on FreeBSD 5.4, neundorf@kde.org
+//    pthread_attr_get_np(thread, &sattr);
+//#else
+    // FIXME: this function is non-portable; other POSIX systems may have different np alternatives
+    pthread_getattr_np(thread, &sattr);
+//#endif
+    int rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
+    (void)rc; // FIXME: Deal with error code somehow? Seems fatal.
+    //ASSERT(stackBase);
+    pthread_attr_destroy(&sattr);
+    //m_bound = stackBase;
+    return static_cast<char*>(stackBase) + stackSize; 
 }
 
 PF_CreateEAWebkitInstance get_CreateEAWebKitInstance()
@@ -166,20 +173,26 @@ PF_CreateEAWebkitInstance get_CreateEAWebKitInstance()
 
 struct EA::WebKit::AppCallbacks callbacks = {
    timerCallback,
-   NULL, //stackBaseCallback
+   stackBaseCallback,
    NULL, //atomicIncrementCallback
    NULL, //atomicDecrementCallback
    cryptographicallyRandomValueCallback, //cryptRandomValueCallback
 };
 
+static GLWebkitClient wkC;
+static StdThreadSystem threadSystem;
+
 // init the systems: using DefaultAllocator, DefaultFileSystem, no text/font support, DefaultThreadSystem
-struct EA::WebKit::AppSystems systems = { nullptr };
+struct EA::WebKit::AppSystems systems = {
+    NULL,// mAllocator
+    NULL,// mFileSystem
+    NULL,// mTextSystem
+    &threadSystem,// mThreadSystem
+    &wkC,// mEAWebkitClient
+};
 
 bool initWebkit()
 {
-   systems.mThreadSystem = new StdThreadSystem;
-   systems.mEAWebkitClient = new GLWebkitClient();
-
    PF_CreateEAWebkitInstance create_Webkit_instance = get_CreateEAWebKitInstance();
 
 #if defined(GLWEBKIT_PLATFORM_WINDOWS)

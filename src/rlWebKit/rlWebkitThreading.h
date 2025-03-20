@@ -73,7 +73,6 @@ public:
    virtual EA::WebKit::IThread* CreateAThread();
    virtual void DestroyAThread(EA::WebKit::IThread*);
 
-   virtual void ScheduleWork(EA::WebKit::ThreadFunc doWork, void* workContext);
    virtual EA::WebKit::ThreadId CurrentThreadId();
    virtual bool IsMainThread();
    virtual void YieldThread();

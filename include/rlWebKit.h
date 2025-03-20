@@ -35,7 +35,7 @@ extern "C" {
    GLWEBKIT_API void mousewheel(void* v, int x, int y, int keys, int delta);
    GLWEBKIT_API void keyboard(void* v, int id, bool ischar, bool depressed);
    GLWEBKIT_API void reload(void* v);
-   GLWEBKIT_API void updateGLTexture(void* v, unsigned int id);
+   GLWEBKIT_API void updateGLTexture(void* v, Texture2D tex);
 
 //Javascript API
 

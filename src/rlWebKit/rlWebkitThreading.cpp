@@ -166,10 +166,10 @@ void StdThreadSystem::DestroyAThread(EA::WebKit::IThread* _pThread)
    delete pThread;
 }
 
-void StdThreadSystem::ScheduleWork(EA::WebKit::ThreadFunc doWork, void* workContext)
-{
-   doWork(workContext);
-}
+//void StdThreadSystem::ScheduleWork(EA::WebKit::ThreadFunc doWork, void* workContext)
+//{
+//   doWork(workContext);
+//}
 EA::WebKit::ThreadId StdThreadSystem::CurrentThreadId()
 {
    std::stringstream ss;
