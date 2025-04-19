@@ -1,0 +1,7 @@
+DefaultDistDir build
+DefaultPlatform win64
+UseRaylib False
+
+Library Activation64
+Source activation.c
+
