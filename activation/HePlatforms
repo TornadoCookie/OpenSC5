@@ -1,0 +1,13 @@
+
+Platform win64
+IsDebug
+ExecExtension 64.exe
+LibExtension 64.dll
+Compiler x86_64-w64-mingw32-gcc
+
+Platform win32
+IsDebug
+ExecExtension .exe
+LibExtension .dll
+Compiler i686-w64-mingw32-gcc
+

@@ -5,56 +5,30 @@ DISTDIR?=build
 
 .PHONY: all
 
-ifeq ($(PLATFORM), linux64)
-EXEC_EXTENSION=
-LIB_EXTENSION=.so
-LIB_EXTENSION_STATIC=.a
-CC=gcc
-CXX=g++
-CFLAGS+=-O2
-CFLAGS+=-D RELEASE
-CFLAGS+=-D EXEC_EXTENSION=\"\"
-CFLAGS+=-D LIB_EXTENSION=\".so\"
-endif
-
-ifeq ($(PLATFORM), linux64-debug)
-EXEC_EXTENSION=-debug
-LIB_EXTENSION=.so
-LIB_EXTENSION_STATIC=.a
-CC=gcc
-CXX=g++
+ifeq ($(PLATFORM), win64)
+EXEC_EXTENSION=64.exe
+LIB_EXTENSION=64.dll
+LIB_EXTENSION_STATIC=(null)
+CC=x86_64-w64-mingw32-gcc
 CFLAGS+=-g
 CFLAGS+=-D DEBUG
-CFLAGS+=-D EXEC_EXTENSION=\"-debug\"
-CFLAGS+=-D LIB_EXTENSION=\".so\"
+CFLAGS+=-D EXEC_EXTENSION=\"64.exe\"
+CFLAGS+=-D LIB_EXTENSION=\"64.dll\"
 endif
 
-ifeq ($(PLATFORM), win64)
+ifeq ($(PLATFORM), win32)
 EXEC_EXTENSION=.exe
 LIB_EXTENSION=.dll
-LIB_EXTENSION_STATIC=.a
-CC=x86_64-w64-mingw32-gcc
-CXX=x86_64-w64-mingw32-g++
-CFLAGS+=-O2
-CFLAGS+=-D RELEASE
+LIB_EXTENSION_STATIC=(null)
+CC=i686-w64-mingw32-gcc
+CFLAGS+=-g
+CFLAGS+=-D DEBUG
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
 endif
 
-ifeq ($(PLATFORM), web)
-EXEC_EXTENSION=.html
-LIB_EXTENSION=.a
-LIB_EXTENSION_STATIC=.a
-CC=emcc
-CXX=em++
-CFLAGS+=-O2
-CFLAGS+=-D RELEASE
-CFLAGS+=-D EXEC_EXTENSION=\".html\"
-CFLAGS+=-D LIB_EXTENSION=\".a\"
-endif
-
 PROGRAMS=
-LIBRARIES=Activation64
+LIBRARIES=Activation
 
 all: $(DISTDIR) $(DISTDIR)/src $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC))
 
@@ -68,14 +42,15 @@ CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
 CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
 
+LDFLAGS+=Activation.def
 
-Activation64_SOURCES+=$(DISTDIR)/src/activation.o
+Activation_SOURCES+=$(DISTDIR)/src/activation.o
 
-$(DISTDIR)/Activation64$(LIB_EXTENSION): $(Activation64_SOURCES)
+$(DISTDIR)/Activation$(LIB_EXTENSION): $(Activation_SOURCES)
 	$(CC) -o $@ $^ -fPIC -shared $(LDFLAGS)
 
 
-$(DISTDIR)/Activation64$(LIB_EXTENSION_STATIC): $(Activation64_SOURCES)
+$(DISTDIR)/Activation$(LIB_EXTENSION_STATIC): $(Activation_SOURCES)
 	$(AR) rcs $@ $^
 
 $(DISTDIR)/%.o: %.c
@@ -83,10 +58,8 @@ $(DISTDIR)/%.o: %.c
 
 clean:
 	rm -f $(DISTDIR)/src/activation.o
-	rm -f $(DISTDIR)/Activation64$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/Activation$(EXEC_EXTENSION)
 
 all_dist:
-	DISTDIR=$(DISTDIR)/dist/linux64 PLATFORM=linux64 $(MAKE)
-	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)
 	DISTDIR=$(DISTDIR)/dist/win64 PLATFORM=win64 $(MAKE)
-	DISTDIR=$(DISTDIR)/dist/web PLATFORM=web $(MAKE)
+	DISTDIR=$(DISTDIR)/dist/win32 PLATFORM=win32 $(MAKE)

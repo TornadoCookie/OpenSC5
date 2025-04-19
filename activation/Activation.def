@@ -1,0 +1,5 @@
+
+LIBRARY Activation.dll
+EXPORTS
+    LaunchActivation @100
+

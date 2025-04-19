@@ -2,6 +2,8 @@ DefaultDistDir build
 DefaultPlatform win64
 UseRaylib False
 
-Library Activation64
+ExtraLDFlag Activation.def
+
+Library Activation
 Source activation.c
 
