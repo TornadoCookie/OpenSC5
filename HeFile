@@ -44,8 +44,8 @@ Program test_package
 Source ../tests/test_package.c
 UseSourceGroup dbpf_all
 
-Program test_update
-Source ../tests/test_update.c
+Program updater
+Source updater.c
 
 Program test_crcbin
 Source ../tests/test_crcbin.c

@@ -56,6 +56,17 @@ void download_to_file(const char *url, FILE *f)
     curl_easy_cleanup(curl);
 }
 
+static int progress_callback(void *clientp,
+                      curl_off_t dltotal,
+                      curl_off_t dlnow,
+                      curl_off_t ultotal,
+                      curl_off_t ulnow)
+{
+	printf("dl %d/%d, ul %d/%d\n", dltotal, dlnow, ultotal, ulnow);
+
+	return 0;
+}
+
 static void add_transfer(CURLM *cm, unsigned int i, int *left, const char *packagefilename)
 {
     CURL *eh = curl_easy_init();
@@ -64,6 +75,7 @@ static void add_transfer(CURLM *cm, unsigned int i, int *left, const char *packa
     curl_easy_setopt(eh, CURLOPT_URL, TextFormat("http://update.prod.simcity.com/%s", packagefilename));
     curl_easy_setopt(eh, CURLOPT_PRIVATE, f);
     curl_easy_setopt(eh, CURLOPT_WRITEDATA, f);
+    curl_easy_setopt(eh, CURLOPT_NOPROGRESS, 0L);
     curl_multi_add_handle(cm, eh);
     (*left)++;
 }

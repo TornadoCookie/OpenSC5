@@ -1,4 +1,4 @@
-# Generated using Helium v2.1.1 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.0.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=build
@@ -10,7 +10,6 @@ RAYLIB_NAME=raylib5.5-$(PLATFORM)
 ifeq ($(PLATFORM), linux64-debug)
 EXEC_EXTENSION=-debug
 LIB_EXTENSION=-debug.so
-LIB_EXTENSION_STATIC=(null)
 CC=gcc
 RAYLIB_DLL=-lraylib
 CFLAGS+=-g
@@ -22,7 +21,6 @@ endif
 ifeq ($(PLATFORM), win64)
 EXEC_EXTENSION=.exe
 LIB_EXTENSION=.dll
-LIB_EXTENSION_STATIC=(null)
 CC=x86_64-w64-mingw32-gcc
 CXX=x86_64-w64-mingw32-g++
 RAYLIB_DLL=-lraylibdll
@@ -30,12 +28,9 @@ CFLAGS+=-O2
 CFLAGS+=-D RELEASE
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
-LDFLAGS+=-lws2_32
-LDFLAGS+=-static-libstdc++
-LDFLAGS+=-static-libgcc
 endif
 
-PROGRAMS=test_package test_update test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor opensc5 test_dbpf
+PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor opensc5 test_dbpf
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -52,14 +47,14 @@ LDFLAGS+=-lEAWebKitd
 LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
 
 
-all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
+all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
-	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
-	if [ -d lib/$(EAWebKitd_NAME) ] && [ ! -d $(DISTDIR)/lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
-	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
 	cp -r LICENSE $(DISTDIR)
@@ -69,8 +64,19 @@ else
 deps:
 endif
 
+$(DISTDIR)/src:
+	mkdir -p $@
 
-$(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests:
+$(DISTDIR)/src/rlWebKit:
+	mkdir -p $@
+
+$(DISTDIR)/src/filetypes:
+	mkdir -p $@
+
+$(DISTDIR)/src/ww2ogg:
+	mkdir -p $@
+
+$(DISTDIR)/src/../tests:
 	mkdir -p $@
 
 $(DISTDIR):
@@ -89,6 +95,7 @@ LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
 LDFLAGS+=$(RAYLIB_DLL)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
+LDFLAGS+=-lstdc++
 shared_SOURCES+=$(DISTDIR)/src/tracelog.o
 shared_SOURCES+=$(DISTDIR)/src/hash.o
 shared_SOURCES+=$(DISTDIR)/src/memstream.o
@@ -111,18 +118,16 @@ dbpf_all_CXX_SOURCES+=$(DISTDIR)/src/ww2ogg/codebook.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/ww2ogg/crc.o
 dbpf_all_SOURCES+=$(DISTDIR)/src/threadpool.o
 dbpf_all_CXX_SOURCES+=$(shared_CXX_SOURCES)
-dbpf_all_SOURCES+=$(shared_SOURCES)
 
 test_package_SOURCES+=$(DISTDIR)/src/../tests/test_package.o
 test_package_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
-test_package_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_package$(EXEC_EXTENSION): $(test_package_SOURCES) $(test_package_CXX_SOURCES)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-test_update_SOURCES+=$(DISTDIR)/src/../tests/test_update.o
+updater_SOURCES+=$(DISTDIR)/src/updater.o
 
-$(DISTDIR)/test_update$(EXEC_EXTENSION): $(test_update_SOURCES)
+$(DISTDIR)/updater$(EXEC_EXTENSION): $(updater_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_crcbin_SOURCES+=$(DISTDIR)/src/../tests/test_crcbin.o
@@ -188,26 +193,22 @@ $(DISTDIR)/test_hash$(EXEC_EXTENSION): $(test_hash_SOURCES)
 opensc5_editor_SOURCES+=$(DISTDIR)/src/editor.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/getopt.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
-opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES) $(opensc5_editor_CXX_SOURCES)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 opensc5_SOURCES+=$(DISTDIR)/src/game.o
 opensc5_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
-opensc5_SOURCES+=$(dbpf_all_SOURCES)
 opensc5_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
-opensc5_SOURCES+=$(rlWebKit_SOURCES)
 
 $(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES) $(opensc5_CXX_SOURCES)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_dbpf_SOURCES+=$(DISTDIR)/src/../tests/test_dbpf.o
 test_dbpf_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
-test_dbpf_SOURCES+=$(dbpf_all_SOURCES)
 
 $(DISTDIR)/test_dbpf$(EXEC_EXTENSION): $(test_dbpf_SOURCES) $(test_dbpf_CXX_SOURCES)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(DISTDIR)/%.o: %.c
 	$(CC) -c $^ $(CFLAGS) -o $@
@@ -237,8 +238,8 @@ clean:
 	rm -f $(DISTDIR)/src/threadpool.o
 	rm -f $(DISTDIR)/src/../tests/test_package.o
 	rm -f $(DISTDIR)/test_package$(EXEC_EXTENSION)
-	rm -f $(DISTDIR)/src/../tests/test_update.o
-	rm -f $(DISTDIR)/test_update$(EXEC_EXTENSION)
+	rm -f $(DISTDIR)/src/updater.o
+	rm -f $(DISTDIR)/updater$(EXEC_EXTENSION)
 	rm -f $(DISTDIR)/src/../tests/test_crcbin.o
 	rm -f $(DISTDIR)/src/filetypes/crcbin.o
 	rm -f $(DISTDIR)/src/crc32.o
