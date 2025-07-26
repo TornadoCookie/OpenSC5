@@ -153,9 +153,15 @@ void *stackBaseCallback()
     return static_cast<char*>(stackBase) + stackSize; 
 }
 
+static EA::WebKit::EAWebKitLib *linux_CreateEAWebkitInstance()
+{
+    static EA::WebKit::EAWebKitLib concreteInstance;
+    return &concreteInstance;
+}
+
 PF_CreateEAWebkitInstance get_CreateEAWebKitInstance()
 {
-    return CreateEAWebkitInstance;
+    return linux_CreateEAWebkitInstance;
 }
 
 #endif
