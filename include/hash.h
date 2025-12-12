@@ -1,6 +1,14 @@
 #ifndef _HASH_
 #define _HASH_
 
-unsigned long TheHash(char *strptr);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+unsigned long TheHash(const char *strptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

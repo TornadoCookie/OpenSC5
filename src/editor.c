@@ -487,6 +487,7 @@ static FileDialogReason fileDialogReason;
 int main(int argc, char **argv)
 {
     bool hasLoadedPkg = false;
+    bool shouldLoadArg = argc > 1;
 
     Rectangle pkgEntryListView = {0};
     Vector2 pkgEntryListScroll = {0};
@@ -508,13 +509,20 @@ int main(int argc, char **argv)
     while (!WindowShouldClose())
     {
         // Update
-        if (IsFileDropped())
+        if (IsFileDropped() || shouldLoadArg)
         {
-            FilePathList droppedFiles = LoadDroppedFiles();
+            const char *path;
+            FilePathList droppedFiles;
 
-            if (droppedFiles.count == 1)
+            if (shouldLoadArg)
             {
+                path = argv[1];
+            }
+            else
+            {
+                droppedFiles = LoadDroppedFiles();
                 const char *path = droppedFiles.paths[0];
+            }
 
                 if (IsFileExtension(path, ".package"))
                 {
@@ -573,9 +581,13 @@ int main(int argc, char **argv)
 
 
                 }
+            
+            if (!shouldLoadArg)
+            {
+                UnloadDroppedFiles(droppedFiles);
             }
 
-            UnloadDroppedFiles(droppedFiles);
+            shouldLoadArg = false;
         }
 
         if (fileDialogState.SelectFilePressed)

@@ -9,6 +9,8 @@
 #include <EAWebKit/EAWebKit>
 #include <EAWebKit/EAWebKitDll.h>
 
+#include "DBPFFileSystem.hpp"
+
 //#include <DirtySDK/dirtysock/netconn.h>
 
 #if defined(GLWEBKIT_PLATFORM_WINDOWS)
@@ -87,7 +89,7 @@ PF_CreateEAWebkitInstance get_CreateEAWebKitInstance()
 #else
    HMODULE wdll = LoadLibraryA("EAWebkit.dll");
 #endif // _DEBUG
-   if(wdll != nullptr)
+if(wdll != nullptr)
    {
       return reinterpret_cast<PF_CreateEAWebkitInstance>(GetProcAddress(wdll, "CreateEAWebkitInstance"));
    }
@@ -187,11 +189,12 @@ struct EA::WebKit::AppCallbacks callbacks = {
 
 static GLWebkitClient wkC;
 static StdThreadSystem threadSystem;
+static DBPFFileSystem fileSystem;
 
 // init the systems: using DefaultAllocator, DefaultFileSystem, no text/font support, DefaultThreadSystem
 struct EA::WebKit::AppSystems systems = {
     NULL,// mAllocator
-    NULL,// mFileSystem
+    &fileSystem,// mFileSystem
     NULL,// mTextSystem
     &threadSystem,// mThreadSystem
     &wkC,// mEAWebkitClient

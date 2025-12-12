@@ -84,6 +84,13 @@ static void add_transfer(CURLM *cm, unsigned int i, int *left, const char *packa
 
 int main()
 {
+    // TODO
+    // add options for:
+    // download version at certain timestamp
+    // unpack updates
+    // download all metadata
+    // specify custom game scripts manifest
+
     struct MemoryStruct chunk;
  
     chunk.memory = malloc(1);  /* grown as needed by the realloc above */
@@ -125,7 +132,7 @@ int main()
             char *packagefilename = malloc(length+1);
             memcpy(packagefilename, cursor, length);
             packagefilename[length] = 0;
-            printf("%s\n", packagefilename);
+            //printf("%s\n", packagefilename);
 
             packageCount++;
             packages = realloc(packages, packageCount * sizeof(char*));
@@ -135,9 +142,75 @@ int main()
             cursor += length;
         }
 
+        int downloadCount = 0;
+        struct {
+            char *fileName;
+            int id;
+            int undLen;
+        } *workingDownloadQueue = NULL;
+
+        for (int i = 0; i < packageCount; i++)
+        {
+            char *und = strchr(packages[i], '_');
+            int undLen = und - packages[i];
+            if (!und)
+            {
+                printf("no und: %s\n", packages[i]);
+                continue;
+            }
+
+            int id = atoi(und+1);
+            if (!id)
+            {
+                //printf("id0: %s %s\n", packages[i], und);
+                continue;
+            }
+
+            printf("process %s: ", packages[i]);
+            bool found = false;
+            for (int j = 0; j < downloadCount; j++)
+            {
+                if (!strncmp(workingDownloadQueue[j].fileName, packages[i], undLen) && workingDownloadQueue[j].undLen == undLen)
+                {
+                    printf("FOUND");
+                    found = true;
+                    if (workingDownloadQueue[j].id < id)
+                    {
+                        printf("\n");
+                        workingDownloadQueue[j].fileName = packages[i];
+                        workingDownloadQueue[j].id = id;
+                    }
+                    else
+                    {
+                        printf(" lesser %s\n", workingDownloadQueue[j].fileName);
+                        break;
+                    }
+                }
+            }
+            
+            if (!found)
+            {
+                printf("NOT FOUND\n");
+                downloadCount++;
+                workingDownloadQueue = realloc(workingDownloadQueue, sizeof(*workingDownloadQueue) * downloadCount);
+                workingDownloadQueue[downloadCount - 1].fileName = packages[i];
+                workingDownloadQueue[downloadCount - 1].id = id;
+                workingDownloadQueue[downloadCount - 1].undLen = undLen;
+            }
+        }
+
+        // TODO fuck this
+        packageCount = downloadCount;
+        for (int i = 0; i < downloadCount; i++)
+        {
+            packages[i] = workingDownloadQueue[i].fileName;
+            printf("%s\n", packages[i]);
+        }
+
         CURLM *curlm = curl_multi_init();
 
         printf("There are %d packages to download\n", packageCount);
+
         printf("Download in parallel, %d scripts at a time\n", MAX_PARALLEL);
 
         curl_multi_setopt(curlm, CURLMOPT_MAXCONNECTS, MAX_PARALLEL);

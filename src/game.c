@@ -5,6 +5,8 @@
 #include <threadpool.h>
 #include <rlWebKit.h>
 
+#include "DBPFFileSystem.hpp"
+
 static int compar_alphabetize(const void *p1, const void *p2)
 {
     const char *s1 = *(const char **)p1;
@@ -43,7 +45,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    initWebkit(); // otherwise this breaks allocation
+
     printf("Treating %s as SimCityData...\n", argv[1]);
+
+    SetTraceLogLevel(LOG_ERROR);
 
     FilePathList simcityData = LoadDirectoryFiles(argv[1]);
 
@@ -61,6 +67,8 @@ int main(int argc, char **argv)
     SetTraceLogLevel(LOG_INFO);
     InitWindow(1280, 720, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
+
+    Package SimCity_App;
 
     {
         const char *simcity_app_file = strdup(TextFormat("%s/SimCity_App.package", argv[1]));
@@ -89,14 +97,16 @@ int main(int argc, char **argv)
         printf("Merging package into game...\n");
         MergePackages(&allGameData, pkg);
         fclose(f);
+
+        SimCity_App = pkg;
     }
+
+    SetWebKitPackage(&allGameData);
 
     printf("Loaded %d package entries.\n", allGameData.entryCount);
 
-    initWebkit();
-
     void *v = createView(1280, 720);
-    setViewUrl(v, "Updater.html");
+    setViewUrl(v, "file:///Updater.html");
 
     Image img = GenImageColor(1280, 720, BLANK);
     Texture2D screenTex = LoadTextureFromImage(img);

@@ -15,7 +15,7 @@ char *strlwr(char *str)
 }
 
 // Adapted from https://simswiki.info/wiki.php?title=Spore:HashVal
-unsigned long TheHash(char *strptr) {
+unsigned long TheHash(const char *strptr) {
 	char oname[1024];
 	unsigned int hash;
 	char *p;

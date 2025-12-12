@@ -1,9 +1,17 @@
 #ifndef _TRACELOG_
 #define _TRACELOG_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void OpenSC5_TraceLog(int logLevel, const char *text, ...);
 void OpenSC5_TraceLogNoNL(int logLevel, const char *text, ...);
 void OpenSC5_SetTraceLogLevel(int logLevel);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifndef TRACELOG
 
@@ -14,7 +22,6 @@ void OpenSC5_SetTraceLogLevel(int logLevel);
 #define TRACELOGNONL OpenSC5_TraceLogNoNL
 
 #endif
-
 
 #endif
 
