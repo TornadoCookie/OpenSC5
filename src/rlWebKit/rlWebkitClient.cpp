@@ -14,15 +14,29 @@
    EA::WebKit::EAWebKitClient::GetLocalizedString(info);
 }
 
+static void pc16(const char16_t *chars)
+{
+    for (int i = 0;;i++)
+    {
+        if (!chars[i]) break;
+        std::cout << (char)chars[i];
+    }
+}
+
  void GLWebkitClient::LoadUpdate(EA::WebKit::LoadInfo& info) 
 {
    //std::cout << __FUNCTION__ << std::endl;
+   //const char16_t *chars = info.mResourceURL.GetCharacters();
+   // std::cout << "rlWebKit: LoadUpdate " << chars << " [";
+   // pc16(chars);
+   // std::cout << "] " << info.mProgressEstimation << " " << info.mLoadEventType << " " << info.mLoadErrorType << " " << info.mStatusCode << std::endl;
    EA::WebKit::EAWebKitClient::LoadUpdate(info);
 }
 
  void GLWebkitClient::NetworkError(EA::WebKit::NetworkErrorInfo& info) 
 {
    //std::cout << __FUNCTION__ << std::endl;
+    std::cout << "rlWebKit: NetworkError: " << info.mErrorMessage << " " << info.mNetworkErrorType << " " << info.mNetworkErrorCode << std::endl;
    EA::WebKit::EAWebKitClient::NetworkError(info);
 }
 

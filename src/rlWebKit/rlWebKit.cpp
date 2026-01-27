@@ -200,6 +200,18 @@ struct EA::WebKit::AppSystems systems = {
     &wkC,// mEAWebkitClient
 };
 
+static char16_t *tochar16(const char *str)
+{
+    char16_t *ret = new char16_t[strlen(str)];
+
+    for (int i = 0; i < strlen(str); i++)
+    {
+        ret[i] = str[i];
+    }
+
+    return ret;
+}
+
 bool initWebkit()
 {
    PF_CreateEAWebkitInstance create_Webkit_instance = get_CreateEAWebKitInstance();
@@ -237,8 +249,11 @@ bool initWebkit()
    params.mReportJSExceptionCallstacks = true;
    params.mVerifySSLCert = true;
    params.mJavaScriptStackSize = 1024 * 1024; //1MB of stack space
-
+   params.mJavaScriptDebugOutputEnabled = true;
+   
    wk->SetParameters(params);
+
+   wk->AddTransportHandler(wk->GetTransportHandler(tochar16("file")), tochar16(""));
 
    //NetConnStartup("-servicename=rlWebKit");
 
@@ -271,6 +286,9 @@ EA::WebKit::View* createView(int x, int y)
    v->InitView(vp);
    v->SetSize(EA::WebKit::IntSize(vp.mWidth, vp.mHeight));
 
+   //v->ShowInspector(true);
+   v->SetDrawDebugVisuals(true);
+
    return v;
 }
 
@@ -297,7 +315,8 @@ void setViewUrl(EA::WebKit::View* v, const char* url)
 
 void updateView(EA::WebKit::View* v)
 {
-    v->Paint();
+    //v->Paint();
+    v->ShowInspector(true);
 }
 
 void resize(EA::WebKit::View* v, int width, int height)

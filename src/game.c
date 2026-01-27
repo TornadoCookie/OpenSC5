@@ -36,6 +36,35 @@ static void *loadPackageFile_async(void *param)
     args->done = true;
 }
 
+static void loadPackage(const char *pkgFile, Package *allGameData)
+{
+    printf("Loading %s...\n", pkgFile);
+    FILE *f = fopen(pkgFile, "r");
+    if (!f)
+    {
+        perror(pkgFile);
+        exit(EXIT_FAILURE);
+    }
+    pthread_t thread;
+    LoadPackageFileAsyncArgs args;
+    args.done = false;
+    args.f = f;
+    Package pkg;
+    args.pkg = &pkg;
+    pthread_create(&thread, NULL, loadPackageFile_async, &args);
+    while (!args.done)
+    {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawText(TextFormat("%s: %d left.\n", pkgFile, GetThreadpoolTasksLeft()), 0, 0, 20, BLACK);
+        EndDrawing();
+    }
+    pthread_join(thread, NULL);
+    printf("Merging package into game...\n");
+    MergePackages(allGameData, pkg);
+    fclose(f);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -64,42 +93,17 @@ int main(int argc, char **argv)
 
     Package allGameData = { 0 };
 
+    const char *appPkgFn = strdup(TextFormat("%s/SimCity_App.package", argv[1]));
+    const char *lcPkgFn = strdup(TextFormat("%s/Locale/en-us/Data.package", argv[1]));
+
     SetTraceLogLevel(LOG_INFO);
     InitWindow(1280, 720, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
 
     Package SimCity_App;
 
-    {
-        const char *simcity_app_file = strdup(TextFormat("%s/SimCity_App.package", argv[1]));
-        printf("Loading SimCity_App...\n");
-        FILE *f = fopen(simcity_app_file, "r");
-        if (!f)
-        {
-            perror(simcity_app_file);
-            return 1;
-        }
-        pthread_t thread;
-        LoadPackageFileAsyncArgs args;
-        args.done = false;
-        args.f = f;
-        Package pkg;
-        args.pkg = &pkg;
-        pthread_create(&thread, NULL, loadPackageFile_async, &args);
-        while (!args.done)
-        {
-            BeginDrawing();
-            ClearBackground(RAYWHITE);
-            DrawText(TextFormat("%s: %d left.\n", simcity_app_file, GetThreadpoolTasksLeft()), 0, 0, 20, BLACK);
-            EndDrawing();
-        }
-        pthread_join(thread, NULL);
-        printf("Merging package into game...\n");
-        MergePackages(&allGameData, pkg);
-        fclose(f);
-
-        SimCity_App = pkg;
-    }
+    loadPackage(appPkgFn, &allGameData);
+    loadPackage(lcPkgFn, &allGameData);
 
     SetWebKitPackage(&allGameData);
 

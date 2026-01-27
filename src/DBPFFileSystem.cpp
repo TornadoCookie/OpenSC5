@@ -27,6 +27,11 @@ IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
 
     unsigned int type = TheHash(extension);
     unsigned int instance = TheHash(name);
+    
+    if (!strcmp(extension, "json"))
+    {
+        type = 0xA98EAF0;
+    }
 
     TRACELOG(LOG_WARNING, "GetIDTriadFromPath: %s -> %X-0-%X\n", path, type, instance);
 
@@ -80,6 +85,8 @@ bool DBPFFileSystem::OpenFile(DBPFFileSystem::FileObject fileObject, const utf8_
         if (PKG->entries[i].instance == triad.instance && PKG->entries[i].type == triad.type)
         {
             fobj->index = i;
+            TRACELOG(LOG_WARNING, "DBPFFS: Triad found %X-%X-%X\n", triad.instance, PKG->entries[i].group, triad.type);
+            //break;
         }
     }
 
@@ -88,6 +95,8 @@ bool DBPFFileSystem::OpenFile(DBPFFileSystem::FileObject fileObject, const utf8_
         TRACELOG(LOG_ERROR, "DBPFFS: Does not exist: %s\n", path);
         return false;
     }
+
+    SaveFileData(TextFormat("_ewk%s", static_cast<const char *>(path)), PKG->entries[fobj->index].dataRaw, PKG->entries[fobj->index].dataRawSize);
 
     fobj->offset = 0;
 
@@ -120,8 +129,10 @@ int64_t DBPFFileSystem::ReadFile(DBPFFileSystem::FileObject fileObject, void *bu
         bytesRead = entry.dataRawSize - fobj->offset;
     }
 
-    memcpy(buffer, entry.dataRaw, bytesRead);
-
+    memcpy(buffer, entry.dataRaw + fobj->offset, bytesRead);
+    
+    //TRACELOG(LOG_WARNING, "DBPFFS: %d: read %d asked for %d, off %d (bytes)\n", fileObject, bytesRead, size, fobj->offset);
+    
     fobj->offset += bytesRead;
 
     return bytesRead;
