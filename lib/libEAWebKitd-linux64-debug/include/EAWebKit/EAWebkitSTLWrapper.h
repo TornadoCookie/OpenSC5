@@ -145,7 +145,7 @@ public:
 	void* GetImpl() const;
 private:
 #if USE_INDIRECT_VIRTUALCALL
-	virtual const char8_t*	GetCharactersInternal();
+	virtual const char8_t*	GetCharactersInternal();wd
 	virtual void			SetCharactersInternal(const char8_t* chars);
 #endif
 

@@ -8,6 +8,7 @@
 #include <EABase/eabase.h>
 #include <EAWebKit/EAWebKit>
 #include <EAWebKit/EAWebKitDll.h>
+#include <EAText/EAText.h>
 
 #include "DBPFFileSystem.hpp"
 
@@ -24,6 +25,7 @@
 
 #include <list>
 #include <iostream>
+#include <raylib.h>
 
 EA::WebKit::EAWebKitLib* wk = nullptr;
 
@@ -37,7 +39,7 @@ double timerCallback()
     LARGE_INTEGER frequency;
     ::QueryPerformanceFrequency(&frequency);
 
-    LARGE_INTEGER start;
+LARGE_INTEGER start;
     ::QueryPerformanceCounter(&start);
 
     return static_cast<double>(start.QuadPart) / (double)frequency.QuadPart;
@@ -202,9 +204,9 @@ struct EA::WebKit::AppSystems systems = {
 
 static char16_t *tochar16(const char *str)
 {
-    char16_t *ret = new char16_t[strlen(str)];
+    char16_t *ret = new char16_t[strlen(str)+1];
 
-    for (int i = 0; i < strlen(str); i++)
+    for (int i = 0; i < strlen(str)+1; i++)
     {
         ret[i] = str[i];
     }
@@ -238,7 +240,7 @@ bool initWebkit()
       std::cout << "Error!  Mismatched versions of EA Webkit" << std::endl;
       return false;
    }
-
+   
    //initialize the system
    wk->Init(&callbacks, &systems);
 
@@ -256,6 +258,8 @@ bool initWebkit()
    wk->AddTransportHandler(wk->GetTransportHandler(tochar16("file")), tochar16(""));
 
    //NetConnStartup("-servicename=rlWebKit");
+
+   EA::Text::Init();
 
    //should be pulling these from the OS by their family type
    //times new roman is the default fallback if a font isn't found, so we need 

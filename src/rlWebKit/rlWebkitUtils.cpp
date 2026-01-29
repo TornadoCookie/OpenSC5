@@ -134,33 +134,19 @@ int getSystemFonts(std::vector<std::string>& fonts)
 
 #endif
 
+#include <EAIO/EAFileStream.h>
+
 int add_ttf_font(EA::WebKit::EAWebKitLib* wk, const char* ttfFile) 
 {
     EA::WebKit::ITextSystem* ts = wk->GetTextSystem();
 
-    FILE* f = 0;
-
-#if defined(GLWEBKIT_PLATFORM_WINDOWS)
-    fopen_s(&f, ttfFile, "rb");
-#else // safe bet
-    f = fopen(ttfFile, "rb");
-#endif
-    
-    if (!f) return 1;
-    fseek(f, 0L, SEEK_END);
-    size_t fileSize = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-    char* buffer = (char*)calloc(fileSize + 6, 1);
-    size_t read_bytes = fread(buffer, 1, fileSize, f);
-    if (read_bytes != fileSize) 
-    {
-        // error!
-        free(buffer);
-        return 0;
-    }
+    // WTF is this hack??? Otherwise it crashes.
+    void *block = malloc(1024);
+    EA::IO::FileStream *fs = new (block) EA::IO::FileStream(ttfFile);
+    fs->Open();
 
     //Text system will take ownership of this memory
-    //int numFaces = ts->AddFace(buffer, fileSize);
+    int numFaces = ts->AddFace(fs);
 
     return 1;
 }

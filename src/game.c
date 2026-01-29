@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     const char *lcPkgFn = strdup(TextFormat("%s/Locale/en-us/Data.package", argv[1]));
 
     SetTraceLogLevel(LOG_INFO);
-    InitWindow(1280, 720, "OpenSC5 Launcher");
+    InitWindow(1024, 640, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
 
     Package SimCity_App;

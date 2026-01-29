@@ -352,7 +352,7 @@ public:
 	virtual void					RemoveSocketTransportHandler(SocketTransportHandler* pSTH);
 	virtual SocketTransportHandler* GetSocketTransportHandler();
 
-    // APIs related to Javascript
+   // APIs related to Javascript
     virtual JavascriptValue *CreateJavascriptValue(View *view);
     virtual void DestroyJavascriptValue(JavascriptValue *v);
     virtual JavascriptValue *CreateJavascriptValueArray(View *view, size_t count);

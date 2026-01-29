@@ -22,6 +22,12 @@ IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
 // so we can use raylib functions that I love so very much
     const char *cpath = static_cast<const char *>(path);
 
+    if (GetFileExtension(cpath) == NULL)
+    {
+        TRACELOG(LOG_WARNING, "%s has no extension. This is no file!\n", path);
+        return {0, 0, 0};
+    }
+
     const char *extension = GetFileExtension(cpath) + 1;
     const char *name = GetFileNameWithoutExt(cpath);
 
@@ -31,6 +37,14 @@ IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
     if (!strcmp(extension, "json"))
     {
         type = 0xA98EAF0;
+    }
+    else if (!strcmp(extension, "png"))
+    {
+        type = 0x2F7D0004;
+    }
+    else if (!strcmp(extension, "gif"))
+    {
+        type = 0x2F7D0007;
     }
 
     TRACELOG(LOG_WARNING, "GetIDTriadFromPath: %s -> %X-0-%X\n", path, type, instance);
