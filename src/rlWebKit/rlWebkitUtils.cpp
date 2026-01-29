@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include <raylib.h>
+#include <raymath.h>
 
 #if defined(GLWEBKIT_PLATFORM_WINDOWS)
 int getSystemFonts(std::vector<std::string>& fonts) 
@@ -178,15 +179,33 @@ void updateGLTexture(EA::WebKit::View* v, Texture2D tex)
       return;
    }
 
-   //int w, h;
+   int w, h;
    EA::WebKit::ISurface* surface = v->GetDisplaySurface();
-   //surface->GetContentDimensions(&w, &h);
-   //int dataSize = w * h * 4;
+   surface->GetContentDimensions(&w, &h);
+   int dataSize = w * h * 4;
 
    EA::WebKit::ISurface::SurfaceDescriptor sd = {};
    surface->Lock(&sd);
   
-   UpdateTexture(tex, sd.mData);
+   uint8_t *data = (uint8_t*)malloc(dataSize);
+   memcpy(data, sd.mData, dataSize);
+
+   for (int i = 0; i < w*h; i++)
+   {
+       // convert CAIRO_FORMAT_ARGB32 to PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+       // TODO this is little-endian. big-endian is subtly different
+       uint8_t b = data[i*4+0];
+       uint8_t g = data[i*4+1];
+       uint8_t r = data[i*4+2];
+       uint8_t a = data[i*4+3];
+       data[i*4+0] = r;
+       data[i*4+1] = g;
+       data[i*4+2] = b;
+       data[i*4+3] = a;
+   }
+
+   UpdateTexture(tex, data);
+   free(data);
    
    surface->Unlock();   
 }

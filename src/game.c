@@ -65,6 +65,9 @@ static void loadPackage(const char *pkgFile, Package *allGameData)
     fclose(f);
 }
 
+#define UPDATER_WINDOW_W 900
+#define UPDATER_WINDOW_H 576
+
 int main(int argc, char **argv)
 {
 
@@ -97,7 +100,7 @@ int main(int argc, char **argv)
     const char *lcPkgFn = strdup(TextFormat("%s/Locale/en-us/Data.package", argv[1]));
 
     SetTraceLogLevel(LOG_INFO);
-    InitWindow(1024, 640, "OpenSC5 Launcher");
+    InitWindow(UPDATER_WINDOW_W, UPDATER_WINDOW_H, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
 
     Package SimCity_App;
@@ -109,12 +112,14 @@ int main(int argc, char **argv)
 
     printf("Loaded %d package entries.\n", allGameData.entryCount);
 
-    void *v = createView(1280, 720);
+    void *v = createView(UPDATER_WINDOW_W, UPDATER_WINDOW_H);
     setViewUrl(v, "file:///Updater.html");
 
-    Image img = GenImageColor(1280, 720, BLANK);
+    Image img = GenImageColor(UPDATER_WINDOW_W, UPDATER_WINDOW_H, BLANK);
     Texture2D screenTex = LoadTextureFromImage(img);
     UnloadImage(img);
+
+    SetTargetFPS(30);
 
     while (!WindowShouldClose())
     {

@@ -273,6 +273,120 @@ bool initWebkit()
    return true;
 }
 
+#include <codecvt>
+#include <locale>
+
+std::string char16_to_string(const char16_t* s16, size_t len)
+{
+    // https://stackoverflow.com/a/7235204/865719
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+    return convert.to_bytes(s16).substr(0, len);
+}
+
+class JSClient : public EA::WebKit::IJSBoundObject {
+    bool hasMethod(const char *name)
+    {
+        if (!strcmp(name, "RequestUpdaterData"))
+        {
+            return true;
+        }
+        else if (!strcmp(name, "hasOwnProperty"))
+        {
+            return true;
+        }
+        else if (!strcmp(name, "RequestGameData"))
+        {
+            return true;
+        }
+        
+        std::cout << "Attempt to access scrui.gClient." << name << std::endl;
+        return false;
+    }
+
+    bool invokeMethod(const char *name, EA::WebKit::JavascriptValue *args, unsigned argCount, EA::WebKit::JavascriptValue *resultOut)
+    {
+        //std::cout << "JSINVOKE scrui.gClient." << name << " " << argCount << " args" << std::endl;
+
+        if (!strcmp(name, "RequestUpdaterData"))
+        {
+            unsigned int command = args[0].GetNumberValue();
+            std::cout << "scrui.gClient.RequestUpdaterData " << command << std::endl;
+
+            switch (command)
+            {
+                case 278506655: // ORIGIN_IS_ONLINE
+                {
+                    resultOut->SetBooleanValue(false);
+                } break;
+                case 285775037: // kHaveValidLineState
+                {
+                    resultOut->SetBooleanValue(false);
+                } break;
+                case 286464908: // kGameMessageUpdaterReady
+                {
+                    // This is the updater telling us something we don't need
+                } break;
+            }
+            return true;
+        }
+        else if (!strcmp(name, "hasOwnProperty"))
+        {
+            size_t len = 0;
+            const char16_t *x = args[0].GetStringValue(&len);
+            std::string has = char16_to_string(x, len);
+            std::cout << "scrui.gClient.hasOwnProperty " << has << std::endl;
+
+            const std::vector<std::string> meths = {
+                "RequestGameData",
+                "ProfBegin",
+                "ProfEnd",
+                "DebugPrint",
+                "RequestGameEvents",
+                "PostGameCommand",
+                "Set3DMode",
+                "Set3DCoords",
+                "Set3DViewWorldSize",
+                "Set3DViewSize"
+            };
+
+            for (int i = 0; i < meths.size(); i++)
+            {
+                if (has == meths[i])
+                {
+                    resultOut->SetBooleanValue(true);
+                    return true;
+                }
+            }
+
+            std::cout << "scrui.gClient." << has << " is expected to exist" << std::endl;
+
+            return true;
+        }
+        else if (!strcmp(name, "RequestGameData"))
+        {
+            size_t len = 0;
+            const char16_t *x = args[0].GetStringValue(&len);
+            std::string req = char16_to_string(x, len);
+
+            std::cout << "scrui.gClient.RequestGameData " << req << std::endl;
+
+            if (req == "origin/isLocaleEntitled")
+            {
+                resultOut->SetBooleanValue(true);
+            }
+            else if (req == "urlproperty/150330524") // kPropEcoNetRESTAPI
+            {
+                const char *url = "http://simcity.elysiumorpheus.com";
+            }
+
+            return true;
+        }
+
+        std::cout << "Attempt to invoke scrui.gClient." << name << std::endl;
+        return false;
+    }
+};
+
 EA::WebKit::View* createView(int x, int y)
 {
    EA::WebKit::View* v = 0;
@@ -290,8 +404,11 @@ EA::WebKit::View* createView(int x, int y)
    v->InitView(vp);
    v->SetSize(EA::WebKit::IntSize(vp.mWidth, vp.mHeight));
 
-   //v->ShowInspector(true);
+   v->ShowInspector(true);
    v->SetDrawDebugVisuals(true);
+
+   JSClient *cl = new JSClient;
+   v->BindJavaScriptObject("Client", cl);
 
    return v;
 }
@@ -320,7 +437,7 @@ void setViewUrl(EA::WebKit::View* v, const char* url)
 void updateView(EA::WebKit::View* v)
 {
     //v->Paint();
-    v->ShowInspector(true);
+    //v->ShowInspector(true);
 }
 
 void resize(EA::WebKit::View* v, int width, int height)
