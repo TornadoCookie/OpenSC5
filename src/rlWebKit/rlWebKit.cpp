@@ -214,6 +214,143 @@ static char16_t *tochar16(const char *str)
     return ret;
 }
 
+#include <codecvt>
+#include <locale>
+
+
+std::string char16_to_string(const char16_t* s16, size_t len)
+{
+    // https://stackoverflow.com/a/7235204/865719
+    //((char16_t*)(s16))[len-1] = 0;
+    char16_t *clone = (char16_t*)malloc((len+1)*2);
+    clone[len] = 0;
+    memcpy(clone, s16, len*2);
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+    std::string ret = convert.to_bytes(clone).substr(0, len);
+    free(clone);
+
+    return ret;
+}
+
+class GameTransportHandler : public EA::WebKit::TransportHandler {
+    
+    enum RequestType {
+        kRequestTypeFile
+    };
+
+    struct GameData {
+        RequestType requestType;
+
+        // kRequestTypeFile data
+        EA::WebKit::FileSystem::FileObject mFileObject;
+        void *mBuffer;
+        int64_t mFileSize;
+    };
+    
+    const unsigned kFileBufferSize = 16384;
+
+    bool InitJob(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
+    {
+        const char *path = pTInfo->mPath.GetCharacters();
+        GameData *data = new GameData;
+
+        if (!strncmp(path, "/dbpf", 5))
+        {
+            data->requestType = kRequestTypeFile;
+            EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
+            data->mFileObject = pFS->CreateFileObject();
+            data->mBuffer = malloc(kFileBufferSize);
+            data->mFileSize = -1;
+        }
+        else
+        {
+            std::cout << "game:// TODO " << path << std::endl;
+        }
+
+        pTInfo->mTransportHandlerData = (uintptr_t)data;
+
+        bStateComplete = true;
+        return true;
+    }
+
+    bool Connect(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
+    {
+        GameData *data = (GameData*)pTInfo->mTransportHandlerData;
+
+        if (data->requestType == kRequestTypeFile)
+        {
+            EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
+
+            pFS->OpenFile(data->mFileObject, pTInfo->mPath.GetCharacters()+5, EA::WebKit::FileSystem::kRead);
+        }
+
+        bStateComplete = true;
+        return true;
+    }
+
+    bool Transfer(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
+    {
+        GameData *data = (GameData*)pTInfo->mTransportHandlerData;
+
+        if (data->requestType == kRequestTypeFile)
+        {
+            EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
+
+            if (data->mFileSize < 0)
+            {
+                data->mFileSize = pFS->GetFileSize(data->mFileObject);
+                pTInfo->mpTransportServer->SetExpectedLength(pTInfo, data->mFileSize);
+            }
+
+            int64_t read = pFS->ReadFile(data->mFileObject, data->mBuffer, kFileBufferSize);
+
+            if (read > 0)
+            {
+                pTInfo->mpTransportServer->DataReceived(pTInfo, data->mBuffer, read);
+            }
+            else
+            {
+                bStateComplete = true;
+                pTInfo->mResultCode = 200;
+                pTInfo->mpTransportServer->DataDone(pTInfo, true);
+            }
+        }
+
+        return true;
+    }
+
+    bool Disconnect(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
+    {
+        GameData *data = (GameData*)pTInfo->mTransportHandlerData;
+
+        if (data->requestType == kRequestTypeFile)
+        {
+            EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
+
+            pFS->CloseFile(data->mFileObject);
+        }
+
+        bStateComplete = true;
+        return true;
+    }
+    
+    bool ShutdownJob(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
+    {
+        GameData *data = (GameData*)pTInfo->mTransportHandlerData;
+
+        if (data->requestType == kRequestTypeFile)
+        {
+            EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
+            pFS->DestroyFileObject(data->mFileObject);
+            free(data->mBuffer);
+            delete data;
+        }
+
+        bStateComplete = true;
+        return true;
+    }
+};
+
 bool initWebkit()
 {
    PF_CreateEAWebkitInstance create_Webkit_instance = get_CreateEAWebKitInstance();
@@ -255,7 +392,9 @@ bool initWebkit()
    
    wk->SetParameters(params);
 
-   wk->AddTransportHandler(wk->GetTransportHandler(tochar16("file")), tochar16(""));
+   //wk->AddTransportHandler(wk->GetTransportHandler(EA_CHAR16("file")), tochar16(""));
+
+   wk->AddTransportHandler(new GameTransportHandler, EA_CHAR16("file"));
 
    //NetConnStartup("-servicename=rlWebKit");
 
@@ -273,17 +412,14 @@ bool initWebkit()
    return true;
 }
 
-#include <codecvt>
-#include <locale>
-
-std::string char16_to_string(const char16_t* s16, size_t len)
-{
-    // https://stackoverflow.com/a/7235204/865719
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    return convert.to_bytes(s16).substr(0, len);
-}
-
+// TODO what do we do about this?
 class JSClient : public EA::WebKit::IJSBoundObject {
+
+public:
+    JSClient(EA::WebKit::View *pView)
+        : mView(pView)
+    {}
+
     bool hasMethod(const char *name)
     {
         if (!strcmp(name, "RequestUpdaterData"))
@@ -295,6 +431,14 @@ class JSClient : public EA::WebKit::IJSBoundObject {
             return true;
         }
         else if (!strcmp(name, "RequestGameData"))
+        {
+            return true;
+        }
+        else if (!strcmp(name, "DebugPrint") || !strcmp(name, "Assert"))
+        {
+            return true;
+        }
+        else if (!strcmp(name, "ProfBegin") || !strcmp(name, "ProfEnd") || !strcmp(name, "RequestGameEvents") || !strcmp(name, "PostGameCommand") || !strcmp(name, "Set3DMode") || !strcmp(name, "Set3DCoords") || !strcmp(name, "Set3DViewWorldSize") || !strcmp(name, "Set3DViewSize"))
         {
             return true;
         }
@@ -310,7 +454,6 @@ class JSClient : public EA::WebKit::IJSBoundObject {
         if (!strcmp(name, "RequestUpdaterData"))
         {
             unsigned int command = args[0].GetNumberValue();
-            std::cout << "scrui.gClient.RequestUpdaterData " << command << std::endl;
 
             switch (command)
             {
@@ -320,11 +463,22 @@ class JSClient : public EA::WebKit::IJSBoundObject {
                 } break;
                 case 285775037: // kHaveValidLineState
                 {
-                    resultOut->SetBooleanValue(false);
+                    resultOut->SetBooleanValue(true);
                 } break;
                 case 286464908: // kGameMessageUpdaterReady
                 {
                     // This is the updater telling us something we don't need
+                } break;
+                case 244423987: // GET_SHOW_RETRY_BTN
+                {
+                    // This only pops up if the updater tells the engine to update, which we don't want
+
+                    std::cout << "!!! The updater tried to tell the engine to update." << std::endl;
+                    return false;
+                } break;
+                default:
+                {
+                    std::cout << "scrui.gClient.RequestUpdaterData " << command << std::endl;
                 } break;
             }
             return true;
@@ -368,16 +522,92 @@ class JSClient : public EA::WebKit::IJSBoundObject {
             const char16_t *x = args[0].GetStringValue(&len);
             std::string req = char16_to_string(x, len);
 
-            std::cout << "scrui.gClient.RequestGameData " << req << std::endl;
-
             if (req == "origin/isLocaleEntitled")
             {
                 resultOut->SetBooleanValue(true);
             }
             else if (req == "urlproperty/150330524") // kPropEcoNetRESTAPI
             {
-                const char *url = "http://simcity.elysiumorpheus.com";
+                resultOut->SetStringValue(EA_CHAR16("http://simcity.elysiumorpheus.com"));
             }
+            else if (req == "GetTutorialPlayed")
+            {
+                resultOut->SetBooleanValue(true);
+            }
+            else if (req == "OnlineGameState")
+            {
+                resultOut->SetNumberValue(1); // we are offline. WTF? onlinegamestate returns whether or not the game is offline...
+            }
+            else if (req == "appProperties/255207476") // mSCWorldConnect
+            {
+                resultOut->SetBooleanValue(true); // we are connected to the simcity worlds?
+            }
+            else if (req == "origin/IsFreeTrial")
+            {
+                resultOut->SetBooleanValue(false); // free trial
+            }
+            else if (req == "origin/FreeTrialTime")
+            {
+                resultOut->SetNumberValue(100);
+            }
+            else if (req == "origin/FreeTrialExpiryDate")
+            {
+                resultOut->SetNumberValue(10000000);
+            }
+            else if (req == "error")
+            {
+                resultOut->SetNumberValue(10008); // kErrorCode_NetworkOffline
+            }
+            else if (req == "appproperties/231936915") // kPropEnableOriginLogin
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else if (req == "origin/3043198785") // isIntegration
+            {
+                resultOut->SetBooleanValue(false); // production
+            }
+            else
+            {
+                std::cout << "scrui.gClient.RequestGameData " << req << std::endl;
+            }
+
+            return true;
+        }
+        else if (!strcmp(name, "PostGameCommand"))
+        {
+            size_t len = 0;
+            const char16_t *x = args[0].GetStringValue(&len);
+            std::string req = char16_to_string(x, len);
+
+            std::cout << "scrui.gClient.PostGameCommand " << req << std::endl;
+
+            resultOut->SetBooleanValue(true);
+
+            return true;
+        }
+        else if (!strcmp(name, "Assert"))
+        {
+            std::cout << "args[0], args[1] = " << args[0].Type() << ", " << args[1].Type() << std::endl;
+
+            bool assertVal = args[1].GetBooleanValue();
+        
+            if (!assertVal)
+            {
+                size_t len = 0;
+                const char16_t *x = args[0].GetStringValue(&len);
+                std::string str = char16_to_string(x, len);
+
+                std::cout << "ASSERT FAILED: " << str << std::endl;
+                return true;
+            }
+        }
+        else if (!strcmp(name, "DebugPrint"))
+        {
+            size_t len = 0;
+            const char16_t *x = args[0].GetStringValue(&len);
+            std::string str = char16_to_string(x, len);
+
+            std::cout << "scrui.DebugPrint: " << str << std::endl;
 
             return true;
         }
@@ -385,6 +615,9 @@ class JSClient : public EA::WebKit::IJSBoundObject {
         std::cout << "Attempt to invoke scrui.gClient." << name << std::endl;
         return false;
     }
+
+    private:
+    EA::WebKit::View *mView;
 };
 
 EA::WebKit::View* createView(int x, int y)
@@ -407,8 +640,10 @@ EA::WebKit::View* createView(int x, int y)
    v->ShowInspector(true);
    v->SetDrawDebugVisuals(true);
 
-   JSClient *cl = new JSClient;
-   v->BindJavaScriptObject("Client", cl);
+   JSClient *cl = new JSClient(v);
+   //v->BindJavaScriptObject("Client", cl);
+
+
 
    return v;
 }
@@ -425,7 +660,10 @@ void updateWebkit(EA::WebKit::View *v)
    if (!v) 
        return;
 
-    v->Tick();
+   //v->EvaluateJavaScript("console.log(\"tick\");");
+   //v->EvaluateJavaScript("if (scrui) {scrui.DEBUG = !0; scrui.ALLOW_EDITOR = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;} console.log(\"tick \" + scrui + scrui.DEBUG);"); // set no debug in scrui
+   v->EvaluateJavaScript("if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; window.ClientHooks.ShowDebugConsole(!0);  } scrui.kCurrentHostPath = \"game://\""); 
+   v->Tick();
     
 }
 

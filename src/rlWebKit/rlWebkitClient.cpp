@@ -120,7 +120,7 @@ static void pc16(const char16_t *chars)
 
  void GLWebkitClient::ReportJSCallstack(EA::WebKit::ReportJSCallstackInfo& info) 
 {
-   //std::cout << __FUNCTION__ << std::endl;
+   std::cout << __FUNCTION__ << std::endl;
    EA::WebKit::EAWebKitClient::ReportJSCallstack(info);
 }
 

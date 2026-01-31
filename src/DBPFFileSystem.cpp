@@ -17,6 +17,13 @@ struct IDTriad {
     unsigned int instance;
 };
 
+static const char *tempPath = "_ewk/tmp";
+
+static bool isTempPath(const char *path)
+{
+    return !strncmp(path, tempPath, strlen(tempPath));
+}
+
 IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
 {
 // so we can use raylib functions that I love so very much
@@ -47,7 +54,7 @@ IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
         type = 0x2F7D0007;
     }
 
-    TRACELOG(LOG_WARNING, "GetIDTriadFromPath: %s -> %X-0-%X\n", path, type, instance);
+    //TRACELOG(LOG_WARNING, "GetIDTriadFromPath: %s -> %X-0-%X\n", path, type, instance);
 
     return {type, 0, instance};
 }
@@ -55,6 +62,12 @@ IDTriad GetIDTriadFromPath(const EA::WebKit::utf8_t *path)
 struct DBPFFileObject {
     unsigned int index;
     unsigned int offset;
+
+    bool special;
+    const char *path;
+
+    bool tempFile;
+    EA::WebKit::FileSystem::FileObject tempFObj;
 };
 
 DBPFFileObject *getfobj(EA::WebKit::FileSystem::FileObject fileObject)
@@ -64,6 +77,10 @@ DBPFFileObject *getfobj(EA::WebKit::FileSystem::FileObject fileObject)
 
 DBPFFileSystem::FileObject DBPFFileSystem::CreateFileObject()
 {
+    if (!mDefaultFS)
+    {
+        mDefaultFS = new EA::WebKit::FileSystemDefault;
+    }
     return (FileObject)(new DBPFFileObject);
 }
 
@@ -74,19 +91,37 @@ void DBPFFileSystem::DestroyFileObject(DBPFFileSystem::FileObject fileObject)
 
 bool DBPFFileSystem::OpenFile(DBPFFileSystem::FileObject fileObject, const utf8_t *path, int openFlags)
 {
-    if (openFlags & kWrite)
-    {
-        TRACELOG(LOG_ERROR, "DBPFFS: Tried to open with write flag: %s.\n", path);
-        return false;
-    }
-
     TRACELOG(LOG_WARNING, "DBPFFS OPEN %s\n", path);
 
     DBPFFileObject *fobj = getfobj(fileObject);
+    fobj->special = false;
+    fobj->tempFile = false;
 
     if (strlen(path) == 0)
     {
         fobj->offset = 0;
+        return false;
+    }
+
+    if (!strcmp(path, "/gameevents/attach")
+            || !strcmp(path, "/gamedata/batch/"))
+    {
+        TRACELOG(LOG_WARNING, "DBPFFS: special");
+        fobj->special = true;
+        fobj->path = strdup(path);
+        return true;
+    }
+
+    if (isTempPath(path))
+    {
+        fobj->tempFile = true;
+        fobj->tempFObj = mDefaultFS->CreateFileObject();
+        return mDefaultFS->OpenFile(fobj->tempFObj, path, openFlags);
+    }
+
+    if (openFlags & kWrite)
+    {
+        TRACELOG(LOG_ERROR, "DBPFFS: Tried to open with write flag: %s.\n", path);
         return false;
     }
 
@@ -99,7 +134,7 @@ bool DBPFFileSystem::OpenFile(DBPFFileSystem::FileObject fileObject, const utf8_
         if (PKG->entries[i].instance == triad.instance && PKG->entries[i].type == triad.type)
         {
             fobj->index = i;
-            TRACELOG(LOG_WARNING, "DBPFFS: Triad found %X-%X-%X\n", triad.instance, PKG->entries[i].group, triad.type);
+            //TRACELOG(LOG_WARNING, "DBPFFS: Triad found %X-%X-%X\n", triad.instance, PKG->entries[i].group, triad.type);
             //break;
         }
     }
@@ -134,6 +169,21 @@ int64_t DBPFFileSystem::ReadFile(DBPFFileSystem::FileObject fileObject, void *bu
 {
     DBPFFileObject *fobj = getfobj(fileObject);
 
+    if (fobj->special)
+    {
+        if (!strcmp(fobj->path, "/gameevents/attach"))
+        {
+            const char *resp = "{\"gameEventToken\": \"OpenSC5\"}";
+            memcpy(buffer, resp, strlen(resp)+1);
+            return strlen(resp) + 1;
+        }
+        else
+        {
+            TRACELOG(LOG_ERROR, "DBPFFS: no way to read from %s", fobj->path);
+            return 0;
+        }
+    }
+
     int64_t bytesRead = size;
 
     PackageEntry entry = PKG->entries[fobj->index];
@@ -154,6 +204,10 @@ int64_t DBPFFileSystem::ReadFile(DBPFFileSystem::FileObject fileObject, void *bu
 
 bool DBPFFileSystem::WriteFile(DBPFFileSystem::FileObject fileObject, const void *buffer, int64_t size)
 {
+    DBPFFileObject *fobj = getfobj(fileObject);
+
+    if (fobj->tempFile) return mDefaultFS->WriteFile(fobj->tempFObj, buffer, size);
+
     TRACELOG(LOG_ERROR, "DBPFFS: Read-Only file system");
 
     return false;
@@ -162,6 +216,13 @@ bool DBPFFileSystem::WriteFile(DBPFFileSystem::FileObject fileObject, const void
 int64_t DBPFFileSystem::GetFileSize(DBPFFileSystem::FileObject fileObject)
 {
     DBPFFileObject *fobj = getfobj(fileObject);
+    
+    if (fobj->special)
+    {
+        TRACELOG(LOG_WARNING, "DBPFFS: get size of %s", fobj->path);
+        return 1024; // TODO
+    }
+
     PackageEntry entry = PKG->entries[fobj->index];
 
     return entry.dataRawSize;
@@ -191,6 +252,7 @@ bool DBPFFileSystem::FileExists(const utf8_t *path)
 
 bool DBPFFileSystem::DirectoryExists(const utf8_t *path)
 {
+    if (isTempPath(path)) return mDefaultFS->DirectoryExists(path);
     TRACELOG(LOG_ERROR, "DirectoryExists: No directories in DBPF\n");
     return false;
 }
@@ -203,6 +265,7 @@ bool DBPFFileSystem::RemoveFile(const utf8_t *path)
 
 bool DBPFFileSystem::DeleteDirectory(const utf8_t *path)
 {
+    if (isTempPath(path)) return mDefaultFS->DeleteDirectory(path);
     TRACELOG(LOG_ERROR, "DeleteDirectory: just... no.");
     return false;
 }
@@ -240,5 +303,11 @@ bool DBPFFileSystem::GetDataDirectory(utf8_t *path, size_t pathBufferCapacity)
 {
     TRACELOG(LOG_ERROR, "FIXME GetDataDirectory");
     return false;
+}
+
+bool DBPFFileSystem::GetTempDirectory(utf8_t *path, size_t pathBufferCapacity)
+{
+    strcpy(path, tempPath);
+    return true;
 }
 

@@ -1,14 +1,11 @@
-#ifndef _RWK_DBPF_FS_
-#define _RWK_DBPF_FS_
-
-#include "filetypes/package.h"
-
-#ifdef __cplusplus
+#ifndef _CLIENTFS_
+#define _CLIENTFS_
 
 #include <EAWebKit/EAWebKit>
 
-class DBPFFileSystem : public EA::WebKit::FileSystem {
-    
+class ClientFileSystem : public EA::WebKit::FileSystem {
+
+public:
     typedef EA::WebKit::FileSystem::FileObject FileObject;
     typedef EA::WebKit::utf8_t utf8_t;
 
@@ -30,21 +27,10 @@ class DBPFFileSystem : public EA::WebKit::FileSystem {
     bool GetFileModificationTime(const utf8_t *path, time_t &result);
     bool MakeDirectory(const utf8_t *path);
     bool GetDataDirectory(utf8_t *path, size_t pathBufferCapacity);
+
     bool GetTempDirectory(utf8_t *path, size_t pathBufferCapacity);
 
-private:
-    
-    EA::WebKit::FileSystemDefault *mDefaultFS;
 };
-
-extern "C" {
-#endif
-
-void SetWebKitPackage(Package *pkg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

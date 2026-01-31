@@ -98,6 +98,7 @@ int main(int argc, char **argv)
 
     const char *appPkgFn = strdup(TextFormat("%s/SimCity_App.package", argv[1]));
     const char *lcPkgFn = strdup(TextFormat("%s/Locale/en-us/Data.package", argv[1]));
+    const char *gamePkgFn = strdup(TextFormat("%s/SimCity_Game.package", argv[1]));
 
     SetTraceLogLevel(LOG_INFO);
     InitWindow(UPDATER_WINDOW_W, UPDATER_WINDOW_H, "OpenSC5 Launcher");
@@ -107,13 +108,21 @@ int main(int argc, char **argv)
 
     loadPackage(appPkgFn, &allGameData);
     loadPackage(lcPkgFn, &allGameData);
+    loadPackage(gamePkgFn, &allGameData);
 
     SetWebKitPackage(&allGameData);
 
     printf("Loaded %d package entries.\n", allGameData.entryCount);
 
     void *v = createView(UPDATER_WINDOW_W, UPDATER_WINDOW_H);
-    setViewUrl(v, "file:///Updater.html");
+    setViewUrl(v, "file:///dbpf/Updater.html");
+
+    // entrypoints:
+    // Updater.html
+    // Editor.html
+    // Launcher3D_planar.html
+    // WebKitPanel.html
+    //
 
     Image img = GenImageColor(UPDATER_WINDOW_W, UPDATER_WINDOW_H, BLANK);
     Texture2D screenTex = LoadTextureFromImage(img);
@@ -154,6 +163,20 @@ int main(int argc, char **argv)
          }
 
          mousewheel(v, GetMouseX(), GetMouseY(), 0, GetMouseWheelMove()*60);
+
+         int key = GetCharPressed();
+
+         while(key > 0)
+         {
+             keyboard(v, key, true, true);
+
+             key = GetCharPressed();
+         }
+
+         if (IsKeyPressed(KEY_ENTER))
+         {
+             keyboard(v, '\r', false, true);
+         }
 
 
       BeginDrawing();
