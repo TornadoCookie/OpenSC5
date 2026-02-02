@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     printf("Loaded %d package entries.\n", allGameData.entryCount);
 
     void *v = createView(UPDATER_WINDOW_W, UPDATER_WINDOW_H);
-    setViewUrl(v, "file:///dbpf/Updater.html");
+    setViewUrl(v, "game:///dbpf/Updater.html");
 
     // entrypoints:
     // Updater.html

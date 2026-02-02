@@ -25,6 +25,7 @@
 
 #include <list>
 #include <iostream>
+#include "tracelog.h"
 #include <raylib.h>
 
 EA::WebKit::EAWebKitLib* wk = nullptr;
@@ -216,26 +217,36 @@ static char16_t *tochar16(const char *str)
 
 #include <codecvt>
 #include <locale>
-
+#include <sstream>
 
 std::string char16_to_string(const char16_t* s16, size_t len)
 {
     // https://stackoverflow.com/a/7235204/865719
     //((char16_t*)(s16))[len-1] = 0;
+    if (len == 0)
+    {
+        for (; s16[len] != 0; len++) {}
+        //std::cout << "subbed len for " << len << std::endl;
+    }
     char16_t *clone = (char16_t*)malloc((len+1)*2);
     clone[len] = 0;
     memcpy(clone, s16, len*2);
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
     std::string ret = convert.to_bytes(clone).substr(0, len);
+    //std::cout << "converted: " << ret << std::endl;
     free(clone);
 
     return ret;
 }
 
+#include "json.hpp"
+
 class GameTransportHandler : public EA::WebKit::TransportHandler {
     
     enum RequestType {
-        kRequestTypeFile
+        kRequestTypeFile,
+        kRequestTypeGameEvent,
+        kRequestTypeGameData,
     };
 
     struct GameData {
@@ -245,13 +256,18 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         EA::WebKit::FileSystem::FileObject mFileObject;
         void *mBuffer;
         int64_t mFileSize;
+
+        // kRequestTypeGameData
+        //std::stringstream request;
     };
     
     const unsigned kFileBufferSize = 16384;
 
     bool InitJob(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
     {
-        const char *path = pTInfo->mPath.GetCharacters();
+        std::string sPath = char16_to_string(pTInfo->mURI.GetCharacters(), 0);
+        const char *path = strdup(sPath.c_str() + strlen("game://")); // we strdup because sPath will be deleted once we leave InitJob
+        pTInfo->mPath.SetCharacters(path);
         GameData *data = new GameData;
 
         if (!strncmp(path, "/dbpf", 5))
@@ -261,6 +277,14 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
             data->mFileObject = pFS->CreateFileObject();
             data->mBuffer = malloc(kFileBufferSize);
             data->mFileSize = -1;
+        }
+        else if (!strncmp(path, "/gameevents", strlen("/gameevents")))
+        {
+            data->requestType = kRequestTypeGameEvent;
+        }
+        else if (!strncmp(path, "/gamedata", strlen("/gamedata")))
+        {
+            data->requestType = kRequestTypeGameData;
         }
         else
         {
@@ -282,6 +306,36 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
             EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
 
             pFS->OpenFile(data->mFileObject, pTInfo->mPath.GetCharacters()+5, EA::WebKit::FileSystem::kRead);
+            const char *ext = GetFileExtension(pTInfo->mPath.GetCharacters());
+            const char *mimeType;
+            if (!strcmp(ext, ".html"))
+            {
+                mimeType = "text/html";
+            }
+            else if (!strcmp(ext, ".css"))
+            {
+                mimeType = "text/css";
+            }
+            else if (!strcmp(ext, ".js"))
+            {
+                mimeType = "text/javascript";
+            }
+            else if (!strcmp(ext, ".json"))
+            {
+                mimeType = "application/json";
+            }
+            else if (!strcmp(ext, ".png"))
+            {
+                mimeType = "image/png";
+            }
+            else
+            {
+                TRACELOG(LOG_WARNING, "GAME: No mime type for extension %s", ext);
+                mimeType = NULL;
+            }
+
+            if (mimeType)
+                pTInfo->mpTransportServer->SetMimeType(pTInfo, mimeType);
         }
 
         bStateComplete = true;
@@ -313,6 +367,58 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
                 bStateComplete = true;
                 pTInfo->mResultCode = 200;
                 pTInfo->mpTransportServer->DataDone(pTInfo, true);
+            }
+        }
+        else if (data->requestType == kRequestTypeGameEvent)
+        {
+            const char *method = pTInfo->mPath.GetCharacters() + strlen("/gameevents/");
+
+            if (!strcmp(method, "attach"))
+            {
+                std::cout << "TODO gameevents/attach" << std::endl;
+                // this is a get request, so return constant data.
+                const char *response = "{\"gameEventToken\": \"OpenSC5\"}";
+                pTInfo->mpTransportServer->DataReceived(pTInfo, response, sizeof(response));
+                pTInfo->mResultCode = 200;
+                pTInfo->mpTransportServer->DataDone(pTInfo, true);
+
+                bStateComplete = true;
+            }
+            else
+            {
+                std::cout << "TODO gameevents/" << method << std::endl;
+            }
+        }
+        else if (data->requestType == kRequestTypeGameData)
+        {
+            const char *method = pTInfo->mPath.GetCharacters() + strlen("/gamedata/");
+
+            if (!strcmp(method, "batch/"))
+            {
+                std::cout << "TODO gamedata/batch/ " << pTInfo->mPostSize << " " << pTInfo->mHttpRequestType << std::endl;
+
+                char *pRequest = (char*)malloc(pTInfo->mPostSize+1);
+                pTInfo->mpTransportServer->ReadData(pTInfo, pRequest, pTInfo->mPostSize);
+                //std::string request(pRequest);
+                pRequest[pTInfo->mPostSize] = 0;
+                //std::cout << "gamedataRaw: " << pRequest << "\n" << std::endl;
+                std::istringstream sRequest;
+                sRequest.str(pRequest);
+
+                for (std::string line; std::getline(sRequest, line);)
+                {
+                    std::cout << "gamedata: " << line << std::endl;
+                }
+
+                free(pRequest);
+
+                bStateComplete = true;
+
+                return true;
+            }
+            else
+            {
+                std::cout << "TODO gamedata/" << method << std::endl;
             }
         }
 
@@ -394,7 +500,7 @@ bool initWebkit()
 
    //wk->AddTransportHandler(wk->GetTransportHandler(EA_CHAR16("file")), tochar16(""));
 
-   wk->AddTransportHandler(new GameTransportHandler, EA_CHAR16("file"));
+   wk->AddTransportHandler(new GameTransportHandler, EA_CHAR16("game"));
 
    //NetConnStartup("-servicename=rlWebKit");
 
@@ -662,7 +768,7 @@ void updateWebkit(EA::WebKit::View *v)
 
    //v->EvaluateJavaScript("console.log(\"tick\");");
    //v->EvaluateJavaScript("if (scrui) {scrui.DEBUG = !0; scrui.ALLOW_EDITOR = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;} console.log(\"tick \" + scrui + scrui.DEBUG);"); // set no debug in scrui
-   v->EvaluateJavaScript("if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; window.ClientHooks.ShowDebugConsole(!0);  } scrui.kCurrentHostPath = \"game://\""); 
+   v->EvaluateJavaScript("if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; window.ClientHooks.ShowDebugConsole(!0); } "); 
    v->Tick();
     
 }
