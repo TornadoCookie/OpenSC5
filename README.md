@@ -6,7 +6,7 @@ To build for win64 (can only build on linux): <br>
 
 Requires GNU make and gcc/mingw. <br>
 
-<br>This program is based on the source code to SimCityPak and SporeModder-FX.<br>
+<br>This program is based on the source code to SimCityPak and SporeModder-FX, as well as several articles, the EAWebKit source code, and personal research.<br>
 
 What do the programs do:
 - test_update: Downloads the SimCity game scripts into ./update. (You first have to run `mkdir update` for it to work.)
