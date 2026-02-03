@@ -14,6 +14,7 @@ What do the programs do:
 - test_rast, test_rw4, test_heightmap, test_sdelta, test_prop `file`: Prints information in parsing the file format.
 - test_crcbin `dir`: Prints information in parsing the directory containins .bin files.
 - opensc5_editor: GUI editor based on the design of s3pe.
+- opensc5: program which runs UI loaded from a SimCityData (changeable via code)
 
 ## Disk space warning ##
 Running test_update will download ~80 GB of files from update.prod.simcity.com (the entire server contents.)
