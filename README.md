@@ -15,10 +15,6 @@ What do the programs do:
 - test_crcbin `dir`: Prints information in parsing the directory containins .bin files.
 - opensc5_editor: GUI editor based on the design of s3pe.
 
-Quick "style guide":
-- Source files must not exceed 1000 lines. If it is longer than 1000 lines, break it up into smaller modules.
-- Each source file must have it's own header file, unless it has an entrypoint (main() function).
-
 ## Disk space warning ##
 Running test_update will download ~80 GB of files from update.prod.simcity.com (the entire server contents.)
 Running opensc5_editor will unpack ~1 GB of files into the corrupted folder because the program can't read it.
