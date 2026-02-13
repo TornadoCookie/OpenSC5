@@ -97,6 +97,7 @@ int *SearchPackage(Package pkg, PackageSearchParams params, int *nResults);
 
 void MergePackages(Package *dest, Package src);
 void SetWriteCorruptedPackageEntries(bool val);
+void SetTryParseFilesInPackage(bool val);
 
 void ExportPackage(Package pkg, const char *filename);
 

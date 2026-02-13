@@ -71,8 +71,11 @@ static void readuint(uint32_t *ret, FILE *f)
     }
 }
 
+static bool tryParseFilesInPackage = true;
+
 static bool ProcessPackageData(unsigned char *data, int dataSize, uint32_t dataType, PackageEntry *pkgEntry)
 {
+    if (!tryParseFilesInPackage) return true;
     switch (dataType)
     {
         case PKGENTRY_PROP: // Properties files https://simswiki.info/wiki.php?title=Spore:00B1B104
@@ -388,6 +391,12 @@ static void datacycle(void *param)
                 //TRACELOG(LOG_DEBUG, "%#x\n", uncompressed[i]);
             }
         }
+
+        if (!tryParseFilesInPackage)
+        {
+            free(data);
+        }
+
         pkg.entries[i].dataCompressed = data;
         pkg.entries[i].dataCompressedSize = entry.diskSize;
     }
@@ -631,6 +640,11 @@ void MergePackages(Package *dest, Package src)
 void SetWriteCorruptedPackageEntries(bool val)
 {
     writeCorrupted = val;
+}
+
+void SetTryParseFilesInPackage(bool val)
+{
+    tryParseFilesInPackage = val;
 }
 
 void ExportPackage(Package pkg, const char *filename)

@@ -240,10 +240,21 @@ std::string char16_to_string(const char16_t* s16, size_t len)
 }
 
 #include "json.hpp"
+using json = nlohmann::json;
+
+static void transferSendData(EA::WebKit::TransportInfo *pTInfo, const char *data, size_t dataSize, const char *mimeType)
+{
+    pTInfo->mpTransportServer->SetMimeType(pTInfo, mimeType);
+    pTInfo->mpTransportServer->SetExpectedLength(pTInfo, dataSize);
+    pTInfo->mpTransportServer->DataReceived(pTInfo, data, dataSize);
+    pTInfo->mResultCode = 200;
+    pTInfo->mpTransportServer->DataDone(pTInfo, true);
+}
 
 class GameTransportHandler : public EA::WebKit::TransportHandler {
     
     enum RequestType {
+        kRequestTypeNone,
         kRequestTypeFile,
         kRequestTypeGameEvent,
         kRequestTypeGameData,
@@ -288,6 +299,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         }
         else
         {
+            data->requestType = kRequestTypeNone;
             std::cout << "game:// TODO " << path << std::endl;
         }
 
@@ -327,6 +339,10 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
             else if (!strcmp(ext, ".png"))
             {
                 mimeType = "image/png";
+            }
+            else if (!strcmp(ext, ".gif"))
+            {
+                mimeType = "image/gif";
             }
             else
             {
@@ -375,12 +391,10 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
 
             if (!strcmp(method, "attach"))
             {
-                std::cout << "TODO gameevents/attach" << std::endl;
+                std::cout << "TODO gameevents/attach: done" << std::endl;
                 // this is a get request, so return constant data.
                 const char *response = "{\"gameEventToken\": \"OpenSC5\"}";
-                pTInfo->mpTransportServer->DataReceived(pTInfo, response, sizeof(response));
-                pTInfo->mResultCode = 200;
-                pTInfo->mpTransportServer->DataDone(pTInfo, true);
+                transferSendData(pTInfo, response, sizeof(response), "application/json");
 
                 bStateComplete = true;
             }
@@ -405,12 +419,31 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
                 std::istringstream sRequest;
                 sRequest.str(pRequest);
 
-                for (std::string line; std::getline(sRequest, line);)
+                json response = json::array();
+                int next = 0;
+
+                for (std::string req; std::getline(sRequest, req);)
                 {
-                    std::cout << "gamedata: " << line << std::endl;
+                    std::cout << "gamedata: " << req << std::endl;
+                    if (req == "OnlineGameState")
+                    {
+                        response[next] = 1; // offline
+                    }
+                    
+                    next++;
                 }
 
                 free(pRequest);
+
+                json jResp;
+                jResp["results"] = response;
+                jResp["length"] = next;
+
+                std::string resp = jResp.dump();
+
+                std::cout << "response: " << resp << std::endl;
+
+                transferSendData(pTInfo, resp.c_str(), resp.length(), "application/json");
 
                 bStateComplete = true;
 
@@ -538,7 +571,7 @@ public:
         }
         else if (!strcmp(name, "RequestGameData"))
         {
-            return true;
+            return false;
         }
         else if (!strcmp(name, "DebugPrint") || !strcmp(name, "Assert"))
         {
@@ -719,6 +752,13 @@ public:
         }
 
         std::cout << "Attempt to invoke scrui.gClient." << name << std::endl;
+        return false;
+    }
+
+    bool hasProperty(const char *propName)
+    {
+        if (hasMethod(propName)) return false;
+        std::cout << "gClient has prop " << propName << "?" << std::endl;
         return false;
     }
 

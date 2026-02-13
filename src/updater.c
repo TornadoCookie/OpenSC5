@@ -120,7 +120,7 @@ int main()
         printf("game_scripts_manifest.html: Retrieved %lu bytes.\n", chunk.size);
         
         char **packages = NULL;
-        int packageCount;
+        int packageCount = 0;
 
         char *cursor = chunk.memory;
         while ((cursor - chunk.memory) < chunk.size)

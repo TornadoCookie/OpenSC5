@@ -103,6 +103,7 @@ int main(int argc, char **argv)
     SetTraceLogLevel(LOG_INFO);
     InitWindow(UPDATER_WINDOW_W, UPDATER_WINDOW_H, "OpenSC5 Launcher");
     SetWriteCorruptedPackageEntries(false);
+    SetTryParseFilesInPackage(false);
 
     Package SimCity_App;
 
