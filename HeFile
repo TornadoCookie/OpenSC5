@@ -5,6 +5,7 @@ UseRaylib
 
 NativeDependency curl
 NativeDependency EAWebKitd
+NativeDependency archive
 
 DistData packed_codebooks_aoTuV_603.bin
 DistData README.md
@@ -93,6 +94,7 @@ Source hash.c
 Program opensc5_editor
 Source editor.c
 UseSourceGroup dbpf_all
+UseSourceGroup rlWebKit
 Source getopt.c
 
 Program opensc5

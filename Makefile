@@ -52,6 +52,13 @@ LDFLAGS+=-lEAWebKitd
 LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
 
 
+archive_NAME=libarchive-$(PLATFORM)
+CFLAGS+=-Ilib/$(archive_NAME)/include
+LDFLAGS+=-Llib/$(archive_NAME)/lib
+LDFLAGS+=-larchive
+LDFLAGS+=-Wl,-rpath,lib/$(archive_NAME)/lib
+
+
 all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
@@ -59,6 +66,7 @@ deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(EAWebKitd_NAME) ] && [ ! -d $(DISTDIR)/lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
+	if [ -d lib/$(archive_NAME) ] && [ ! -d $(DISTDIR)/lib/$(archive_NAME) ]; then cp -r lib/$(archive_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
@@ -202,6 +210,8 @@ opensc5_editor_SOURCES+=$(DISTDIR)/src/editor.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/getopt.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
+opensc5_editor_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
+opensc5_editor_SOURCES+=$(rlWebKit_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES) $(opensc5_editor_CXX_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
