@@ -5,6 +5,7 @@
 #include <cpl_pthread.h>
 #include <getopt.h>
 #include "filetypes/prop.h"
+#include <rlWebKit.h>
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -491,6 +492,8 @@ int main(int argc, char **argv)
 
     Rectangle pkgEntryListView = {0};
     Vector2 pkgEntryListScroll = {0};
+
+    initWebkit(); // init allocator....
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor");
