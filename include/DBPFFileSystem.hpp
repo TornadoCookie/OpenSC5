@@ -7,6 +7,14 @@
 
 #include <EAWebKit/EAWebKit>
 
+#if !EAWEBKIT_DEFAULT_FILE_SYSTEM_ENABLED
+namespace EA {
+    namespace WebKit {
+        class FileSystemDefault;
+    }
+}
+#endif
+
 class DBPFFileSystem : public EA::WebKit::FileSystem {
     
     typedef EA::WebKit::FileSystem::FileObject FileObject;

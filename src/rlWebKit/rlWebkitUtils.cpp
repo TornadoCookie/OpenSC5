@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 #if defined(GLWEBKIT_PLATFORM_WINDOWS)
-#include <windows.h> // LoadLibraryA
+#include <cpl_raylib.h> // LoadLibraryA
 #elif defined(GLWEBKIT_PLATFORM_LINUX)
 #include <dirent.h>
 #define index _index // avoid name collision with deprecated POSIX func
@@ -40,7 +40,7 @@ int getSystemFonts(std::vector<std::string>& fonts)
     LONG result;
 
     // Open Windows font registry key
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, fontRegistryPath, 0, KEY_READ, &hKey);
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, fontRegistryPath, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS) {
         return 1;
     }

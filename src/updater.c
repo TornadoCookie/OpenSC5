@@ -8,15 +8,42 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <archive.h>
-#include <archive_entry.h>
+//#include <archive.h> HOLD UNTIL 3.7.8 is in debian trixie
+//#include <archive_entry.h>
 #include <fcntl.h>
 
 #define PATH_SIZE 128
 #define strlitsize(s) (sizeof(s)-1)
 
+// need: mkdir, mkstemps
 #ifdef __linux__
 #define mkdir(x) mkdir(x, 0777)
+
+FILE *openTempFile(char *template, int suffixLen)
+{
+    int fd = mkstemps(template, suffixLen);
+    if (fd == -1)
+    {
+        perror("failed to open tmp file");
+        exit(EXIT_FAILURE);
+    }
+    return fdopen(fd, "wb+");
+}
+
+#elif defined _WIN32
+
+FILE *openTempFile(char *template, int suffixLen)
+{
+    for (int i = 0; i < strlen(template); i++)
+    {
+        if (template[i] == 'X')
+            template[i] = rand() % 10 + '0';
+    }
+    return fopen(template, "wb+");
+}
+
+#else
+#error no backend for platform.
 #endif
 
 typedef struct UpdaterOptions {
@@ -138,21 +165,13 @@ struct MemoryStruct downloadFileToMemory(const char *url)
     return chunk;
 }
 
-char *downloadFileToTmpFile(const char *url, const char *name, int *ofd)
+char *downloadFileToTmpFile(const char *url, const char *name, FILE **of)
 {
     char template[PATH_SIZE];
 
     sprintf(template, "update/%sXXXXXX.7z", name);
 
-    int fd = mkstemps(template, 3);
-
-    if (fd == -1)
-    {
-        perror("failed to open tmp file");
-        exit(EXIT_FAILURE);
-    }
-
-    FILE *f = fdopen(fd, "w+");
+    FILE *f = openTempFile(template, 3);
     CURL *curl = curl_easy_init();
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -170,7 +189,7 @@ char *downloadFileToTmpFile(const char *url, const char *name, int *ofd)
 
     curl_easy_cleanup(curl);
 
-    *ofd = fd;
+    *of = f;
     return strdup(template);
 }
 
@@ -309,7 +328,7 @@ typedef struct PackageInstallQueue {
     struct {
         Package pkg;
         char *filename;
-        int fd;
+        FILE *f;
     } *downloads;
     int downloadCount;
 } PackageInstallQueue;
@@ -326,7 +345,7 @@ PackageInstallQueue downloadPackages(PackageList downloadQueue, const char *serv
         installQueue.downloads[installQueue.downloadCount-1].pkg = downloadQueue.packages[i];
         
         const char *url = getPackageURL(downloadQueue.packages[i], serverURL);
-        installQueue.downloads[installQueue.downloadCount - 1].filename = downloadFileToTmpFile(url, downloadQueue.packages[i].name, &(installQueue.downloads[installQueue.downloadCount - 1].fd));
+        installQueue.downloads[installQueue.downloadCount - 1].filename = downloadFileToTmpFile(url, downloadQueue.packages[i].name, &(installQueue.downloads[installQueue.downloadCount - 1].f));
     }
 
     return installQueue;
@@ -334,7 +353,8 @@ PackageInstallQueue downloadPackages(PackageList downloadQueue, const char *serv
 
 void extract7z(const char *filename, const char *path)
 {
-    struct archive *archive = archive_read_new();
+    printf("TODO extract 7z\n");
+    /*struct archive *archive = archive_read_new();
     struct archive_entry *entry;
     int result = 0;
 
@@ -366,7 +386,7 @@ void extract7z(const char *filename, const char *path)
         exit(EXIT_FAILURE);
     }
 
-    archive_read_close(archive);
+    archive_read_close(archive);*/
 }
 
 void installPackages(PackageInstallQueue installQueue, const char *installPath)
@@ -454,11 +474,11 @@ int main(int argc, char **argv)
 
     PackageInstallQueue installQueue = downloadPackages(downloadQueue, options.server);
 
-    if (options.installPath)
-    {
-        installPackages(installQueue, options.installPath);
-    }
-    else
+    //if (options.installPath)
+    //{
+    //    installPackages(installQueue, options.installPath);
+    //}
+    //else
     {
         copyArchives(installQueue);
     }

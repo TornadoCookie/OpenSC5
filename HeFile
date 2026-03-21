@@ -5,7 +5,7 @@ UseRaylib
 
 NativeDependency curl
 NativeDependency EAWebKitd
-NativeDependency archive
+# NativeDependency archive
 
 DistData packed_codebooks_aoTuV_603.bin
 DistData README.md
@@ -98,9 +98,9 @@ UseSourceGroup rlWebKit
 Source getopt.c
 
 Program opensc5
-Source game.c
 UseSourceGroup dbpf_all
 UseSourceGroup rlWebKit
+Source game.c
 
 Program test_dbpf
 Source ../tests/test_dbpf.c

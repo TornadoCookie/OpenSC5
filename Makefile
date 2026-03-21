@@ -1,4 +1,4 @@
-# Generated using Helium v2.2.0 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.2.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=build
@@ -35,6 +35,28 @@ LDFLAGS+=-static-libstdc++
 LDFLAGS+=-static-libgcc
 endif
 
+ifeq ($(PLATFORM), win32)
+EXEC_EXTENSION=.exe
+LIB_EXTENSION=.dll
+LIB_EXTENSION_STATIC=(null)
+CC=i686-w64-mingw32-gcc
+CXX=i686-w64-mingw32-g++
+RAYLIB_DLL=-lraylib
+CFLAGS+=-O2
+CFLAGS+=-D RELEASE
+CFLAGS+=-D EXEC_EXTENSION=\".exe\"
+CFLAGS+=-D LIB_EXTENSION=\".dll\"
+CFLAGS+=-DEAWEBKIT_PLATFORM_HEADER="<windows.h>"
+CFLAGS+=-DEAWEBKIT_DEFAULT_FILE_SYSTEM_ENABLED=0
+LDFLAGS+=-static-libstdc++
+LDFLAGS+=-static-libgcc
+LDFLAGS+=-lws2_32
+LDFLAGS+=-lwinmm
+LDFLAGS+=-lopengl32
+LDFLAGS+=-lgdi32
+LDFLAGS+=-lbcrypt
+endif
+
 PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor opensc5 test_dbpf
 LIBRARIES=
 
@@ -52,13 +74,6 @@ LDFLAGS+=-lEAWebKitd
 LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
 
 
-archive_NAME=libarchive-$(PLATFORM)
-CFLAGS+=-Ilib/$(archive_NAME)/include
-LDFLAGS+=-Llib/$(archive_NAME)/lib
-LDFLAGS+=-larchive
-LDFLAGS+=-Wl,-rpath,lib/$(archive_NAME)/lib
-
-
 all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
@@ -66,7 +81,6 @@ deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(EAWebKitd_NAME) ] && [ ! -d $(DISTDIR)/lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
-	if [ -d lib/$(archive_NAME) ] && [ ! -d $(DISTDIR)/lib/$(archive_NAME) ]; then cp -r lib/$(archive_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
@@ -105,7 +119,7 @@ CFLAGS+=-Ilib/$(RAYLIB_NAME)/include
 
 LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
-LDFLAGS+=$(RAYLIB_DLL)
+LDFLAGS:=$(RAYLIB_DLL) $(LDFLAGS)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
 LDFLAGS+=-lstdc++
@@ -244,3 +258,4 @@ clean:
 all_dist:
 	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)
 	DISTDIR=$(DISTDIR)/dist/win64 PLATFORM=win64 $(MAKE)
+	DISTDIR=$(DISTDIR)/dist/win32 PLATFORM=win32 $(MAKE)

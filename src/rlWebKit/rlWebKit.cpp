@@ -239,6 +239,16 @@ std::string char16_to_string(const char16_t* s16, size_t len)
     return ret;
 }
 
+static const char8_t *EASTLFixedString8Wrapper_GetCharacters(EA::WebKit::EASTLFixedString8Wrapper str)
+{
+    return reinterpret_cast<const char8_t *>(str.GetImpl());
+}
+
+static const char16_t *EASTLFixedString16Wrapper_GetCharacters(EA::WebKit::EASTLFixedString16Wrapper str)
+{
+    return reinterpret_cast<const char16_t *>(str.GetImpl());
+}
+
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -276,7 +286,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
 
     bool InitJob(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
     {
-        std::string sPath = char16_to_string(pTInfo->mURI.GetCharacters(), 0);
+        std::string sPath = char16_to_string(EASTLFixedString16Wrapper_GetCharacters(pTInfo->mURI), 0);
         const char *path = strdup(sPath.c_str() + strlen("game://")); // we strdup because sPath will be deleted once we leave InitJob
         pTInfo->mPath.SetCharacters(path);
         GameData *data = new GameData;
@@ -317,8 +327,9 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         {
             EA::WebKit::FileSystem *pFS = EA::WebKit::GetFileSystem();
 
-            pFS->OpenFile(data->mFileObject, pTInfo->mPath.GetCharacters()+5, EA::WebKit::FileSystem::kRead);
-            const char *ext = GetFileExtension(pTInfo->mPath.GetCharacters());
+            const char8_t *pathChars = EASTLFixedString8Wrapper_GetCharacters(pTInfo->mPath);
+            pFS->OpenFile(data->mFileObject, pathChars+5, EA::WebKit::FileSystem::kRead);
+            const char *ext = GetFileExtension(pathChars);
             const char *mimeType;
             if (!strcmp(ext, ".html"))
             {
@@ -387,7 +398,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         }
         else if (data->requestType == kRequestTypeGameEvent)
         {
-            const char *method = pTInfo->mPath.GetCharacters() + strlen("/gameevents/");
+            const char *method = EASTLFixedString8Wrapper_GetCharacters(pTInfo->mPath) + strlen("/gameevents/");
 
             if (!strcmp(method, "attach"))
             {
@@ -405,7 +416,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         }
         else if (data->requestType == kRequestTypeGameData)
         {
-            const char *method = pTInfo->mPath.GetCharacters() + strlen("/gamedata/");
+            const char *method = EASTLFixedString8Wrapper_GetCharacters(pTInfo->mPath) + strlen("/gamedata/");
 
             if (!strcmp(method, "batch/"))
             {
@@ -490,7 +501,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
     }
 };
 
-bool initWebkit()
+extern "C" bool initWebkit()
 {
    PF_CreateEAWebkitInstance create_Webkit_instance = get_CreateEAWebKitInstance();
 
@@ -537,7 +548,10 @@ bool initWebkit()
 
    //NetConnStartup("-servicename=rlWebKit");
 
+   // Symbol is not present in EAWebKit.dll.
+#ifndef GLWEBKIT_PLATFORM_WINDOWS
    EA::Text::Init();
+#endif
 
    //should be pulling these from the OS by their family type
    //times new roman is the default fallback if a font isn't found, so we need 
@@ -869,7 +883,7 @@ void mousewheel(EA::WebKit::View* v, int x, int y, int keys, int delta)
 #if defined(GLWEBKIT_PLATFORM_WINDOWS)
     UINT scrollLines = 1;
     SystemParametersInfoA(SPI_GETWHEELSCROLLLINES, 0, &scrollLines, 0);
-    e.mNumLines = ((delta * (int32_t)scrollLines) / (int32_t)WHEEL_DELTA);
+    e.mNumLines = ((delta * (int32_t)scrollLines) /*/ (int32_t)WHEEL_DELTA*/);
 #elif defined(GLWEBKIT_PLATFORM_LINUX)
     e.mNumLines = delta;
 #endif

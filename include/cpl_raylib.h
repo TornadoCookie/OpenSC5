@@ -13,6 +13,7 @@
 
 typedef struct tagMSG *LPMSG;
 
+#include <winsock2.h>
 #include <windows.h>
 
 #undef near

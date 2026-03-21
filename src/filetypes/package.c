@@ -1,16 +1,17 @@
-#include "filetypes/package.h"
+#include <cpl_raylib.h>
+#include <cpl_endian.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <cpl_endian.h>
-#include <raylib.h>
 #include "filetypes/wwriff.h"
 #include <threadpool.h>
 #include <cpl_pthread.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include "memstream.h"
+
+#include "filetypes/package.h"
 
 #ifdef __linux__
 #define mkdir(x) mkdir(x, 0777)

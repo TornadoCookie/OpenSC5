@@ -10,7 +10,8 @@ The UI is stored in the .package files. it is  standard HTML/CSS/js, except it m
 
 ## how the game communicates with EAWebKit
 ### Client Callback
-this system uses a js object in window.Client that contains callbacks which link to c++ code. this appears to be an older implementation and a remnant. The code paths it makes are impossible to progress with.
+this system uses a js object in window.Client that contains callbacks which link to c++ code. 
+there are also functions tied to window.ClientHooks
 ### game protocol
 this system expects the engine to respond to specific special URLs.
 - example URL: game://host/dbpf/file.js asks for game://host/gamecommand, this is a special URL 

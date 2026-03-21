@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang-19",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "/home/helix/OpenSC5/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/x86_64-w64-mingw32-gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "compilerPathInCppPropertiesJson": "/usr/bin/clang-19",
+            "mergeConfigurations": false,
+            "recursiveIncludes": {},
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}

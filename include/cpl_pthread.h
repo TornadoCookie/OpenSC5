@@ -19,7 +19,7 @@ static DWORD WINAPI _threadproc(void *param)
     void *ret = args->func(args->arg);
     free(args);
 
-    return ret;
+    return (DWORD)ret;
 }
 
 static void pthread_create(pthread_t *newThread, void *unused, void *(*func)(void *), void *arg)
@@ -43,7 +43,7 @@ static void pthread_join(pthread_t thread, void **ret)
     WaitForSingleObject(thread, INFINITE);
     GetExitCodeThread(thread, &exitCode);
 
-    *ret = exitCode;
+    *ret = (void*)exitCode;
 }
 
 typedef HANDLE pthread_mutex_t;

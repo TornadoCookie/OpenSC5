@@ -5,7 +5,7 @@ To build for win64 (can only build on linux): <br>
 `$ PLATFORM=win64 make -j$(nproc)` <br>
 
 ## Dependencies
-- libarchive and libcurl (for updater)
+- libcurl (for updater)
 - EAWebKit 12 (bundled)
 - raylib (bundled)
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #if defined(_WIN32)
-    #define GLWEBKIT_PLATFORM_WINDOWS
+    #define GLWEBKIT_PLATFORM_WINDOWS // assumes simcity's eawebkit
 #elif defined(__linux__)
-    #define GLWEBKIT_PLATFORM_LINUX // also assumes glibc and x11
+    #define GLWEBKIT_PLATFORM_LINUX // assumes glibc and x11
 #else
     #error "Unknown Platform: you will have issues"
 #endif

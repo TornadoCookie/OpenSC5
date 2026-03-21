@@ -5,13 +5,26 @@ LibExtension -debug.so
 Compiler gcc
 RaylibLdFlag -lraylib
 
-Platform win64
+Platform win32
 IsRelease
 ExecExtension .exe
 LibExtension .dll
-Compiler x86_64-w64-mingw32-gcc
-CxxCompiler x86_64-w64-mingw32-g++
-ExtraLDFlag -lws2_32
+Compiler i686-w64-mingw32-gcc
+CxxCompiler i686-w64-mingw32-g++
+RaylibLdFlag -lraylib
 ExtraLDFlag -static-libstdc++
 ExtraLDFlag -static-libgcc
-RaylibLdFlag -lraylibdll
+
+# Libraries
+ExtraLDFlag -lws2_32
+ExtraLDFlag -lwinmm
+ExtraLDFlag -lopengl32
+ExtraLDFlag -lgdi32
+ExtraLDFlag -lbcrypt
+
+# flags for EAWebKit code compilation
+ExtraCFlag -DEAWEBKIT_PLATFORM_HEADER="<windows.h>"
+
+# EAWebKit flags for compatibility with SimCity's EAWebKit
+ExtraCFlag -DEAWEBKIT_DEFAULT_FILE_SYSTEM_ENABLED=0
+
