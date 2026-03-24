@@ -252,13 +252,18 @@ static const char16_t *EASTLFixedString16Wrapper_GetCharacters(EA::WebKit::EASTL
 #include "json.hpp"
 using json = nlohmann::json;
 
-static void transferSendData(EA::WebKit::TransportInfo *pTInfo, const char *data, size_t dataSize, const char *mimeType)
+static void sendHeaders(EA::WebKit::TransportInfo *pTInfo, size_t dataSize, const char *mimeType)
 {
     pTInfo->mpTransportServer->SetMimeType(pTInfo, mimeType);
     pTInfo->mpTransportServer->SetExpectedLength(pTInfo, dataSize);
-    pTInfo->mpTransportServer->DataReceived(pTInfo, data, dataSize);
     pTInfo->mResultCode = 200;
-    pTInfo->mpTransportServer->DataDone(pTInfo, true);
+    //pTInfo->mpTransportServer->HeadersReceived(pTInfo);
+}
+
+static void transferSendData(EA::WebKit::TransportInfo *pTInfo, const char *data, size_t dataSize)
+{
+    pTInfo->mpTransportServer->DataReceived(pTInfo, data, dataSize);
+    //pTInfo->mpTransportServer->DataDone(pTInfo, true);
 }
 
 class GameTransportHandler : public EA::WebKit::TransportHandler {
@@ -270,6 +275,12 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         kRequestTypeGameData,
     };
 
+    enum RequestState {
+        kRequestStateHeaders,
+        kRequestStateData,
+        kRequestStateDone
+    };
+
     struct GameData {
         RequestType requestType;
 
@@ -278,11 +289,14 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         void *mBuffer;
         int64_t mFileSize;
 
-        // kRequestTypeGameData
-        //std::stringstream request;
+        RequestState mRequestState;
+        std::string mResponse;
+
+        // kRequestTypeGameEvent
+        bool mSentOfflineNoUpdates;
     };
     
-    const unsigned kFileBufferSize = 16384;
+    const unsigned kFileBufferSize = 65536;
 
     bool InitJob(EA::WebKit::TransportInfo *pTInfo, bool &bStateComplete)
     {
@@ -290,6 +304,8 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         const char *path = strdup(sPath.c_str() + strlen("game://")); // we strdup because sPath will be deleted once we leave InitJob
         pTInfo->mPath.SetCharacters(path);
         GameData *data = new GameData;
+
+        data->mRequestState = kRequestStateHeaders;
 
         if (!strncmp(path, "/dbpf", 5))
         {
@@ -302,6 +318,7 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
         else if (!strncmp(path, "/gameevents", strlen("/gameevents")))
         {
             data->requestType = kRequestTypeGameEvent;
+            data->mSentOfflineNoUpdates = false;
         }
         else if (!strncmp(path, "/gamedata", strlen("/gamedata")))
         {
@@ -355,6 +372,10 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
             {
                 mimeType = "image/gif";
             }
+            else if (!strcmp(ext, ".jpg"))
+            {
+                mimeType = "image/jpeg";
+            }
             else
             {
                 TRACELOG(LOG_WARNING, "GAME: No mime type for extension %s", ext);
@@ -396,6 +417,18 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
                 pTInfo->mpTransportServer->DataDone(pTInfo, true);
             }
         }
+        else if (data->mRequestState == kRequestStateData)
+        {
+            std::cout << "data send " << data->mResponse << std::endl;
+            transferSendData(pTInfo, data->mResponse.c_str(), data->mResponse.length());
+            data->mRequestState = kRequestStateDone;
+        }
+        else if (data->mRequestState == kRequestStateDone)
+        {
+            std::cout << "data done" << std::endl;
+            pTInfo->mpTransportServer->DataDone(pTInfo, true);
+            bStateComplete = true;
+        }
         else if (data->requestType == kRequestTypeGameEvent)
         {
             const char *method = EASTLFixedString8Wrapper_GetCharacters(pTInfo->mPath) + strlen("/gameevents/");
@@ -405,9 +438,32 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
                 std::cout << "TODO gameevents/attach: done" << std::endl;
                 // this is a get request, so return constant data.
                 const char *response = "{\"gameEventToken\": \"OpenSC5\"}";
-                transferSendData(pTInfo, response, sizeof(response), "application/json");
+                sendHeaders(pTInfo, sizeof(response), "application/json");
+                data->mRequestState = kRequestStateData;
+                data->mResponse = response;
 
-                bStateComplete = true;
+                //bStateComplete = true;
+            }
+            else if (!strcmp(method, ""))
+            {
+                json response = json::array();
+                int next = 0;
+
+                //if (!data->mSentOfflineNoUpdates)
+                {
+                    json event;
+                    event["eventID"] = (unsigned)278776844; // kGameMessageOfflineNoUpdateAvailable
+                    response[next++] = event;
+                    data->mSentOfflineNoUpdates = true;
+                }
+
+                json jResp;
+                jResp["events"] = response;
+                jResp["length"] = next;
+                std::string resp = jResp.dump();
+                sendHeaders(pTInfo, resp.length(), "application/json");
+                data->mResponse = resp;
+                data->mRequestState = kRequestStateData;
             }
             else
             {
@@ -454,11 +510,13 @@ class GameTransportHandler : public EA::WebKit::TransportHandler {
 
                 std::cout << "response: " << resp << std::endl;
 
-                transferSendData(pTInfo, resp.c_str(), resp.length(), "application/json");
+                sendHeaders(pTInfo, resp.length(), "application/json");
+                data->mResponse = resp;
+                data->mRequestState = kRequestStateData;
 
-                bStateComplete = true;
+                //bStateComplete = true;
 
-                return true;
+                //return true;
             }
             else
             {
@@ -570,7 +628,11 @@ class JSClient : public EA::WebKit::IJSBoundObject {
 
 public:
     JSClient(EA::WebKit::View *pView)
-        : mView(pView)
+        : mView(pView),
+          mSentOfflineNoUpdateAvailable(false),
+          mErroredNetworkServicesOffline(false),
+          mSendAuthToken(false),
+          mStartShardFlow(false)
     {}
 
     bool hasMethod(const char *name)
@@ -585,7 +647,7 @@ public:
         }
         else if (!strcmp(name, "RequestGameData"))
         {
-            return false;
+            return true;
         }
         else if (!strcmp(name, "DebugPrint") || !strcmp(name, "Assert"))
         {
@@ -612,7 +674,7 @@ public:
             {
                 case 278506655: // ORIGIN_IS_ONLINE
                 {
-                    resultOut->SetBooleanValue(false);
+                    resultOut->SetBooleanValue(false); // is origin there?
                 } break;
                 case 285775037: // kHaveValidLineState
                 {
@@ -620,14 +682,46 @@ public:
                 } break;
                 case 286464908: // kGameMessageUpdaterReady
                 {
+                    std::cout << "updater ready." << std::endl;
                     // This is the updater telling us something we don't need
                 } break;
                 case 244423987: // GET_SHOW_RETRY_BTN
                 {
                     // This only pops up if the updater tells the engine to update, which we don't want
 
-                    std::cout << "!!! The updater tried to tell the engine to update." << std::endl;
-                    return false;
+                    resultOut->SetBooleanValue(false);
+                    //std::cout << "!!! The updater tried to tell the engine to update." << std::endl;
+                    return true;
+                } break;
+                case 287607681: // UPDATE_IN_PROGRESS
+                {
+                    resultOut->SetBooleanValue(false);
+                } break;
+                case 252943297: // GET_UPDATER_STATE
+                {
+                    resultOut->SetNumberValue((int)0); // normal
+                } break;
+                case 254316777: // GET_RESTART_PENDING
+                {
+                    resultOut->SetBooleanValue(false);
+                } break;
+                case 243655923: // DOWNLOAD_FINSIHED (sic)
+                {
+                    resultOut->SetBooleanValue(true);
+                } break;
+                case 243610865: // DOWNLOAD_PROGRESS
+                {
+                    resultOut->SetNumberValue(0.5);
+                } break;
+                case 243527656: // STATUS_CODE
+                {
+                    // Entry in UpdateManagerErrorCodes.json
+                    // Having a result puts the updater back into updating state.
+                    //resultOut->SetStringValue(EA_CHAR16("0x80000001"));
+                } break;
+                case 255285637: // kGameMessageStartShardFlow
+                {
+                    mStartShardFlow = true;
                 } break;
                 default:
                 {
@@ -685,11 +779,11 @@ public:
             }
             else if (req == "GetTutorialPlayed")
             {
-                resultOut->SetBooleanValue(true);
+                resultOut->SetBooleanValue(false);
             }
             else if (req == "OnlineGameState")
             {
-                resultOut->SetNumberValue(1); // we are offline. WTF? onlinegamestate returns whether or not the game is offline...
+                resultOut->SetNumberValue(1); // we are offline. 
             }
             else if (req == "appProperties/255207476") // mSCWorldConnect
             {
@@ -709,15 +803,68 @@ public:
             }
             else if (req == "error")
             {
-                resultOut->SetNumberValue(10008); // kErrorCode_NetworkOffline
+                EA::WebKit::JavascriptValue *errors = wk->CreateJavascriptValue(mView);
+                errors->SetArrayType();
+
+                if (!mErroredNetworkServicesOffline)
+                {
+                    EA::WebKit::JavascriptValue *error = wk->CreateJavascriptValue(mView);
+                    mView->EvaluateJavaScript("{messageType = \"errordata\", code = 10010}", error);
+                    errors->PushArrayValue(*error);
+                    mErroredNetworkServicesOffline = true;
+                }
+
+                resultOut->SetArrayType();
+                resultOut->PushArrayValue(*errors);
             }
             else if (req == "appproperties/231936915") // kPropEnableOriginLogin
             {
-                resultOut->SetBooleanValue(false);
+                resultOut->SetBooleanValue(true);
             }
             else if (req == "origin/3043198785") // isIntegration
             {
                 resultOut->SetBooleanValue(false); // production
+            }
+            else if (req == "appproperties/242912640") // kShowStore
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else if (req == "appproperties/242821410") // kPropAdWebServer
+            {
+                resultOut->SetStringValue(EA_CHAR16("http://simcity.elysiumorpheus.com/ad"));
+            }
+            else if (req == "appproperties/4220525218") // kSkipIntroMovie
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else if (req == "appproperties/2002965982") // kBetaFlow
+            {
+                resultOut->SetBooleanValue(true);
+            }
+            else if (req == "appproperties/4263713262") // kPropOriginAddOnStore
+            {
+                // nothing
+            }
+            else if (req == "demo")
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else if (req == "hasEntitlement/2") // do we have cities of tomorrow expansion pack
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else if (req == "urlproperty/292003341") // kPropBuyNowLink
+            {
+                resultOut->SetStringValue(EA_CHAR16("http://simcity.elysiumorpheus.com/buynow"));
+            }
+            else if (req == "appproperties/292005258") // kPropPromoURL
+            {
+                // nothing
+            }
+            else if (req == "origin/authToken")
+            {
+                resultOut->SetStringValue(EA_CHAR16("DUMMY_AUTH_TOKEN"));
+                mSendAuthToken = true;
             }
             else
             {
@@ -764,6 +911,63 @@ public:
 
             return true;
         }
+        else if (!strcmp(name, "RequestGameEvents"))
+        {
+            resultOut->SetObjectType();
+            int length = 0;
+
+            EA::WebKit::JavascriptValue *events = wk->CreateJavascriptValue(mView);
+            events->SetArrayType();
+            /*if (!mSentOfflineNoUpdateAvailable)
+            {
+                length++;
+                EA::WebKit::JavascriptValue *event = wk->CreateJavascriptValue(mView);
+
+                mView->EvaluateJavaScript("{eventID = 278776844}", event); // kGameMessageOfflineNoUpdateAvailable
+                mSentOfflineNoUpdateAvailable = true;
+
+                events->PushArrayValue(*event);
+            }*/
+
+            if (mSendAuthToken)
+            {
+                length++;
+                EA::WebKit::JavascriptValue *event = wk->CreateJavascriptValue(mView);
+                mView->EvaluateJavaScript("{eventID = 231431032, eventData = {authToken = \"DUMMY_AUTH_TOKEN\"}}", event);
+                events->PushArrayValue(*event);
+                mSendAuthToken = false;
+            }
+
+            if (mStartShardFlow)
+            {
+                length++;
+                EA::WebKit::JavascriptValue *event = wk->CreateJavascriptValue(mView);
+                mView->EvaluateJavaScript(R"(JSON.parse('{ "eventID": 3438476797, "eventData": { "config": { "hosts": [ { "Desc": "Antarctica", "name": "0x0f3b425d", "url": "p21.api.awsprod.simcity.com", "game": "p21.api.awsprod.simcity.com", "websocket": "p21.api.awsprod.simcity.com:2001", "telemetry": "http://telemetry.simcity.com", "news": "p21.api.awsprod.simcity.com", "statuses": [ { "status": "available" } ], "id": 999143101, "sort": 4 }, { "Desc": "Antarctica2", "name": "0x0f3b4256", "url": "p21.api.awsprod.simcity.com", "game": "p21.api.awsprod.simcity.com", "websocket": "p21.api.awsprod.simcity.com:2001", "telemetry": "http://telemetry.simcity.com", "news": "p21.api.awsprod.simcity.com", "statuses": [ { "status": "available" } ], "id": 999143101, "sort": 4 } ] } } }'))", event);
+                events->PushArrayValue(*event);
+                mStartShardFlow = false;
+            }
+
+            EA::WebKit::JavascriptValue *vLength = wk->CreateJavascriptValue(mView);
+            vLength->SetNumberValue(length);
+
+            resultOut->SetProperty(EA_CHAR16("events"), *events);
+            resultOut->SetProperty(EA_CHAR16("length"), *vLength);
+
+            return true;
+        }
+        else if (!strcmp(name, "ProfBegin"))
+        {
+            size_t len = 0;
+            const char16_t *x = args[0].GetStringValue(&len);
+            std::string has = char16_to_string(x, len);
+            //std::cout << "scrui.gClient.ProfBegin " << has << std::endl;
+
+            return true;
+        }
+        else if (!strcmp(name, "ProfEnd"))
+        {
+            return true;
+        }
 
         std::cout << "Attempt to invoke scrui.gClient." << name << std::endl;
         return false;
@@ -778,7 +982,14 @@ public:
 
     private:
     EA::WebKit::View *mView;
+
+    bool mSentOfflineNoUpdateAvailable;
+    bool mErroredNetworkServicesOffline;
+    bool mSendAuthToken;
+    bool mStartShardFlow;
 };
+
+static std::vector<EA::WebKit::View *> gViews;
 
 EA::WebKit::View* createView(int x, int y)
 {
@@ -790,20 +1001,20 @@ EA::WebKit::View* createView(int x, int y)
    vp.mDisplaySurface = nullptr; // use default surface
    vp.mWidth = x;
    vp.mHeight = y;
-   vp.mBackgroundColor = 0; //clear  0xffffffff; //white
+   vp.mBackgroundColor = 0xffffffff; //clear  0xffffffff; //white
    vp.mTileSize = 256;
    vp.mUseTiledBackingStore = false;
    vp.mpUserData = v;
    v->InitView(vp);
    v->SetSize(EA::WebKit::IntSize(vp.mWidth, vp.mHeight));
 
-   v->ShowInspector(true);
+   //v->ShowInspector(true);
    v->SetDrawDebugVisuals(true);
 
    JSClient *cl = new JSClient(v);
-   //v->BindJavaScriptObject("Client", cl);
+   v->BindJavaScriptObject("Client", cl);
 
-
+   gViews.push_back(v);
 
    return v;
 }
@@ -819,10 +1030,28 @@ void updateWebkit(EA::WebKit::View *v)
 {
    if (!v) 
        return;
+    
+    for (int i = 0; i < gViews.size(); i++)
+    {
+        if (gViews[i] != v)
+        {
+            gViews[i]->Tick();
+        }
+    }
 
    //v->EvaluateJavaScript("console.log(\"tick\");");
    //v->EvaluateJavaScript("if (scrui) {scrui.DEBUG = !0; scrui.ALLOW_EDITOR = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;} console.log(\"tick \" + scrui + scrui.DEBUG);"); // set no debug in scrui
-   v->EvaluateJavaScript("if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; window.ClientHooks.ShowDebugConsole(!0); } "); 
+   
+    // enable scrui debug, profiling, update scrui, make it so that scrui listens for game events
+    v->EvaluateJavaScript("if (scrui) { scrui.ClientHooks.Update(17); } if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; scrui.gProfilingEnabled = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;  scrui.gUIManager.mGameEventToken = \"OPENSC5\"; }  ");
+   
+   // override window.open to tell us info
+   v->EvaluateJavaScript("if (!window.overrodeOpen) { var oldopen = window.open; window.open = function(x, t, f) { console.log(\"OPEN \" + x); return oldopen(\"game:///dbpf/\" + x, t, f);}; window.overrodeOpen = true;}");
+   
+   // updater: add play button handler hook
+    v->EvaluateJavaScript("if (simcity.gUpdater && !window.overrodepbh) {var oldpbh = simcity.gUpdater.PlayButtonHandler; simcity.gUpdater.PlayButtonHandler = function() {console.log('hello from pbh. state = ' + this.mCurrentState); oldpbh();}; window.overrodepbh = true;}");
+
+    v->EvaluateJavaScript("if (simcity.gEventManager && !window.overrodepbh2) {var oldpbh = simcity.gEventManager.TriggerEvent; simcity.gEventManager.TriggerEvent = function(a,b,c) {console.log('hello from pbh. ' + a + ' ' + b +  ' ' + c); oldpbh.call(simcity.gEventManager, a, b, c);}; window.overrodepbh2 = true;}");
    v->Tick();
     
 }

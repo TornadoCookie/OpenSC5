@@ -708,3 +708,17 @@ void ExportPackage(Package pkg, const char *filename)
     fwrite(indexStream.buf, 1, indexStream.size, f);
 
 }
+
+static void *loadPackageFile_async(void *param)
+{
+    LoadPackageFileAsyncArgs *args = param;
+    args->done = false;
+    *args->pkg = LoadPackageFile(args->f);
+    args->done = true;
+}
+
+void LoadPackageFileAsync(LoadPackageFileAsyncArgs *args)
+{
+    pthread_t thread;
+    pthread_create(&thread, NULL, loadPackageFile_async, args);
+}

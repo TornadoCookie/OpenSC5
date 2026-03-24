@@ -99,6 +99,14 @@ void MergePackages(Package *dest, Package src);
 void SetWriteCorruptedPackageEntries(bool val);
 void SetTryParseFilesInPackage(bool val);
 
+typedef struct LoadPackageFileAsyncArgs { // use GetThreadpoolTasksLeft() for progress
+    FILE *f; // file (open with rb at least)
+    Package *pkg; // ptr to pkg
+    bool done; // set to false; gets set to true when done
+} LoadPackageFileAsyncArgs;
+
+void LoadPackageFileAsync(LoadPackageFileAsyncArgs *args);
+
 void ExportPackage(Package pkg, const char *filename);
 
 unsigned char *DecompressDBPF(unsigned char *data, int dataSize, int outDataSize);

@@ -1,9 +1,9 @@
 DefaultDistDir build
-DefaultPlatform win64
+DefaultPlatform linux64
 UseRaylib False
 
-ExtraLDFlag Activation.def
-
-Library Activation
-Source activation.c
+Program decryptdlf
+Source decryptdlf.c
+Source aes.c
+Source base64.c
 

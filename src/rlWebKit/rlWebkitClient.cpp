@@ -1,5 +1,8 @@
 #include "rlWebkitClient.h"
 
+#include <raylib.h>
+#include "rlWebKit.h"
+
 #include <iostream>
 
 
@@ -43,8 +46,10 @@ static void pc16(const char16_t *chars)
 
  void GLWebkitClient::CreateView(EA::WebKit::CreateViewInfo& info) 
 {
-   //std::cout << __FUNCTION__ << std::endl;
-   EA::WebKit::EAWebKitClient::CreateView(info);
+   std::cout << __FUNCTION__ << info.mEventType << std::endl;
+   info.mpCreatedView = (EA::WebKit::View*)createView(info.mWidth, info.mHeight);
+
+   //EA::WebKit::EAWebKitClient::CreateView(info);
 }
 
 

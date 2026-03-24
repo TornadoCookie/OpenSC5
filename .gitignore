@@ -14,6 +14,13 @@ HeroesAndVillains-Scripts
 
 dist
 build
+_ewk
+simcityTestRoot
 
+# file too large. download from https://simcity.elysiumorpheus.com/libEAWebKitd.so
 lib/libEAWebKitd-linux64-debug/lib/libEAWebKitd.so
+
+# This is the license key for SimCity. It would be illegal to share it
+# You can find it somewhere in the EA app files after installing SimCity
+activation/71480.dlf
 

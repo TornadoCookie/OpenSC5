@@ -3,11 +3,19 @@ Platform win64
 IsDebug
 ExecExtension 64.exe
 LibExtension 64.dll
+ExtraLDFlag Activation.def
 Compiler x86_64-w64-mingw32-gcc
 
 Platform win32
 IsDebug
 ExecExtension .exe
 LibExtension .dll
+ExtraLDFlag Activation.def
 Compiler i686-w64-mingw32-gcc
+
+Platform linux64
+IsDebug
+ExecExtension
+LibExtension .so
+Compiler gcc
 

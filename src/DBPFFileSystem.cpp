@@ -188,6 +188,11 @@ int64_t DBPFFileSystem::ReadFile(DBPFFileSystem::FileObject fileObject, void *bu
         }
     }
 
+    if (fobj->tempFile)
+    {
+        return mDefaultFS->ReadFile(fobj->tempFObj, buffer, size);
+    }
+
     int64_t bytesRead = size;
 
     PackageEntry entry = PKG->entries[fobj->index];
@@ -220,7 +225,12 @@ bool DBPFFileSystem::WriteFile(DBPFFileSystem::FileObject fileObject, const void
 int64_t DBPFFileSystem::GetFileSize(DBPFFileSystem::FileObject fileObject)
 {
     DBPFFileObject *fobj = getfobj(fileObject);
-    
+   
+    if (fobj->tempFile)
+    {
+        return mDefaultFS->GetFileSize(fobj->tempFObj);
+    }
+
     if (fobj->special)
     {
         TRACELOG(LOG_WARNING, "DBPFFS: get size of %s", fobj->path);
@@ -276,6 +286,12 @@ bool DBPFFileSystem::DeleteDirectory(const utf8_t *path)
 
 bool DBPFFileSystem::GetFileSize(const utf8_t *path, int64_t &size)
 {
+    if (isTempPath(path))
+    {
+        //DestroyFileObject(CreateFileObject()); // hack to get mDefaultFS existing
+        return mDefaultFS->GetFileSize(path, size);
+    }
+
     IDTriad triad = GetIDTriadFromPath(path);
 
     for (int i = 0; i < PKG->entryCount; i++)
