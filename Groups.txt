@@ -1,0 +1,10 @@
+# Group ID Mappings
+# https://community.simtropolis.com/forums/topic/53298-identifying-properties
+
+property MenuItems 0x09878a01
+property Agents    0x40e1c600
+property Units     0x40e1c000
+property Resources 0x40e1c100
+property Paths     0x40e1c400
+property Actions   0x40e1c500
+property AgentCaps 0x48e1c600

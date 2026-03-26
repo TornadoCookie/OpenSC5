@@ -1,4 +1,4 @@
-# Generated using Helium v2.2.1 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.2.0 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=build
@@ -17,22 +17,6 @@ CFLAGS+=-g
 CFLAGS+=-D DEBUG
 CFLAGS+=-D EXEC_EXTENSION=\"-debug\"
 CFLAGS+=-D LIB_EXTENSION=\"-debug.so\"
-endif
-
-ifeq ($(PLATFORM), win64)
-EXEC_EXTENSION=.exe
-LIB_EXTENSION=.dll
-LIB_EXTENSION_STATIC=(null)
-CC=x86_64-w64-mingw32-gcc
-CXX=x86_64-w64-mingw32-g++
-RAYLIB_DLL=-lraylibdll
-CFLAGS+=-O2
-CFLAGS+=-D RELEASE
-CFLAGS+=-D EXEC_EXTENSION=\".exe\"
-CFLAGS+=-D LIB_EXTENSION=\".dll\"
-LDFLAGS+=-lws2_32
-LDFLAGS+=-static-libstdc++
-LDFLAGS+=-static-libgcc
 endif
 
 ifeq ($(PLATFORM), win32)
@@ -74,7 +58,7 @@ LDFLAGS+=-lEAWebKitd
 LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
 
 
-all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
+all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(DISTDIR)/src/Editor $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
@@ -106,6 +90,9 @@ $(DISTDIR)/src/ww2ogg:
 $(DISTDIR)/src/../tests:
 	mkdir -p $@
 
+$(DISTDIR)/src/Editor:
+	mkdir -p $@
+
 $(DISTDIR):
 	mkdir -p $@
 
@@ -113,13 +100,14 @@ CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
 CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
 CFLAGS+=-Isrc/ww2ogg
+CFLAGS+=-Wno-narrowing
 
 
 CFLAGS+=-Ilib/$(RAYLIB_NAME)/include
 
 LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
-LDFLAGS:=$(RAYLIB_DLL) $(LDFLAGS)
+LDFLAGS+=$(RAYLIB_DLL)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
 LDFLAGS+=-lstdc++
@@ -220,8 +208,9 @@ test_hash_SOURCES+=$(DISTDIR)/src/hash.o
 $(DISTDIR)/test_hash$(EXEC_EXTENSION): $(test_hash_SOURCES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-opensc5_editor_SOURCES+=$(DISTDIR)/src/editor.o
-opensc5_editor_SOURCES+=$(DISTDIR)/src/getopt.o
+opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/Main.o
+opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/ListView.o
+opensc5_editor_SOURCES+=$(DISTDIR)/src/raygui.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
 opensc5_editor_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
@@ -257,5 +246,4 @@ clean:
 
 all_dist:
 	DISTDIR=$(DISTDIR)/dist/linux64-debug PLATFORM=linux64-debug $(MAKE)
-	DISTDIR=$(DISTDIR)/dist/win64 PLATFORM=win64 $(MAKE)
 	DISTDIR=$(DISTDIR)/dist/win32 PLATFORM=win32 $(MAKE)

@@ -14,6 +14,7 @@ DistData Properties.txt
 DistData launcher.bat
 
 ExtraCFlag -Isrc/ww2ogg
+ExtraCFlag -Wno-narrowing
 
 SourceGroup shared
 Source tracelog.c
@@ -92,10 +93,11 @@ Source ../tests/test_hash.c
 Source hash.c
 
 Program opensc5_editor
-Source editor.c
+CxxSource Editor/Main.cpp
+CxxSource Editor/ListView.cpp
 UseSourceGroup dbpf_all
 UseSourceGroup rlWebKit
-Source getopt.c
+Source raygui.c
 
 Program opensc5
 UseSourceGroup dbpf_all

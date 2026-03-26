@@ -17,6 +17,9 @@
 
 // need: mkdir, mkstemps
 #ifdef __linux__
+
+#include <sys/stat.h>
+
 #define mkdir(x) mkdir(x, 0777)
 
 FILE *openTempFile(char *template, int suffixLen)
