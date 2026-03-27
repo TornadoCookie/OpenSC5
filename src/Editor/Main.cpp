@@ -15,8 +15,6 @@ extern "C" {
 
 #include "Editor.hpp"
 
-#define PADDING 20 // px
-
 struct EditorState {
     bool hasLoadedPkg;
     bool isLoadingPackage;
@@ -349,59 +347,32 @@ void DrawPropMenu(EditorState &state, PropData data, unsigned int id)
     }
 }
 
-void DrawMainScreen(EditorState &state)
+static ListRow GenPropListRow(int i, void *pState)
 {
-    GuiScrollPanel((Rectangle){
-        .x = PADDING,
-        .y = PADDING,
-        .width = PADDING + (GetScreenWidth() - 2*PADDING)/2,
-        .height = GetScreenHeight() - PADDING*2
-    }, "Property List", (Rectangle){
-        .x = PADDING,
-        .y = PADDING*2,
-        .width = PADDING + (GetScreenWidth() - 2*PADDING)/2,
-        .height = state.propEntries.size()*PADDING + PADDING*4
-    }, &state.propScroll, &state.propView);
-
-    BeginScissorMode(state.propView.x, state.propView.y, state.propView.width, state.propView.height);
-
-    for (int i = 0; i < state.propEntries.size(); i++)
+    if (i == -1)
     {
-        PackageEntry *entry = state.propEntries[i];
-        ListRow row = GenListRowForPackageEntry(state, i, *entry);
-        bool selected = state.selectedPropEntry ==i;
-
-        bool pressed = GuiListRow((Rectangle){
-            .x = PADDING,
-            .y = PADDING*2 + PADDING*i + state.propScroll.y + PADDING,
-            .width = state.propView.width,
-            .height = PADDING,
-        }, row, selected, true);
-    
-        if (pressed)
-        {
-            state.selectedPropVal = -1;
-            state.selectedPropEntry = selected ? -1 : i;
-        }
-    }
-
-    GuiDummyRec((Rectangle){
-        PADDING, PADDING*2,
-        state.propView.width,
-        PADDING
-    }, "");
-    GuiListRow((Rectangle){
-        PADDING, PADDING*2,
-        state.propView.width,
-        PADDING
-    }, (ListRow){
-        {
+        return (ListRow){{
             {0.7f, "INSTANCE"},
             {0.3f, "GROUP"}
-        }
-    }, false, false);
+        }};
+    }
 
-    EndScissorMode();
+    EditorState state = *static_cast<EditorState*>(pState);
+    PackageEntry *entry = state.propEntries[i];
+    ListRow row = GenListRowForPackageEntry(state, i, *entry);
+
+    return row;
+}
+
+void DrawMainScreen(EditorState &state)
+{
+    GuiScrollingListPanel((Rectangle){
+        .x = PADDING,
+        .y = PADDING,
+        .width = GetScreenWidth() / 2 - PADDING * 2,
+        .height = GetScreenHeight() - PADDING * 2
+    }, "Property List", &state.propScroll, &state.propView,
+        state.propEntries.size(), GenPropListRow, &state, &state.selectedPropEntry);
 
     if (state.selectedPropEntry != -1)
     {

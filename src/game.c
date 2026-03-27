@@ -22,20 +22,6 @@ static int compar_alphabetize(const void *p1, const void *p2)
     return strlen(s1) - strlen(s2);
 }
 
-typedef struct LoadPackageFileAsyncArgs {
-    FILE *f;
-    Package *pkg;
-    bool done;
-} LoadPackageFileAsyncArgs;
-
-static void *loadPackageFile_async(void *param)
-{
-    LoadPackageFileAsyncArgs *args = param;
-    args->done = false;
-    *args->pkg = LoadPackageFile(args->f);
-    args->done = true;
-}
-
 static void loadPackage(const char *pkgFile, Package *allGameData)
 {
     printf("Loading %s...\n", pkgFile);
@@ -51,7 +37,7 @@ static void loadPackage(const char *pkgFile, Package *allGameData)
     args.f = f;
     Package pkg;
     args.pkg = &pkg;
-    pthread_create(&thread, NULL, loadPackageFile_async, &args);
+    LoadPackageFileAsync(&args);
     while (!args.done)
     {
         BeginDrawing();
