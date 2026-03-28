@@ -7,8 +7,6 @@ General
 
 Editor
 ------
-- simplify args to GuiScrollingListPanel
-- fix issue with not resetting selected item in submenus
 - Add dropdown menu to sort by filetype (prop, rw4, etc.)
 - Add sort by to list panels
 - Restrict input of list panels to their frames
@@ -17,6 +15,10 @@ Editor
 - Exporting files
 - Deleting and editing files
 - 'Go To Instance' menu
+- References
+- Class names
+- Property editing
+- Having multiple packages merged into one session
 - Hotkeys
 - Add an actual search function
 - Add more reverse hashes + reverse hashes for groups

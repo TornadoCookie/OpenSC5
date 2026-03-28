@@ -49,34 +49,33 @@ bool GuiListRow(Rectangle bounds, ListRow row, bool selected, bool canSelect)
     return pressed;
 }
 
-void GuiScrollingListPanel(Rectangle bounds, const char *title, Vector2 *scroll,
-    Rectangle *view, int count, GenListRowCallback callback, void *callbackArg,
-    int *selected)
+void GuiScrollingListPanel(Rectangle bounds, const char *title, int count,
+    GenListRowCallback callback, void *callbackArg, ScrollingListPanelData *data)
 {
     GuiScrollPanel(bounds, title, (Rectangle){
         .x = bounds.x,
         .y = bounds.y + PADDING,
         .width = bounds.width,
         .height = (count + 4) * PADDING
-    }, scroll, view);
+    }, &data->scroll, &data->view);
 
-    BeginScissorMode(view->x, view->y, view->width, view->height);
+    BeginScissorMode(data->view.x, data->view.y, data->view.width, data->view.height);
 
     for (int i = 0; i < count; i++)
     {
         ListRow row = callback(i, callbackArg);
-        bool isSelected = i == *selected;
+        bool isSelected = i == data->selected;
 
         bool pressed = GuiListRow((Rectangle){
             .x = bounds.x,
-            .y = bounds.y + PADDING*2 + PADDING * i + scroll->y,
+            .y = bounds.y + PADDING*2 + PADDING * i + data->scroll.y,
             .width = bounds.width,
             .height = PADDING
         }, row, isSelected, true);
 
         if (pressed)
         {
-            *selected = isSelected ? -1 : i;
+            data->selected = isSelected ? -1 : i;
         }
     }
 

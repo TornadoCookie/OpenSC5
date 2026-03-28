@@ -23,20 +23,13 @@ struct EditorState {
 
     std::vector<PackageEntry*> propEntries;
     std::vector<const char *> propEntryNames;
-    int selectedPropEntry;
 
     const char *packageToLoad;
     LoadPackageFileAsyncArgs packageLoadState;
 
-    Vector2 propScroll;
-    Rectangle propView;
-    int selectedPropVal;
-
-    Vector2 dataScroll;
-    Rectangle dataView;
-
-    Vector2 valScroll;
-    Rectangle valView;
+    ScrollingListPanelData mainListData;
+    ScrollingListPanelData propListData;
+    ScrollingListPanelData propValData;
 
     std::string statusText;
 };
@@ -51,7 +44,7 @@ void SetLoadedPackage(EditorState &state, const char *packageFilename)
         return;
     }
 
-    state.selectedPropEntry = -1;
+    state.mainListData.selected = -1;
     if (state.hasLoadedPkg)
     {
         UnloadPackageFile(state.loadedPkg);
@@ -131,13 +124,13 @@ void Update(EditorState &state)
     {
         if (IsKeyPressed(KEY_DOWN))
         {
-            state.selectedPropEntry = Wrap(state.selectedPropEntry + 1, 0, state.propEntries.size());
-            state.selectedPropVal = 0;
+            state.mainListData.selected = Wrap(state.mainListData.selected + 1, 0, state.propEntries.size());
+            state.propListData.selected = -1;
         }
         if (IsKeyPressed(KEY_UP))
         {
-            state.selectedPropEntry = Wrap(state.selectedPropEntry - 1, 0, state.propEntries.size());
-            state.selectedPropVal = 0;
+            state.mainListData.selected = Wrap(state.mainListData.selected - 1, 0, state.propEntries.size());
+            state.propListData.selected = -1;
         }
     }
 }
@@ -218,7 +211,7 @@ void GoToInstance(EditorState &state, unsigned int id)
         PackageEntry *entry = state.propEntries[i];
         if (entry->instance != id) continue;
 
-        state.selectedPropEntry = i;
+        state.mainListData.selected = i;
         break;
     }
 }
@@ -249,16 +242,15 @@ static ListRow GenPropValueListRow(int i, void *data)
 
 void DrawPropValueMenu(EditorState &state, unsigned int id, PropVariable var)
 {
-    int selected = -1;
-
     GuiScrollingListPanel((Rectangle){
         .x = GetScreenWidth()/2,
         .y = PADDING*2 + GetScreenHeight()/2,
         .width = GetScreenWidth()/2 - 2*PADDING,
         .height = GetScreenHeight()/2 - 2*PADDING
-    }, TextFormat("Properties of %#X!%#X", id, var.identifier), &state.valScroll, &state.valView, 
-        var.count, GenPropValueListRow, &var, &selected);
+    }, TextFormat("Properties of %#X!%#X", id, var.identifier), 
+        var.count, GenPropValueListRow, &var, &state.propValData);
 
+    int selected = state.propValData.selected;
     if (selected != -1 && var.type == PROPVAR_KEYS)
     {
         GoToInstance(state, var.values[selected].keys.file);
@@ -304,17 +296,23 @@ void DrawPropMenu(EditorState &state, PropData data, unsigned int id)
         .data = data
     };
 
+    int prevSelected = state.propListData.selected;
+
     GuiScrollingListPanel((Rectangle){
         .x = GetScreenWidth()/2,
         .y = PADDING,
         .width = GetScreenWidth()/2 - 2*PADDING,
         .height = GetScreenHeight()/2 - 2*PADDING
-    }, TextFormat("Properties of %#X", id), &state.dataScroll, &state.dataView, 
-        data.variableCount, GenPropMenuListRow, &menuData, &state.selectedPropVal);
+    }, TextFormat("Properties of %#X", id), 
+        data.variableCount, GenPropMenuListRow, &menuData, &state.propListData);
 
-    if (state.selectedPropVal != -1)
+    if (state.propListData.selected != -1)
     {
-        DrawPropValueMenu(state, id, data.variables[state.selectedPropVal]);
+        if (state.propListData.selected != prevSelected)
+        {
+            state.propValData.selected = -1;
+        }
+        DrawPropValueMenu(state, id, data.variables[state.propListData.selected]);
     }
 }
 
@@ -337,24 +335,31 @@ static ListRow GenPropListRow(int i, void *pState)
 
 void DrawMainScreen(EditorState &state)
 {
+    int prevSelected = state.mainListData.selected;
+
     GuiScrollingListPanel((Rectangle){
         .x = PADDING,
         .y = PADDING,
         .width = GetScreenWidth() / 2 - PADDING * 2,
         .height = GetScreenHeight() - PADDING * 2
-    }, "Property List", &state.propScroll, &state.propView,
-        state.propEntries.size(), GenPropListRow, &state, &state.selectedPropEntry);
+    }, "Property List",
+        state.propEntries.size(), GenPropListRow, &state, &state.mainListData);
 
-    if (state.selectedPropEntry != -1)
+    if (state.mainListData.selected != -1)
     {
-        PropData data = state.propEntries[state.selectedPropEntry]->data.propData;
+        if (state.mainListData.selected != prevSelected)
+        {
+            state.propListData.selected = -1;
+        }
+
+        PropData data = state.propEntries[state.mainListData.selected]->data.propData;
         if (data.corrupted)
         {
             DrawText("CORRUPTED. see corrupted/ folder", 3*GetScreenWidth()/4, GetScreenHeight()/2, 20, GRAY);
         }
         else
         {
-            DrawPropMenu(state, data, state.propEntries[state.selectedPropEntry]->instance);
+            DrawPropMenu(state, data, state.propEntries[state.mainListData.selected]->instance);
         }
     }
 

@@ -25,8 +25,15 @@ bool GuiListRow(Rectangle bounds, ListRow row, bool selected, bool canSelect);
 // second argument: argument specified in call to GuiScrollingListPanel
 typedef ListRow (*GenListRowCallback) (int, void *);
 
-void GuiScrollingListPanel(Rectangle bounds, const char *title, Vector2 *scroll,
-    Rectangle *view, int count, GenListRowCallback callback, void *callbackArg,
-    int *selected); //TODO make this into a struct. 8 args is too much and I actually want to add even more to this function
+struct ScrollingListPanelData {
+    Vector2 scroll;
+    Rectangle view;
+
+    int selected;
+};
+
+void GuiScrollingListPanel(Rectangle bounds, const char *title, int count,
+    GenListRowCallback callback, void *callbackArg,
+    ScrollingListPanelData *data); //TODO make this into a struct. 8 args is too much and I actually want to add even more to this function
 
 #endif
