@@ -7,8 +7,8 @@ General
 
 Editor
 ------
-- make other menus use GuiScrollingListPanel
 - simplify args to GuiScrollingListPanel
+- fix issue with not resetting selected item in submenus
 - Add dropdown menu to sort by filetype (prop, rw4, etc.)
 - Add sort by to list panels
 - Restrict input of list panels to their frames

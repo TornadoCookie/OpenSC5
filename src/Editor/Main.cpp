@@ -223,123 +223,94 @@ void GoToInstance(EditorState &state, unsigned int id)
     }
 }
 
-void DrawPropValueMenu(EditorState &state, unsigned int id, PropVariable var)
+static ListRow GenPropValueListRow(int i, void *data)
 {
-    GuiScrollPanel((Rectangle){
-        .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-        .y = PADDING + GetScreenHeight()/2 - PADDING *2,
-        .width = GetScreenWidth()/2 - 3*PADDING,
-        .height = GetScreenHeight()/2 - PADDING *2
-    }, TextFormat("Values of %#X!%#X", id, var.identifier), (Rectangle){
-        .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-        .y = PADDING*2 + GetScreenHeight()/2 - PADDING *2,
-        .width = (GetScreenWidth() - 2*PADDING)/2,
-        .height = var.count*PADDING + PADDING*4
-    }, &state.valScroll, &state.valView);
-
-    BeginScissorMode(state.valView.x, state.valView.y, state.valView.width, state.valView.height);
-    
-    for (int i = 0; i < var.count; i++)
+    if (i == -1)
     {
-        ListRow row = {
+        return (ListRow){
             {
-                {0.2f, TextFormat("%d", i)},
-                {0.8f, PropVarToString(var, i)},
+                {0.2f, "#"},
+                {0.8f, "VALUE"}
             }
         };
-        bool selected = false;
-
-        bool pressed = GuiListRow((Rectangle){
-            .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-            .y = PADDING*2 + GetScreenHeight()/2 - PADDING *2 + PADDING*i + state.valScroll.y + PADDING,
-            .width = state.valView.width,
-            .height = PADDING,
-        }, row, selected, true);
-
-        if (pressed && var.type == PROPVAR_KEYS)
-        {
-            GoToInstance(state, var.values[i].keys.file);
-        }
     }
 
-    GuiDummyRec((Rectangle){
-        PADDING*3 + (GetScreenWidth() - 2*PADDING)/2, PADDING*2 + GetScreenHeight()/2 - PADDING *2,
-        state.valView.width,
-        PADDING
-    }, "");
-    GuiListRow((Rectangle){
-        PADDING*3 + (GetScreenWidth() - 2*PADDING)/2, PADDING*2 + GetScreenHeight()/2 - PADDING *2,
-        state.valView.width,
-        PADDING
-    }, (ListRow){
-        {
-            {0.2f, "#"},
-            {0.8f, "VALUE"}
-        }
-    }, false, false);
+    PropVariable *pVar = static_cast<PropVariable *>(data);
 
-    EndScissorMode();
+    ListRow row = {
+        {
+            {0.2f, TextFormat("%d", i)},
+            {0.8f, PropVarToString(*pVar, i)},
+        }
+    };
+
+    return row;
 }
 
-void DrawPropMenu(EditorState &state, PropData data, unsigned int id)
+void DrawPropValueMenu(EditorState &state, unsigned int id, PropVariable var)
 {
-    GuiScrollPanel((Rectangle){
-        .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-        .y = PADDING,
-        .width = GetScreenWidth()/2 - 3*PADDING,
-        .height = GetScreenHeight()/2 - PADDING *2
-    }, TextFormat("Properties of %#X", id), (Rectangle){
-        .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-        .y = PADDING*2,
-        .width = (GetScreenWidth() - 2*PADDING)/2,
-        .height = data.variableCount*PADDING + PADDING*4
-    }, &state.dataScroll, &state.dataView);
+    int selected = -1;
 
-    BeginScissorMode(state.dataView.x, state.dataView.y, state.dataView.width, state.dataView.height);
-    
-    for (int i = 0; i < data.variableCount; i++)
+    GuiScrollingListPanel((Rectangle){
+        .x = GetScreenWidth()/2,
+        .y = PADDING*2 + GetScreenHeight()/2,
+        .width = GetScreenWidth()/2 - 2*PADDING,
+        .height = GetScreenHeight()/2 - 2*PADDING
+    }, TextFormat("Properties of %#X!%#X", id, var.identifier), &state.valScroll, &state.valView, 
+        var.count, GenPropValueListRow, &var, &selected);
+
+    if (selected != -1 && var.type == PROPVAR_KEYS)
     {
-        PropVariable var = data.variables[i];
-        ListRow row = {
-            {
-                {0.4f, TextFormat("%#X (%s)", var.type, PropTypeToString(var.type))},
-                {0.4f, TextFormat("%#X (%s)", var.identifier, FindPropNameForId(state.propNameList, var.identifier) ?: "")},
-                {0.2f, TextFormat("%d", var.count)}
-            }
-        };
-        bool selected = i == state.selectedPropVal;
-
-        bool pressed = GuiListRow((Rectangle){
-            .x = PADDING*3 + (GetScreenWidth() - 2*PADDING)/2,
-            .y = PADDING*2 + PADDING*i + state.dataScroll.y + PADDING,
-            .width = state.propView.width,
-            .height = PADDING,
-        }, row, selected, true);
-
-        if (pressed)
-        {
-            state.selectedPropVal = selected ? -1 : i;
-        }
+        GoToInstance(state, var.values[selected].keys.file);
     }
+}
 
-    GuiDummyRec((Rectangle){
-        PADDING*3 + (GetScreenWidth() - 2*PADDING)/2, PADDING*2,
-        state.propView.width,
-        PADDING
-    }, "");
-    GuiListRow((Rectangle){
-        PADDING*3 + (GetScreenWidth() - 2*PADDING)/2, PADDING*2,
-        state.propView.width,
-        PADDING
-    }, (ListRow){
+struct PropMenuData {
+    EditorState *state;
+    PropData data;
+};
+
+static ListRow GenPropMenuListRow(int i, void *data)
+{
+    if (i == -1)
+    {
+        return (ListRow){
         {
             {0.4f, "TYPE"},
             {0.4f, "IDENTIFIER"},
             {0.2f, "#"}
-        }
-    }, false, false);
+        }};
+    }
 
-    EndScissorMode();
+    PropMenuData *menuData = static_cast<PropMenuData*>(data);
+    PropVariable var = menuData->data.variables[i];
+    EditorState *state = menuData->state;
+
+    ListRow row = {
+        {
+            {0.4f, TextFormat("%#X (%s)", var.type, PropTypeToString(var.type))},
+            {0.4f, TextFormat("%#X (%s)", var.identifier, FindPropNameForId(state->propNameList, var.identifier) ?: "")},
+            {0.2f, TextFormat("%d", var.count)}
+        }
+    };
+
+    return row;
+}
+
+void DrawPropMenu(EditorState &state, PropData data, unsigned int id)
+{
+    PropMenuData menuData = {
+        .state = &state,
+        .data = data
+    };
+
+    GuiScrollingListPanel((Rectangle){
+        .x = GetScreenWidth()/2,
+        .y = PADDING,
+        .width = GetScreenWidth()/2 - 2*PADDING,
+        .height = GetScreenHeight()/2 - 2*PADDING
+    }, TextFormat("Properties of %#X", id), &state.dataScroll, &state.dataView, 
+        data.variableCount, GenPropMenuListRow, &menuData, &state.selectedPropVal);
 
     if (state.selectedPropVal != -1)
     {
