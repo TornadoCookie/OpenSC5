@@ -1,0 +1,56 @@
+
+General
+-------
+- Win32 support. Hopefully we can use the EAWebKit version that SimCity proper uses. However, there are several necessary functions missing. I think these must be statically linked to SimCity.exe, along with EAIO, EASTL, etc. Thank you Maxis for this wonderful code organization. This is also why we're using Win32 and not Win64.
+- GitHub releases. The aforementioned could be the major milestone to track 1.0
+- Meanwhile, prereleases could be made if enough of the other things in this list get done.
+
+Editor
+------
+- make other menus use GuiScrollingListPanel
+- simplify args to GuiScrollingListPanel
+- Add dropdown menu to sort by filetype (prop, rw4, etc.)
+- Add sort by to list panels
+- Restrict input of list panels to their frames
+- Creating files
+- Importing files
+- Exporting files
+- Deleting and editing files
+- 'Go To Instance' menu
+- Hotkeys
+- Add an actual search function
+- Add more reverse hashes + reverse hashes for groups
+- Script editor
+- Building viewer
+- SCRUI editor (separate program?)
+
+Activation
+----------
+- Figure out where the decryption key and IV are
+- Figure out where to use the key and IV / start of encrypted binary
+
+Engine
+------
+- Due for rewrite, rlWebKit is in dire need of cleaning up having been filled with too much SimCity cruft for what started as a dependency completely unassociated with SimCity.
+- Updater -> Launcher3D -> Game: How does this flow work?
+- Find where in the game it says to go to Updater.html. Will need advanced editor for that.
+- Updater: Actually update?
+
+File Formats
+------------
+- RW4: Full support, also rename to Rdx9, its proper name. Perhaps a rewrite is in order
+- BNK crashes often. Why?
+- ww2ogg: Can't seek generated OGGs. This is low priority.
+- MFS: Gather More info. This is SDelta/GDelta/SLDelta format.
+- Statefile: Gather more info. This is singleplayer save file format. It's probably the same files used by the server.
+- CRCBin: Work out how to use this format to checksum downloaded update files
+- Rules: Gather more info. Low priority.
+- Rast: Sync with RW4 format?
+- Heightmap: This is the key to creating custom regions as it contains that kind of information. However, there are multiple types of files under this heightmap umbrella. I believe it should be renamed to map or resmap.
+
+Updater
+-------
+- Make it an API so the engine can call it if we want that
+- Checksum the files using CRC
+- Extract the 7z files to a prefix for installation
+- Download EcoGame scripts?

@@ -4,11 +4,11 @@ Ugh. DRM. the bane of any modders existence.
 ## what's encrypted?
 the Main exe (SimCity.exe) is encrypted, and nothing else....
 
-## decrypting SimCity.exe (theoretical)
-dump the memory of a running SimCity.exe, copy the .text to the original exe and that should work. haven't tested yet.
+## decrypting SimCity.exe
+dump the memory of a running SimCity.exe, copy the .text to the original exe
 
 ## how does origin do this?
-core/activation.dll tells origin to do it, origin decrypts it using an AES method probably similar to how more modern games do it but with the .text section instead of the .ooa section.
+core/activation.dll tells origin to do it, origin decrypts it using AES-CBC-128 but with the .text section instead of the .ooa section.
 
 ## how to launch our own c++ code?
 aside from using the exe decryption method, one could use a fake eawebkit.dll.

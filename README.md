@@ -1,13 +1,21 @@
 
 To build for linux64: <br>
 `$ make -j$(nproc)` <br>
-To build for win64 (can only build on linux): <br>
-`$ PLATFORM=win64 make -j$(nproc)` <br>
+To build for win32 (w64devkit or similar linux-like environmnent required): <br>
+`$ PLATFORM=win32 make -j$(nproc)` <br>
+
+Look at docs/building.md for more info.
 
 ## Dependencies
 - libcurl (for updater)
 - EAWebKit 12 (bundled)
 - raylib (bundled)
+
+## Contributing
+If you are looking to help the project,
+- If you can code in C or C++, the TODO file is full of little things to work on.
+- If you know / discovered something about SimCity (or Spore, Darkspore, or The Sims 3) (Spark Engine) feel free to email me or add me on discord, both of which are linked on my GitHub account.
+- Testing and reviewing the software is encouraged, although the software isn't quite ready for testing yet and still requires a bit of tinkering to get working.
 
 <br>This program is based on the source code to SimCityPak and SporeModder-FX, as well as several articles, the EAWebKit source code, simtropolis forum posts, and personal research.<br>
 
