@@ -4,6 +4,11 @@
 #include <cpl_endian.h>
 #include <stdio.h>
 
+// RULES
+// extension: .erb
+// compiled version of .er2 files.
+// Most of the decompilation that works comes from a version of the Heroes and Villains game scripts, where the uncompiled .er2 files were left in
+
 typedef struct RulesFileHeader {
     uint32_t unknown1;
     uint32_t unknown2;

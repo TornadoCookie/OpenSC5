@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <cpl_endian.h>
 
+// This is the format that the region terrain is in. 
+
 typedef struct __attribute__ ((packed)) HeightmapHeader {
     char unknown[7];
     uint32_t height; // may be width

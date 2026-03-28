@@ -5,6 +5,16 @@
 #include <cpl_endian.h>
 #include <stdlib.h>
 
+// This file format is actually called MFS, or MultiFileStream.
+// Stored in \Documents\SimCity\Games and probably some other directories [confirmation needed]
+// SLDelta: Server Local Delta (Singleplayer server deltas)
+// GDelta: Game Delta
+// SDelta: Server Delta
+
+// It seems to consist of a series of data blocks, each of which correspond to a certain offset in a file in some directory (possibly the statefile).
+// It is likely expected that the data from each block be copied to the offset specified, thereby transmitting only the changes (deltas) between the server copy and the local copy.
+// The true meaning of Game Delta remains unknown.
+
 typedef struct SDelta2 {
 
 } SDelta2;
