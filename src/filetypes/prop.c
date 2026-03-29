@@ -245,7 +245,16 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                 } break;
                 case 0x12: // string8 type
                 {
+                    bool isBinary = false;
                     uint32_t length = htobe32(*(uint32_t *)data);
+                    if (length == 0 && specifier & 0x100)
+                    {
+                        isBinary = true;
+                        data++;
+                        // copy it unaligned
+                        memcpy(&length, data, 4);
+                        length = htobe32(length);
+                    }
                     data += sizeof(uint32_t);
 
                     if ((data - initData) + length > dataSize)
@@ -260,7 +269,14 @@ PropData LoadPropData(unsigned char *data, int dataSize)
                     str[length] = 0;
                     data += length;
 
-                    TRACELOG(LOG_DEBUG, "Value: %s\n", str);
+                    if (!isBinary)
+                    {
+                        TRACELOG(LOG_DEBUG, "Value: %s\n", str);
+                    }
+                    else
+                    {
+                        TRACELOG(LOG_DEBUG, "Value: [binary len: %#x]\n", length);
+                    }
 
                     propData.variables[i].values[j].string8 = str;
                 } break;

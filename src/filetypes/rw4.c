@@ -811,6 +811,14 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     // TODO not supported by ANYTHING bro
                     // D3DFMT_A32B32G32R32F
                     blockSize = 16;
+                    rgbBitCount = 32;
+                }
+                else if (raster.textureFormat == 50)
+                {
+                    // D3DFMT_L8
+                    // TODO not supported by raylib so low priority.
+                    //blockSize = 1;
+                    //pfFlags |= 0x20000; // DDPF_LUMINANCE
                 }
                 else
                 {
@@ -831,6 +839,10 @@ RW4Data LoadRW4Data(unsigned char *data, int dataSize)
                     if (raster.textureFormat == 0x74)
                     {
                         pitchOrLinearSize = raster.width * raster.height * raster.volumeDepth * blockSize;
+                    }
+                    else if (raster.textureFormat == 50)
+                    {
+                        pitchOrLinearSize = raster.width;
                     }
                     isCompressed = true;
                 }

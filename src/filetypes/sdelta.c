@@ -16,7 +16,7 @@
 // The true meaning of Game Delta remains unknown.
 
 typedef struct SDelta2 {
-
+    int32_t startOffset;
 } SDelta2;
 
 SDelta LoadSDeltaFile(const char *filename)

@@ -241,12 +241,12 @@ std::string char16_to_string(const char16_t* s16, size_t len)
 
 static const char8_t *EASTLFixedString8Wrapper_GetCharacters(EA::WebKit::EASTLFixedString8Wrapper str)
 {
-    return reinterpret_cast<const char8_t *>(str.GetImpl());
+    return str.GetCharacters();//reinterpret_cast<const char8_t *>(str.GetImpl());
 }
 
 static const char16_t *EASTLFixedString16Wrapper_GetCharacters(EA::WebKit::EASTLFixedString16Wrapper str)
 {
-    return reinterpret_cast<const char16_t *>(str.GetImpl());
+    return str.GetCharacters();//reinterpret_cast<const char16_t *>(str.GetImpl());
 }
 
 #include "json.hpp"
@@ -881,7 +881,14 @@ public:
 
             std::cout << "scrui.gClient.PostGameCommand " << req << std::endl;
 
-            resultOut->SetBooleanValue(true);
+            if (req == "requestOnlineState")
+            {
+                resultOut->SetBooleanValue(false);
+            }
+            else
+            {
+                resultOut->SetBooleanValue(true);
+            }
 
             return true;
         }
@@ -1041,17 +1048,8 @@ void updateWebkit(EA::WebKit::View *v)
 
    //v->EvaluateJavaScript("console.log(\"tick\");");
    //v->EvaluateJavaScript("if (scrui) {scrui.DEBUG = !0; scrui.ALLOW_EDITOR = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;} console.log(\"tick \" + scrui + scrui.DEBUG);"); // set no debug in scrui
-   
-    // enable scrui debug, profiling, update scrui, make it so that scrui listens for game events
-    v->EvaluateJavaScript("if (scrui) { scrui.ClientHooks.Update(17); } if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; scrui.gProfilingEnabled = !0; scrui.gUIManager.mRequestManager.mUseGameEventQueue = !0;  scrui.gUIManager.mGameEventToken = \"OPENSC5\"; }  ");
-   
-   // override window.open to tell us info
-   v->EvaluateJavaScript("if (!window.overrodeOpen) { var oldopen = window.open; window.open = function(x, t, f) { console.log(\"OPEN \" + x); return oldopen(\"game:///dbpf/\" + x, t, f);}; window.overrodeOpen = true;}");
-   
-   // updater: add play button handler hook
-    v->EvaluateJavaScript("if (simcity.gUpdater && !window.overrodepbh) {var oldpbh = simcity.gUpdater.PlayButtonHandler; simcity.gUpdater.PlayButtonHandler = function() {console.log('hello from pbh. state = ' + this.mCurrentState); oldpbh();}; window.overrodepbh = true;}");
-
-    v->EvaluateJavaScript("if (simcity.gEventManager && !window.overrodepbh2) {var oldpbh = simcity.gEventManager.TriggerEvent; simcity.gEventManager.TriggerEvent = function(a,b,c) {console.log('hello from pbh. ' + a + ' ' + b +  ' ' + c); oldpbh.call(simcity.gEventManager, a, b, c);}; window.overrodepbh2 = true;}");
+   //v->EvaluateJavaScript("if (scrui && !window.didDebugEnable) {window.didDebugEnable = true; scrui.DEBUG = !0; window.ClientHooks.ShowDebugConsole(!0); } "); 
+   v->EvaluateJavaScript("window.ClientHooks.Update(10);");
    v->Tick();
     
 }
