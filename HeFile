@@ -95,6 +95,7 @@ Source hash.c
 Program opensc5_editor
 CxxSource Editor/Main.cpp
 CxxSource Editor/ListView.cpp
+CxxSource Editor/PackageLoader.cpp
 UseSourceGroup dbpf_all
 UseSourceGroup rlWebKit
 Source raygui.c

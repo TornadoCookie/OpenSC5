@@ -576,6 +576,11 @@ void UnloadPackageFile(Package pkg)
 
 void ExportPackageEntry(PackageEntry entry, const char *filename)
 {
+    if (filename == NULL)
+    {
+        filename = TextFormat("corrupted/%#X-%#X-%#X.%s", entry.type, entry.group, entry.instance, GetExtensionFromType(entry.type));
+    }
+
     switch (entry.type)
     {
         case PKGENTRY_ER2:

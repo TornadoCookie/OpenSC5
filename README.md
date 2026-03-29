@@ -19,7 +19,7 @@ If you are looking to help the project,
 
 <br>This program is based on the source code to SimCityPak and SporeModder-FX, as well as several articles, the EAWebKit source code, simtropolis forum posts, and personal research.<br>
 
-What do the programs do:
+## What do the programs do
 - updater: Downloads the SimCity 7z files into update/. Use updater --help for more usage info.
 - test_package `file`: Prints information in parsing the .package file `file`.
 - test_rast, test_rw4, test_heightmap, test_sdelta, test_prop `file`: Prints information in parsing the file format.

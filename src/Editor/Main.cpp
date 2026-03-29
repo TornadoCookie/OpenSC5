@@ -4,6 +4,8 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
+
 extern "C" {
 #include "../raygui.h"
 #include "style.h"
@@ -16,54 +18,38 @@ extern "C" {
 #include "Editor.hpp"
 
 struct EditorState {
-    bool hasLoadedPkg;
-    bool isLoadingPackage;
     Package loadedPkg;
     PropertyNameList propNameList;
 
-    std::vector<PackageEntry*> propEntries;
+    int selectedType;
+    std::map<unsigned int, std::vector<PackageEntry *>> entries;
+
+    PackageLoader packageLoader;
+
     std::vector<const char *> propEntryNames;
 
     const char *packageToLoad;
-    LoadPackageFileAsyncArgs packageLoadState;
-
+    
     ScrollingListPanelData mainListData;
     ScrollingListPanelData propListData;
     ScrollingListPanelData propValData;
 
     std::string statusText;
+    bool typeDropdownEditMode;
 };
 
 void SetLoadedPackage(EditorState &state, const char *packageFilename)
 {
-    FILE *f = fopen(packageFilename, "rb");
-
-    if (!f)
-    {
-        perror(packageFilename);
-        return;
-    }
-
     state.mainListData.selected = -1;
-    if (state.hasLoadedPkg)
+    state.statusText = std::string(TextFormat("Loaded: %s", packageFilename));
+    
+    if (state.packageLoader.HasLoadedPackage())
     {
-        UnloadPackageFile(state.loadedPkg);
-        state.propEntries.clear();
+        // a package was loaded beforehand
         state.propEntryNames.clear();
     }
 
-    state.hasLoadedPkg = false;
-
-    state.packageLoadState = {
-        .f = f,
-        .pkg = &state.loadedPkg,
-        .done = false,
-    };
-
-    LoadPackageFileAsync(&state.packageLoadState);
-    state.isLoadingPackage = true;
-
-    state.statusText = std::string(TextFormat("Loaded: %s", packageFilename));
+    state.packageLoader.LoadPackage(packageFilename);
 }
 
 const char *FindPropNameForId(PropertyNameList nameList, unsigned int id)
@@ -75,23 +61,6 @@ const char *FindPropNameForId(PropertyNameList nameList, unsigned int id)
     }
 
     return NULL;
-}
-
-void PopulatePropEntries(EditorState &state)
-{
-    for (int i = 0; i < state.loadedPkg.entryCount; i++)
-    {
-        PackageEntry *entry = &state.loadedPkg.entries[i];
-        if (entry->type != PKGENTRY_PROP)
-            continue;
-        
-        const char *name = FindPropNameForId(state.propNameList, entry->instance);        
-
-        entry->data.propData = LoadPropData(entry->dataRaw, entry->dataRawSize);
-
-        state.propEntries.push_back(entry);
-        state.propEntryNames.push_back(name);
-    }
 }
 
 void Update(EditorState &state)
@@ -108,28 +77,19 @@ void Update(EditorState &state)
             SetLoadedPackage(state, droppedFiles.paths[0]);
     }
 
-    if (state.isLoadingPackage)
-    {
-        state.isLoadingPackage = !state.packageLoadState.done;
-        if (!state.isLoadingPackage)
-        {
-            // done loading package
-            state.hasLoadedPkg = true;
-            PopulatePropEntries(state);
-            fclose(state.packageLoadState.f);
-        }
-    }
+    state.packageLoader.Tick();
 
-    if (state.hasLoadedPkg)
+    if (state.packageLoader.HasLoadedPackage())
     {
+        std::vector<PackageEntry*> entries = state.packageLoader.GetEntries(state.selectedType);
         if (IsKeyPressed(KEY_DOWN))
         {
-            state.mainListData.selected = Wrap(state.mainListData.selected + 1, 0, state.propEntries.size());
+            state.mainListData.selected = Wrap(state.mainListData.selected + 1, 0, entries.size());
             state.propListData.selected = -1;
         }
         if (IsKeyPressed(KEY_UP))
         {
-            state.mainListData.selected = Wrap(state.mainListData.selected - 1, 0, state.propEntries.size());
+            state.mainListData.selected = Wrap(state.mainListData.selected - 1, 0, entries.size());
             state.propListData.selected = -1;
         }
     }
@@ -141,14 +101,8 @@ ListRow GenListRowForPackageEntry(EditorState state, int i, PackageEntry entry)
 
     ListRow::ListRowItem nameItem;
     nameItem.width = 0.7f;
-    if (state.propEntryNames.at(i))
-    {
-        nameItem.text = std::string(TextFormat("%#X (%s)", entry.instance, state.propEntryNames[i]));
-    }
-    else
-    {
-        nameItem.text = std::string(TextFormat("%#X", entry.instance));
-    }
+    nameItem.text = std::string(TextFormat("%#X (%s)", entry.instance, FindPropNameForId(state.propNameList, entry.instance)));
+
 
     ListRow::ListRowItem groupItem;
     groupItem.text = std::string(TextFormat("%#X", entry.group));
@@ -204,16 +158,45 @@ const char *PropVarToString(PropVariable var, int i)
     }
 }
 
+static const char *PackageEntryTypeToString(unsigned int type)
+{
+    switch (type)
+    {
+        case PKGENTRY_PROP: return "PROP";
+        case PKGENTRY_SCPT: return "SCPT";
+        case PKGENTRY_RULE: return "RULE";
+        case PKGENTRY_JSON: return "JSON";
+        case PKGENTRY_RAST: return "RAST";
+        case PKGENTRY_TEXT: return "TEXT";
+        case PKGENTRY_PNG: return "PNG";
+        case PKGENTRY_JSN8: return "JSON8";
+        case PKGENTRY_BNK: return "BNK";
+        case PKGENTRY_CSS: return "CSS";
+        case PKGENTRY_RW4: return "RW4";
+        case PKGENTRY_GIF: return "GIF";
+        case PKGENTRY_MOV: return "MOV";
+        case PKGENTRY_EXIF: return "EXIF";
+        case PKGENTRY_SWB: return "SWB";
+        case PKGENTRY_HTML: return "HTML";
+        case PKGENTRY_ER2: return "ER2";
+        case PKGENTRY_TTF: return "TTF";
+        case PKGENTRY_SHDR: return "SHDR";
+        case PKGENTRY_UNK1: return "UNK1";
+        case PKGENTRY_MAP1: return "MAP1";
+        case PKGENTRY_MAP2: return "MAP2";
+        default: { printf("%#X\n", type); return "UNKN"; }
+    }
+}
+
 void GoToInstance(EditorState &state, unsigned int id)
 {
-    for (int i = 0; i < state.propEntries.size(); i++)
-    {
-        PackageEntry *entry = state.propEntries[i];
-        if (entry->instance != id) continue;
+    PackageEntry *entry = state.packageLoader.FindInstance(id);
+    state.selectedType = entry->type;
+    std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(entry->type);
 
-        state.mainListData.selected = i;
-        break;
-    }
+    auto it = std::find(entries.begin(), entries.end(), entry);
+    
+    state.mainListData.selected = std::distance(entries.begin(), it);
 }
 
 static ListRow GenPropValueListRow(int i, void *data)
@@ -326,16 +309,52 @@ static ListRow GenPropListRow(int i, void *pState)
         }};
     }
 
-    EditorState state = *static_cast<EditorState*>(pState);
-    PackageEntry *entry = state.propEntries[i];
-    ListRow row = GenListRowForPackageEntry(state, i, *entry);
+    EditorState *state = static_cast<EditorState*>(pState);
+    PackageEntry *entry = state->packageLoader.GetEntries(state->selectedType)[i];
+    ListRow row = GenListRowForPackageEntry(*state, i, *entry);
 
     return row;
+}
+
+static std::string GenTypeListStr(std::vector<unsigned int> types)
+{
+    std::string out;
+
+    for (unsigned int type : types)
+    {
+        const char *typeStr = PackageEntryTypeToString(type);
+        out += typeStr;
+        out += ";";
+    }
+
+    return out;
+}
+
+void DrawPackageEntry(EditorState &state, PackageEntry *entry)
+{
+    bool corrupted = true;
+    switch (entry->type)
+    {
+        case PKGENTRY_PROP:
+        {
+            PropData data = entry->data.propData;
+            corrupted = data.corrupted;
+            if (!corrupted) DrawPropMenu(state, data, entry->instance);
+        } break;
+    }
+
+    if (corrupted)
+    {
+        DrawText("CORRUPTED. see corrupted/ folder", 5*GetScreenWidth()/8, GetScreenHeight()/2, 20, GRAY);
+    }
 }
 
 void DrawMainScreen(EditorState &state)
 {
     int prevSelected = state.mainListData.selected;
+    std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(state.selectedType);
+
+    if (state.typeDropdownEditMode) GuiLock();
 
     GuiScrollingListPanel((Rectangle){
         .x = PADDING,
@@ -343,7 +362,7 @@ void DrawMainScreen(EditorState &state)
         .width = GetScreenWidth() / 2 - PADDING * 2,
         .height = GetScreenHeight() - PADDING * 2
     }, "Property List",
-        state.propEntries.size(), GenPropListRow, &state, &state.mainListData);
+        entries.size(), GenPropListRow, &state, &state.mainListData);
 
     if (state.mainListData.selected != -1)
     {
@@ -352,15 +371,29 @@ void DrawMainScreen(EditorState &state)
             state.propListData.selected = -1;
         }
 
-        PropData data = state.propEntries[state.mainListData.selected]->data.propData;
-        if (data.corrupted)
-        {
-            DrawText("CORRUPTED. see corrupted/ folder", 3*GetScreenWidth()/4, GetScreenHeight()/2, 20, GRAY);
-        }
-        else
-        {
-            DrawPropMenu(state, data, state.propEntries[state.mainListData.selected]->instance);
-        }
+        DrawPackageEntry(state, entries[state.mainListData.selected]);
+    }
+
+    if (state.typeDropdownEditMode) GuiUnlock();
+
+    std::vector<unsigned int> types = state.packageLoader.GetTypes();
+    std::string typeStr = GenTypeListStr(types);
+    int selectedTypeI = std::distance(types.begin(), std::find(types.begin(), types.end(), state.selectedType));
+    if (GuiDropdownBox((Rectangle){
+        .x = PADDING,
+        .y = 0,
+        .width = 100,
+        .height = PADDING
+    }, typeStr.c_str(), &selectedTypeI, state.typeDropdownEditMode))
+    {
+        state.typeDropdownEditMode = !state.typeDropdownEditMode;
+    }
+    unsigned int prevType = state.selectedType;
+    state.selectedType = types[selectedTypeI];
+
+    if (state.selectedType != prevType)
+    {
+        state.mainListData.selected = -1;
     }
 
     GuiStatusBar((Rectangle){0, GetScreenHeight()-PADDING, GetScreenWidth(), PADDING}, state.statusText.c_str());
@@ -371,9 +404,9 @@ void Draw(EditorState &state)
     BeginDrawing();
     ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
-    if (!state.hasLoadedPkg)
+    if (!state.packageLoader.HasLoadedPackage())
     {
-        if (state.isLoadingPackage)
+        if (state.packageLoader.IsLoadingPackage())
         {
             DrawText(TextFormat("Loading... %d left", GetThreadpoolTasksLeft()),
                 GetScreenWidth() / 2 - MeasureText("Loading...", 20)/2, GetScreenHeight() / 2 - 10, 20, GRAY);
@@ -406,10 +439,10 @@ int main(int argc, char **argv)
 
     SetTryParseFilesInPackage(false);
     state.propNameList = LoadPropertyNameList("Properties.txt");
-    state.hasLoadedPkg = false;
     state.packageToLoad = NULL;
-    state.isLoadingPackage = false;
     state.statusText = "";
+    state.selectedType = PKGENTRY_PROP;
+    state.typeDropdownEditMode = false;
 
     if (argc == 2)
     {

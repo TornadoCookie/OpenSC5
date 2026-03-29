@@ -7,13 +7,13 @@ General
 
 Editor
 ------
-- Add dropdown menu to sort by filetype (prop, rw4, etc.)
 - Add sort by to list panels
 - Restrict input of list panels to their frames
 - Creating files
 - Importing files
 - Exporting files
 - Deleting and editing files
+- Proper view of entries other than PROPs
 - 'Go To Instance' menu
 - References
 - Class names

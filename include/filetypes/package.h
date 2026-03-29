@@ -12,9 +12,12 @@
 #define PKGENTRY_PROP 0x00B1B104 // PROPerties file
 #define PKGENTRY_GMDL 0x00E6BCE5 // Unknown. Found in a property file enumerating type codes.
 #define PKGENTRY_PLT  0x011989B7 // Unknown. (PaLeTte?) Found in a property file enumerating type codes.
+#define PKGENTRY_UNK1 0x02393756 // unknown but found in sc
 #define PKGENTRY_SCPT 0x024A0E52 // SCriPT file
 #define PKGENTRY_TEXT 0x02FAC0B6 // TEXT file
 #define PKGENTRY_HM   0x0376C3DA // Unknown. Found in a property file enumerating type codes.
+#define PKGENTRY_MAP1 0x03E421EC // heightmap1
+#define PKGENTRY_MAP2 0x03E421ED // heightmap2
 #define PKGENTRY_SHDR 0x0469A3F7 // Compiled DirectX shader.
 #define PKGENTRY_RULE 0x08068AEB // RULEs file
 #define PKGENTRY_ER2  0x08068AEC // .er2 (uncompiled rules file)
@@ -40,6 +43,8 @@
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii), most commonly a MUiLE design.
 #define PKGENTRY_HTML 0xDD6233D6 // HyperText Markup Language
 #define PKGENTRY_SWB  0xEA5118B0 // SWarm Binary file, particles. Unable to be viewed in-editor.
+
+
 
 typedef struct PackageEntry {
     unsigned int type;

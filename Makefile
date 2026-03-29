@@ -1,4 +1,4 @@
-# Generated using Helium v2.2.0 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.2.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64-debug
 DISTDIR?=build
@@ -107,7 +107,7 @@ CFLAGS+=-Ilib/$(RAYLIB_NAME)/include
 
 LDFLAGS+=-lm
 LDFLAGS+=-Llib/$(RAYLIB_NAME)/lib
-LDFLAGS+=$(RAYLIB_DLL)
+LDFLAGS:=$(RAYLIB_DLL) $(LDFLAGS)
 LDFLAGS+=-Wl,-rpath,lib/$(RAYLIB_NAME)/lib
 
 LDFLAGS+=-lstdc++
@@ -210,6 +210,7 @@ $(DISTDIR)/test_hash$(EXEC_EXTENSION): $(test_hash_SOURCES)
 
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/Main.o
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/ListView.o
+opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/PackageLoader.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/raygui.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
