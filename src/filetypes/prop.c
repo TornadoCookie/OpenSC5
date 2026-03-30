@@ -130,7 +130,7 @@ PropData LoadPropData(unsigned char *data, int dataSize)
             continue;
        }
 
-       if (type == 0x38) arraySize -= 6;
+       //if (type == 0x38) arraySize -= 6;
 
         propData.variables[i].count = arrayNumber;
         propData.variables[i].values = malloc(sizeof(*propData.variables[i].values) * arrayNumber);
@@ -374,28 +374,33 @@ PropData LoadPropData(unsigned char *data, int dataSize)
 
                     propData.variables[i].values[j].bbox = bbox;
                 } break;
-                case 0x38: // transform type
+                case 0x37: // transform type
                 {
-                    uint16_t unknown1 = *(uint16_t*)data;
-                    data += sizeof(uint16_t);
+                    uint32_t flags = *(uint32_t*)data;
+                    data += sizeof(uint32_t);
 
-                    TRACELOG(LOG_DEBUG, "Unknown 1: %#x\n", unknown1);
+                    TRACELOG(LOG_DEBUG, "Flags: %#x\n", flags);
 
-                    if (unknown1 == 0xf00 && j == 0) arraySize += 4;
-
-                    float unknown2[12];
-
-                    for (int i = 0; i < 12; i++)
+                    if (flags & 1)
                     {
-                        unknown2[i] = htobefloat(*(float*)data);
-                        TRACELOG(LOG_DEBUG, "Unknown2[%d] = %f\n", i, unknown2[i]);
+                        float scale = htobefloat(*(float *)data);
                         data += sizeof(float);
+                        TRACELOG(LOG_DEBUG, "Scale: %0.2f\n", scale);
                     }
 
-                    if (unknown1 & 0x0100)
+                    if (flags & 2)
                     {
-                        data += sizeof(uint32_t);
+                        data += sizeof(float) * 9; // 3x3 matrix rotation
                     }
+
+                    if (flags & 4)
+                    {
+                        data += sizeof(float) * 3; // vector3 translation
+                    }
+
+                } break;
+                case 0x38:
+                {
 
                 } break;
                 case 0x34: // colorRGBA type

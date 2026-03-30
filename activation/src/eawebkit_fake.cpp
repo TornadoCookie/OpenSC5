@@ -1,5 +1,5 @@
 
-#include "../lib/libEAWebKitd-win32/include/EAWebKit/EAWebKit"
+#include <EAWebKit/EAWebKit>
 #include <iostream>
 
 #define WIN32_LEAN_AND_MEAN
@@ -7,18 +7,20 @@
 
 typedef EA::WebKit::EAWebKitLib* (*PF_CreateEAWebkitInstance)(void);
 
-extern "C" __attribute__ ((visibility ("default"))) EA::WebKit::EAWebKitLib* CreateEAWebkitInstance(void)
+extern "C" EA::WebKit::EAWebKitLib* CreateEAWebkitInstance(void)
 {
     std::cout << "OpenSC5 CEAIHook v1.0" << std::endl;
+
+    MessageBoxA(NULL, "Hello from OpenSC5.", "OpenSC5 EAWebKit Hook", MB_OK);
     
-    MODULE wdll = LoadLibraryA("EAWebkit_real.dll");
+    HMODULE wdll = LoadLibraryA("EAWebkit_real.dll");
     if (!wdll)
     {
         std::cout << "ERROR: EAWebkit_real.dll not found." << std::endl;
         return nullptr;
     }
 
-    PF_CreateEAWebkitInstance ceai = GetProcAddress(wdll, "CreateEAWebkitInstance");
+    PF_CreateEAWebkitInstance ceai = (PF_CreateEAWebkitInstance)GetProcAddress(wdll, "CreateEAWebkitInstance");
     if (!ceai)
     {
         std::cout << "ERROR: CreateEAWebkitInstance not found in EAWebkit_real.dll" << std::endl;

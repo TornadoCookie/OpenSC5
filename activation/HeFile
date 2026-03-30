@@ -2,10 +2,12 @@ DefaultDistDir build
 DefaultPlatform linux64
 UseRaylib False
 
-Program decryptdlf
-Source decryptdlf.c
-Source aes.c
-Source base64.c
+ExtraCFlag -I../lib/libEAWebKitd-win32/include
+
+#Program decryptdlf
+#Source decryptdlf.c
+#Source aes.c
+#Source base64.c
 
 Library EAWebKit
 CxxSource eawebkit_fake.cpp

@@ -22,11 +22,12 @@ EXEC_EXTENSION=.exe
 LIB_EXTENSION=.dll
 LIB_EXTENSION_STATIC=(null)
 CC=i686-w64-mingw32-gcc
+CXX=i686-w64-mingw32-g++
 CFLAGS+=-g
 CFLAGS+=-D DEBUG
 CFLAGS+=-D EXEC_EXTENSION=\".exe\"
 CFLAGS+=-D LIB_EXTENSION=\".dll\"
-LDFLAGS+=Activation.def
+LDFLAGS+=EAWebKit.def
 endif
 
 ifeq ($(PLATFORM), linux64)
@@ -40,8 +41,8 @@ CFLAGS+=-D EXEC_EXTENSION=\"\"
 CFLAGS+=-D LIB_EXTENSION=\".so\"
 endif
 
-PROGRAMS=decryptdlf
-LIBRARIES=
+PROGRAMS=
+LIBRARIES=EAWebKit
 
 all: $(DISTDIR) $(DISTDIR)/src $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC))
 $(DISTDIR)/src:
@@ -53,17 +54,24 @@ $(DISTDIR):
 CFLAGS+=-Isrc
 CFLAGS+=-Iinclude
 CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
+CFLAGS+=-I../lib/libEAWebKitd-win32/include
 
 
-decryptdlf_SOURCES+=$(DISTDIR)/src/decryptdlf.o
-decryptdlf_SOURCES+=$(DISTDIR)/src/aes.o
-decryptdlf_SOURCES+=$(DISTDIR)/src/base64.o
+LDFLAGS+=-lstdc++
+EAWebKit_CXX_SOURCES+=$(DISTDIR)/src/eawebkit_fake.o
 
-$(DISTDIR)/decryptdlf$(EXEC_EXTENSION): $(decryptdlf_SOURCES)
-	$(CC) -o $@ $^ $(LDFLAGS)
+$(DISTDIR)/EAWebKit$(LIB_EXTENSION): $(EAWebKit_SOURCES) $(EAWebKit_CXX_SOURCES)
+	$(CC) -o $@ $^ -fPIC -shared $(LDFLAGS)
+
+
+$(DISTDIR)/EAWebKit$(LIB_EXTENSION_STATIC): $(EAWebKit_SOURCES) $(EAWebKit_CXX_SOURCES)
+	$(AR) rcs $@ $^
 
 $(DISTDIR)/%.o: %.c
 	$(CC) -c $^ $(CFLAGS) -o $@
+
+$(DISTDIR)/%.o: %.cpp
+	$(CXX) -c $^ $(CFLAGS) $(CXXFLAGS) -o $@
 
 clean:
 	rm -rf $(DISTDIR)/*

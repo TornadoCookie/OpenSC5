@@ -10,8 +10,9 @@ Platform win32
 IsDebug
 ExecExtension .exe
 LibExtension .dll
-ExtraLDFlag Activation.def
+ExtraLDFlag EAWebKit.def
 Compiler i686-w64-mingw32-gcc
+CxxCompiler i686-w64-mingw32-g++
 
 Platform linux64
 IsDebug
