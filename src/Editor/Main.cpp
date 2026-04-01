@@ -36,6 +36,8 @@ struct EditorState {
 
     std::string statusText;
     bool typeDropdownEditMode;
+    bool packageOptionsDropdownEditMode;
+    bool packageEntryOptionsDropdownEditMode;
 };
 
 void SetLoadedPackage(EditorState &state, const char *packageFilename)
@@ -150,8 +152,8 @@ const char *PropVarToString(PropVariable var, int i)
         case PROPVAR_TEXTS: return TextFormat("File spec: %#X, Identifier: %#X", var.values[i].texts.fileSpec, var.values[i].texts.identifier);
         case PROPVAR_VECT2: return TextFormat("{%f, %f}", var.values[i].vector2.x, var.values[i].vector2.y);
         case PROPVAR_VECT3: return TextFormat("{%f, %f, %f}", var.values[i].vector3.x, var.values[i].vector3.y, var.values[i].vector3.z);
-        case PROPVAR_COLRGB: return TextFormat("%d, %d, %d", var.values[i].colorRGB.r*255, var.values[i].colorRGB.g*255, var.values[i].colorRGB.b*255);
-        case PROPVAR_CRGBA: return TextFormat("%d, %d, %d, %d", var.values[i].colorRGBA.r*255, var.values[i].colorRGBA.g*255, var.values[i].colorRGBA.b*255, var.values[i].colorRGBA.a*255);
+        case PROPVAR_COLRGB: return TextFormat("%f, %f, %f, %f", var.values[i].colorRGB.r*255, var.values[i].colorRGB.g*255, var.values[i].colorRGB.b*255);
+        case PROPVAR_CRGBA: return TextFormat("%f, %f, %f, %f", var.values[i].colorRGBA.r*255, var.values[i].colorRGBA.g*255, var.values[i].colorRGBA.b*255, var.values[i].colorRGBA.a*255);
         case PROPVAR_BBOX: return TextFormat("min {%f, %f, %f}, max {%f, %f %f}", var.values[i].bbox.min.x, var.values[i].bbox.min.y, var.values[i].bbox.min.z, 
                                              var.values[i].bbox.max.x, var.values[i].bbox.max.y, var.values[i].bbox.max.z);
         default: return "Unable to read type";
@@ -191,6 +193,13 @@ static const char *PackageEntryTypeToString(unsigned int type)
 void GoToInstance(EditorState &state, unsigned int id)
 {
     PackageEntry *entry = state.packageLoader.FindInstance(id);
+
+    if (!entry)
+    {
+        state.statusText = "Entry not found.";
+        return;
+    }
+
     state.selectedType = entry->type;
     std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(entry->type);
 
@@ -354,7 +363,7 @@ void DrawMainScreen(EditorState &state)
     int prevSelected = state.mainListData.selected;
     std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(state.selectedType);
 
-    if (state.typeDropdownEditMode) GuiLock();
+    if (state.typeDropdownEditMode || state.packageOptionsDropdownEditMode || state.packageEntryOptionsDropdownEditMode) GuiLock();
 
     GuiScrollingListPanel((Rectangle){
         .x = PADDING,
@@ -374,7 +383,27 @@ void DrawMainScreen(EditorState &state)
         DrawPackageEntry(state, entries[state.mainListData.selected]);
     }
 
-    if (state.typeDropdownEditMode) GuiUnlock();
+    if (state.typeDropdownEditMode || state.packageOptionsDropdownEditMode || state.packageEntryOptionsDropdownEditMode) GuiUnlock();
+
+    GuiDropdownActionList((Rectangle){
+        .x = PADDING + 100,
+        .y = 0,
+        .width = 100,
+        .height = PADDING
+    }, "Package", {
+    }, &state.packageOptionsDropdownEditMode, &state);
+
+    if (state.mainListData.selected != -1)
+    {
+        GuiDropdownActionList((Rectangle){
+            .x = GetScreenWidth()/2,
+            .y = 0,
+            .width = 100,
+            .height = PADDING
+        }, "Package Entry", {
+            {"Export", "Export the package entry to a file.", nullptr},
+        }, &state.packageEntryOptionsDropdownEditMode, &state);
+    }
 
     std::vector<unsigned int> types = state.packageLoader.GetTypes();
     std::string typeStr = GenTypeListStr(types);
@@ -443,6 +472,8 @@ int main(int argc, char **argv)
     state.statusText = "";
     state.selectedType = PKGENTRY_PROP;
     state.typeDropdownEditMode = false;
+    state.packageOptionsDropdownEditMode = false;
+    state.packageEntryOptionsDropdownEditMode = false;
 
     if (argc == 2)
     {

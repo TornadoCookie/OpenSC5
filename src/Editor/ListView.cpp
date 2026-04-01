@@ -73,7 +73,7 @@ void GuiScrollingListPanel(Rectangle bounds, const char *title, int count,
             .height = PADDING
         }, row, isSelected, true);
 
-        if (pressed)
+        if (pressed && CheckCollisionPointRec(GetMousePosition(), bounds))
         {
             data->selected = isSelected ? -1 : i;
         }

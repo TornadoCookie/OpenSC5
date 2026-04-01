@@ -211,6 +211,7 @@ $(DISTDIR)/test_hash$(EXEC_EXTENSION): $(test_hash_SOURCES)
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/Main.o
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/ListView.o
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/PackageLoader.o
+opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/DropdownActionList.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/raygui.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)

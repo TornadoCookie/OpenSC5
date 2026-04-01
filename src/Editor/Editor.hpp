@@ -67,4 +67,18 @@ private:
     void PopulateEntries();
 };
 
+// DropdownActionList
+
+struct DropdownAction {
+
+    typedef void (*DropdownActionCallback) (void *);
+
+    std::string title;
+    std::string tooltip;
+    DropdownActionCallback callback;
+};
+
+void GuiDropdownActionList(Rectangle bounds, std::string title, std::vector<DropdownAction> actions,
+    bool *editMode, void *callbackArg);
+
 #endif
