@@ -6,6 +6,8 @@
 #include <cstring>
 #include <algorithm>
 
+#define RAYGUI_MALLOC malloc
+
 extern "C" {
 #include "../raygui.h"
 #include "style.h"
@@ -40,6 +42,9 @@ struct EditorState {
     bool packageEntryOptionsDropdownEditMode;
 
     FileDialog fileDialog;
+
+    Vector2 entryScroll;
+    Rectangle entryView;
 };
 
 void SetLoadedPackage(EditorState &state, const char *packageFilename)
@@ -366,6 +371,39 @@ static std::string GenTypeListStr(std::vector<unsigned int> types)
     return out;
 }
 
+int GetTextHeight(const char *text, int textSize)
+{
+    return MeasureTextEx(GuiGetFont(), text, textSize, 1.0f).y;
+}
+
+void DrawTextMenu(EditorState &state, const char *text)
+{
+    GuiScrollPanel((Rectangle){
+        .x = GetScreenWidth()/2,
+        .y = PADDING,
+        .width = GetScreenWidth()/2 - 2*PADDING,
+        .height = GetScreenHeight() - 2*PADDING
+    }, "Source", (Rectangle)
+    {
+        .x = GetScreenWidth()/2,
+        .y = PADDING*2,
+        .width = GetScreenWidth()/2 - 2*PADDING,
+        .height = GetTextHeight(text, 10)
+    }, &state.entryScroll, &state.entryView);
+
+    BeginScissorMode(state.entryView.x, state.entryView.y, state.entryView.width, state.entryView.height);
+
+    GuiTextBox((Rectangle){
+        .x = GetScreenWidth()/2,
+        .y = PADDING + state.entryScroll.y,
+        .width = GetScreenWidth()/2 - 2*PADDING,
+        .height = GetTextHeight(text, 10)
+    }, (char*)text, 10, false);
+
+    EndScissorMode();
+
+}
+
 void DrawPackageEntry(EditorState &state, PackageEntry *entry)
 {
     bool corrupted = true;
@@ -376,6 +414,16 @@ void DrawPackageEntry(EditorState &state, PackageEntry *entry)
             PropData data = entry->data.propData;
             corrupted = data.corrupted;
             if (!corrupted) DrawPropMenu(state, data, entry->instance);
+        } break;
+        case PKGENTRY_ER2:
+        case PKGENTRY_HTML:
+        case PKGENTRY_CSS:
+        case PKGENTRY_JSN8:
+        case PKGENTRY_SCPT:
+        case PKGENTRY_TEXT:
+        case PKGENTRY_JSON:
+        {
+            DrawTextMenu(state, entry->data.scriptSource);
         } break;
     }
 

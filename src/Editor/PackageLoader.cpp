@@ -105,8 +105,20 @@ static void LoadEntryData(PackageEntry *entry)
         case PKGENTRY_TEXT: // "textual" file.
         case PKGENTRY_JSON: // JSON file.
         {
-            entry->data.scriptSource = (char *)entry->dataRaw;
-            entry->data.scriptSource[entry->dataRawSize - 1] = 0;
+            char *str = (char*)malloc(entry->dataRawSize);
+            int actualSize = 0;
+
+            // Filter out these disgusting UTF-8 characters.
+            for (int i = 0; i < entry->dataRawSize; i++)
+            {
+                if (!isprint(entry->dataRaw[i]) && entry->dataRaw[i] != '\n' && entry->dataRaw[i] != '\t') continue;
+                str[actualSize] = entry->dataRaw[i];
+                actualSize++;
+            }
+
+            str = (char*)realloc(str, actualSize + 1);
+            str[actualSize] = 0;
+            entry->data.scriptSource = str;
         } break;
     }
 }

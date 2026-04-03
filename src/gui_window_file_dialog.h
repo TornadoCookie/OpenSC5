@@ -117,7 +117,7 @@ void GuiWindowFileDialog(GuiWindowFileDialogState *state);
 ************************************************************************************/
 #if defined(GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION)
 
-#include "raygui.h"
+#include "../../src/raygui.h"
 
 #include <string.h>     // Required for: strcpy()
 
@@ -316,7 +316,7 @@ void GuiWindowFileDialog(GuiWindowFileDialogState *state)
         state->filesListActive = GuiListViewFiles((Rectangle){ state->position.x + 8, state->position.y + 48 + 20, state->windowBounds.width - 16, state->windowBounds.height - 60 - 16 - 68 }, fileInfo, state->dirFiles.count, &state->itemFocused, &state->filesListScrollIndex, state->filesListActive);
 # else
         GuiListViewEx((Rectangle){ state->windowBounds.x + 8, state->windowBounds.y + 48 + 20, state->windowBounds.width - 16, state->windowBounds.height - 60 - 16 - 68 }, 
-                      (const char**)dirFilesIcon, state->dirFiles.count, &state->filesListScrollIndex, &state->filesListActive, &state->itemFocused);
+                      (char**)dirFilesIcon, state->dirFiles.count, &state->filesListScrollIndex, &state->filesListActive, &state->itemFocused);
 # endif
         GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, prevTextAlignment);
         GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, prevElementsHeight);
@@ -358,7 +358,7 @@ void GuiWindowFileDialog(GuiWindowFileDialogState *state)
                 if (FileExists(TextFormat("%s/%s", state->dirPathText, state->fileNameText)))
                 {
                     // Select filename from list view
-                    for (int i = 0; i < state->dirFiles.count; i++)
+                    for (unsigned int i = 0; i < state->dirFiles.count; i++)
                     {
                         if (TextIsEqual(state->fileNameText, state->dirFiles.paths[i]))
                         {
@@ -402,7 +402,6 @@ void GuiWindowFileDialog(GuiWindowFileDialogState *state)
 
             // Reset state variables
             state->dirFiles.count = 0;
-            state->dirFiles.capacity = 0;
             state->dirFiles.paths = NULL;
         }
     }
@@ -435,7 +434,7 @@ static void ReloadDirectoryFiles(GuiWindowFileDialogState *state)
     for (int i = 0; i < MAX_DIRECTORY_FILES; i++) memset(dirFilesIcon[i], 0, MAX_ICON_PATH_LENGTH);
 
     // Copy paths as icon + fileNames into dirFilesIcon
-    for (int i = 0; i < state->dirFiles.count; i++)
+    for (unsigned int i = 0; i < state->dirFiles.count; i++)
     {
         if (IsPathFile(state->dirFiles.paths[i]))
         {
