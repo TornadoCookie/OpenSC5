@@ -97,6 +97,17 @@ static void LoadEntryData(PackageEntry *entry)
             if (entry->data.propData.corrupted == true)
                 ExportPackageEntry(*entry, NULL);
         } break;
+        case PKGENTRY_ER2:
+        case PKGENTRY_HTML:
+        case PKGENTRY_CSS:
+        case PKGENTRY_JSN8:
+        case PKGENTRY_SCPT: // Script file format (?)
+        case PKGENTRY_TEXT: // "textual" file.
+        case PKGENTRY_JSON: // JSON file.
+        {
+            entry->data.scriptSource = (char *)entry->dataRaw;
+            entry->data.scriptSource[entry->dataRawSize - 1] = 0;
+        } break;
     }
 }
 

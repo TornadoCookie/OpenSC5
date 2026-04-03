@@ -97,6 +97,7 @@ CxxSource Editor/Main.cpp
 CxxSource Editor/ListView.cpp
 CxxSource Editor/PackageLoader.cpp
 CxxSource Editor/DropdownActionList.cpp
+CxxSource Editor/FileDialog.cpp
 UseSourceGroup dbpf_all
 UseSourceGroup rlWebKit
 Source raygui.c

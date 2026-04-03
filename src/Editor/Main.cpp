@@ -38,6 +38,8 @@ struct EditorState {
     bool typeDropdownEditMode;
     bool packageOptionsDropdownEditMode;
     bool packageEntryOptionsDropdownEditMode;
+
+    FileDialog fileDialog;
 };
 
 void SetLoadedPackage(EditorState &state, const char *packageFilename)
@@ -63,6 +65,26 @@ const char *FindPropNameForId(PropertyNameList nameList, unsigned int id)
     }
 
     return NULL;
+}
+
+void ProcessFileDialogSelection(EditorState &state)
+{
+    switch (state.fileDialog.GetMode())
+    {
+        case FileDialog::FileDialogMode::kExportPackageEntry:
+        {
+            std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(state.selectedType);
+            PackageEntry entry = *entries[state.mainListData.selected];
+            ExportPackageEntry(entry, state.fileDialog.GetSelectedFileName());
+            state.statusText = "Successfully Exported " + std::string(state.fileDialog.GetSelectedFileName()) + ".";
+        } break;
+        default:
+        {
+            TRACELOG(LOG_WARNING, "invalid state %d", state.fileDialog.GetMode());
+        } break;
+    }
+    
+    state.fileDialog.Deactivate();
 }
 
 void Update(EditorState &state)
@@ -94,6 +116,11 @@ void Update(EditorState &state)
             state.mainListData.selected = Wrap(state.mainListData.selected - 1, 0, entries.size());
             state.propListData.selected = -1;
         }
+    }
+
+    if (state.fileDialog.IsFileSelected())
+    {
+        ProcessFileDialogSelection(state);
     }
 }
 
@@ -183,8 +210,8 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_ER2: return "ER2";
         case PKGENTRY_TTF: return "TTF";
         case PKGENTRY_SHDR: return "SHDR";
-        case PKGENTRY_UNK1: return "UNK1";
-        case PKGENTRY_MAP1: return "MAP1";
+        case PKGENTRY_CUR: return "CUR";
+        case PKGENTRY_MAP8: return "MAP8";
         case PKGENTRY_MAP2: return "MAP2";
         default: { printf("%#X\n", type); return "UNKN"; }
     }
@@ -358,10 +385,18 @@ void DrawPackageEntry(EditorState &state, PackageEntry *entry)
     }
 }
 
+static void Action_ExportPackageEntry(void *arg)
+{
+    EditorState *state = (EditorState *)arg;
+    state->fileDialog.Activate(FileDialog::FileDialogMode::kExportPackageEntry);
+}
+
 void DrawMainScreen(EditorState &state)
 {
     int prevSelected = state.mainListData.selected;
     std::vector<PackageEntry *> entries = state.packageLoader.GetEntries(state.selectedType);
+
+    if (state.fileDialog.IsActive()) GuiLock();
 
     if (state.typeDropdownEditMode || state.packageOptionsDropdownEditMode || state.packageEntryOptionsDropdownEditMode) GuiLock();
 
@@ -385,6 +420,8 @@ void DrawMainScreen(EditorState &state)
 
     if (state.typeDropdownEditMode || state.packageOptionsDropdownEditMode || state.packageEntryOptionsDropdownEditMode) GuiUnlock();
 
+    if (state.fileDialog.IsActive()) GuiLock();
+
     GuiDropdownActionList((Rectangle){
         .x = PADDING + 100,
         .y = 0,
@@ -401,7 +438,7 @@ void DrawMainScreen(EditorState &state)
             .width = 100,
             .height = PADDING
         }, "Package Entry", {
-            {"Export", "Export the package entry to a file.", nullptr},
+            {"Export", "Export the package entry to a file.", Action_ExportPackageEntry},
         }, &state.packageEntryOptionsDropdownEditMode, &state);
     }
 
@@ -426,6 +463,10 @@ void DrawMainScreen(EditorState &state)
     }
 
     GuiStatusBar((Rectangle){0, GetScreenHeight()-PADDING, GetScreenWidth(), PADDING}, state.statusText.c_str());
+
+    if (state.fileDialog.IsActive()) GuiUnlock();
+
+    state.fileDialog.Draw();
 }
 
 void Draw(EditorState &state)
@@ -463,7 +504,7 @@ int main(int argc, char **argv)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor v2.0");
 
-    SetTargetFPS(60);
+    SetTargetFPS(30);
     GuiLoadStyleDark(); //dark theme on top
 
     SetTryParseFilesInPackage(false);

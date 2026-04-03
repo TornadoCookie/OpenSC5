@@ -6,10 +6,11 @@
 #include <map>
 #include <algorithm>
 
-#include "../raygui.h"
 
 extern "C" {
     #include <filetypes/package.h>
+    #include "../raygui.h"
+    #include "../gui_window_file_dialog.h"
 }
 
 // global UI padding. really it's more of a scale
@@ -80,5 +81,31 @@ struct DropdownAction {
 
 void GuiDropdownActionList(Rectangle bounds, std::string title, std::vector<DropdownAction> actions,
     bool *editMode, void *callbackArg);
+
+// FileDialog
+class FileDialog {
+public:
+    enum FileDialogMode {
+        kNone,
+
+        kSaveMode = 0x80,
+        kExportPackageEntry
+    };
+
+    FileDialog();
+    void Activate(FileDialogMode mode);
+    void Deactivate();
+    void Draw();
+
+    bool IsFileSelected();
+    bool IsActive();
+    
+    const char *GetSelectedFileName();
+    FileDialogMode GetMode();
+
+private:
+    GuiWindowFileDialogState mState;
+    FileDialogMode mMode;
+};
 
 #endif

@@ -10,12 +10,16 @@ Editor
 - Add sort by to list panels
 - Creating files
 - Importing files
-- Exporting files
 - Deleting and editing files
-- Proper view of entries other than PROPs
+- Image view (PNG / other common formats)
+- Map view (map8, map16)
+- Text view
+- Model view
+- Group names
+- Audio
 - 'Go To Instance' menu
 - References
-- Class names
+- Class names for PROP objects
 - Property editing
 - Having multiple packages merged into one session
 - Hotkeys
