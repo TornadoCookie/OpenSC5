@@ -94,33 +94,6 @@ namespace EA
 {
 namespace WebKit {
 
-	class FileSystemDefault : public FileSystem
-{
-public:
-    FileObject CreateFileObject();
-    void       DestroyFileObject(FileObject);
-    bool       OpenFile(FileObject, const utf8_t* path, int openFlags);
-    FileObject OpenTempFile(const utf8_t* prefix, utf8_t* path);
-    void       CloseFile(FileObject);
-    int64_t    ReadFile(FileObject, void* buffer, int64_t size);
-    bool       WriteFile(FileObject, const void* buffer, int64_t size);
-    int64_t    GetFileSize(FileObject fileObject);
-    int64_t    GetFilePosition(FileObject fileObject);
-
-    // File system functionality
-    bool       FileExists(const utf8_t* path);
-    bool       DirectoryExists(const utf8_t* path);
-    bool       RemoveFile(const utf8_t* path);
-    bool       DeleteDirectory(const utf8_t* path);
-    bool       GetFileSize(const utf8_t* path, int64_t& size);
-    bool       GetFileModificationTime(const utf8_t* path, time_t& result);
-    bool       MakeDirectory(const utf8_t* path); // This version in default file system is smart enough to create multiple directory levels if required.
-    bool       GetDataDirectory(utf8_t* path, size_t pathBufferCapacity);
-	bool	   GetTempDirectory(utf8_t* path, size_t pathBufferCapacity); 
-private:
-	bool		MakeDirectoryInternal(const utf8_t* path);
-};
-
 struct FileInfo
 {
     FILE* mpFile;

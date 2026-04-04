@@ -585,6 +585,8 @@ extern "C" bool initWebkit()
       std::cout << "Error!  Mismatched versions of EA Webkit" << std::endl;
       return false;
    }
+
+   EA::WebKit::GetAllocator(); // Ensure the allocator is initialized
    
    //initialize the system
    wk->Init(&callbacks, &systems);

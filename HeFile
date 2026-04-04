@@ -28,6 +28,7 @@ CxxSource rlWebKit/rlWebkitRenderer.cpp
 CxxSource rlWebKit/rlWebkitThreading.cpp
 CxxSource rlWebKit/rlWebkitUtils.cpp
 CxxSource DBPFFileSystem.cpp
+CxxSource WebKitBridge/WebKitBridge.cpp
 
 SourceGroup dbpf_all
 Source filetypes/package.c

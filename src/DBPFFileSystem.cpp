@@ -4,10 +4,6 @@
 #include <raylib.h>
 #include "hash.h"
 
-#if !EAWEBKIT_DEFAULT_FILE_SYSTEM_ENABLED
-#include "FileSystemDefault.cpp"
-#endif
-
 static Package *PKG;
 
 extern "C" void SetWebKitPackage(Package *newPKG)

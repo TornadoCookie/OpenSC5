@@ -6,7 +6,7 @@
 #  ifdef GL_WEBKIT_EXPORTS
 #     define GLWEBKIT_API __declspec ( dllexport )
 #  else
-#     define GLWEBKIT_API __declspec ( dllimport )
+#     define GLWEBKIT_API //__declspec ( dllimport )
 #  endif
 #else
 #  define GLWEBKIT_API

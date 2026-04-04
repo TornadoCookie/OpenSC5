@@ -6,7 +6,7 @@ Compiler gcc
 RaylibLdFlag -lraylib
 
 Platform win32
-IsRelease
+IsDebug
 ExecExtension .exe
 LibExtension .dll
 Compiler i686-w64-mingw32-gcc
@@ -25,6 +25,7 @@ ExtraLDFlag -lbcrypt
 # flags for EAWebKit code compilation
 ExtraCFlag -DEAWEBKIT_PLATFORM_HEADER="<windows.h>"
 
-# EAWebKit flags for compatibility with SimCity's EAWebKit
-ExtraCFlag -DEAWEBKIT_DEFAULT_FILE_SYSTEM_ENABLED=0
+# Bridge for compatibility with SimCity's EAWebKit
+ExtraCFlag -DUSE_WEBKIT_BRIDGE=1
+ExtraCFlag -DUTF_USE_EAASSERT=1
 
