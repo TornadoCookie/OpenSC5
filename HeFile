@@ -4,7 +4,7 @@ RaylibVersion 5.5
 UseRaylib
 
 NativeDependency curl
-NativeDependency EAWebKitd
+# NativeDependency EAWebKitd
 # NativeDependency archive
 
 DistData packed_codebooks_aoTuV_603.bin
@@ -100,13 +100,13 @@ CxxSource Editor/PackageLoader.cpp
 CxxSource Editor/DropdownActionList.cpp
 CxxSource Editor/FileDialog.cpp
 UseSourceGroup dbpf_all
-UseSourceGroup rlWebKit
+# UseSourceGroup rlWebKit
 Source raygui.c
 
-Program opensc5
-UseSourceGroup dbpf_all
-UseSourceGroup rlWebKit
-Source game.c
+# Program opensc5
+# UseSourceGroup dbpf_all
+# UseSourceGroup rlWebKit
+# Source game.c
 
 Program test_dbpf
 Source ../tests/test_dbpf.c

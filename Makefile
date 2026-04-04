@@ -42,7 +42,7 @@ LDFLAGS+=-lgdi32
 LDFLAGS+=-lbcrypt
 endif
 
-PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor opensc5 test_dbpf
+PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor test_dbpf
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -52,20 +52,12 @@ LDFLAGS+=-lcurl
 LDFLAGS+=-Wl,-rpath,lib/$(curl_NAME)/lib
 
 
-EAWebKitd_NAME=libEAWebKitd-$(PLATFORM)
-CFLAGS+=-Ilib/$(EAWebKitd_NAME)/include
-LDFLAGS+=-Llib/$(EAWebKitd_NAME)/lib
-LDFLAGS+=-lEAWebKitd
-LDFLAGS+=-Wl,-rpath,lib/$(EAWebKitd_NAME)/lib
-
-
 all: $(DISTDIR) $(DISTDIR)/src $(DISTDIR)/src/rlWebKit $(DISTDIR)/src/WebKitBridge $(DISTDIR)/src/filetypes $(DISTDIR)/src/ww2ogg $(DISTDIR)/src/../tests $(DISTDIR)/src/Editor $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC)) deps
 
 ifneq ($(DISTDIR), .)
 deps:
 	mkdir -p $(DISTDIR)/lib
 	if [ -d lib/$(curl_NAME) ] && [ ! -d $(DISTDIR)/lib/$(curl_NAME) ]; then cp -r lib/$(curl_NAME) $(DISTDIR)/lib; fi
-	if [ -d lib/$(EAWebKitd_NAME) ] && [ ! -d $(DISTDIR)/lib/$(EAWebKitd_NAME) ]; then cp -r lib/$(EAWebKitd_NAME) $(DISTDIR)/lib; fi
 	if [ -d lib/$(RAYLIB_NAME) ] && [ ! -d $(DISTDIR)/lib/$(RAYLIB_NAME) ]; then cp -r lib/$(RAYLIB_NAME) $(DISTDIR)/lib; fi
 	cp -r packed_codebooks_aoTuV_603.bin $(DISTDIR)
 	cp -r README.md $(DISTDIR)
@@ -220,19 +212,8 @@ opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/FileDialog.o
 opensc5_editor_SOURCES+=$(DISTDIR)/src/raygui.o
 opensc5_editor_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
 opensc5_editor_SOURCES+=$(dbpf_all_SOURCES)
-opensc5_editor_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
-opensc5_editor_SOURCES+=$(rlWebKit_SOURCES)
 
 $(DISTDIR)/opensc5_editor$(EXEC_EXTENSION): $(opensc5_editor_SOURCES) $(opensc5_editor_CXX_SOURCES)
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-opensc5_SOURCES+=$(DISTDIR)/src/game.o
-opensc5_CXX_SOURCES+=$(dbpf_all_CXX_SOURCES)
-opensc5_SOURCES+=$(dbpf_all_SOURCES)
-opensc5_CXX_SOURCES+=$(rlWebKit_CXX_SOURCES)
-opensc5_SOURCES+=$(rlWebKit_SOURCES)
-
-$(DISTDIR)/opensc5$(EXEC_EXTENSION): $(opensc5_SOURCES) $(opensc5_CXX_SOURCES)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 test_dbpf_SOURCES+=$(DISTDIR)/src/../tests/test_dbpf.o

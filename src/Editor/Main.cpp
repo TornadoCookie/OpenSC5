@@ -547,7 +547,7 @@ int main(int argc, char **argv)
 {
     EditorState state;
 
-    initWebkit(); // We must init webkit because they overrode our allocators
+    //initWebkit(); // We must init webkit because they overrode our allocators
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1280, 720, "OpenSC5 Editor v2.0");

@@ -43,7 +43,8 @@ static void pthread_join(pthread_t thread, void **ret)
     WaitForSingleObject(thread, INFINITE);
     GetExitCodeThread(thread, &exitCode);
 
-    *ret = (void*)exitCode;
+    if (ret)
+        *ret = (void*)exitCode;
 }
 
 typedef HANDLE pthread_mutex_t;
