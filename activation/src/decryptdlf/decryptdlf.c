@@ -46,6 +46,9 @@ void GetKeyFromDLF(const char *dlfFile, uint8_t *outKeys)
 
     AES_CBC_decrypt_buffer(&ctx, xml, fsz - 0x41);
 
+    //FILE *f = fopen("decryped.dlf.xml", "w");
+    printf("%s\n", xml);
+
     char *cipherKey = strstr(xml, "<CipherKey>") + strlen("<CipherKey>");
     *strchr(cipherKey, '<') = 0;
 
@@ -96,10 +99,10 @@ int main(int argc, char **argv)
     }
 
     uint8_t candidates[128];
-    GetKeyFromDLF("71480.dlf", candidates);
+    GetKeyFromDLF(argv[1], candidates);
 
     print_hex("Key/IV candidates: ", candidates, 128);
-
+/*
     long exeSize;
     uint8_t *exe = ReadFile(argv[1], &exeSize);
 
@@ -125,5 +128,5 @@ int main(int argc, char **argv)
 
     //fwrite(exe, exeSize, 1, stdout);
 
-    return 0;
+    return 0;*/
 }

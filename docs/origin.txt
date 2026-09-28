@@ -1,0 +1,8 @@
+
+HKEY_CLASSES_ROOT/origin/shell/open/command - not run but presence is checked
+HKEY_CLASSES_ROOT/origin2/shell/open/command - origin2:// protocol handler
+
+HKEY_LOCAL_MACHINE/Software/Origin Games/<gameID> - information about a game
+
+what is SMOID? (shared memory object ID)
+is the handle ID in calls to MapViewOfFile

@@ -93,6 +93,10 @@ Program test_hash
 Source ../tests/test_hash.c
 Source hash.c
 
+Program test_swb
+CxxSource ../tests/test_swb.cpp
+Source memstream.c
+
 Program opensc5_editor
 CxxSource Editor/Main.cpp
 CxxSource Editor/ListView.cpp

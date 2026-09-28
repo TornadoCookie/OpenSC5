@@ -43,7 +43,7 @@
 #define PKGENTRY_JSN8 0x67771F5C // JSoN file (ascii), most commonly a MUiLE design.
 #define PKGENTRY_HTML 0xDD6233D6 // HyperText Markup Language
 #define PKGENTRY_SWB  0xEA5118B0 // SWarm Binary file, particles. Unable to be viewed in-editor.
-
+#define PKGENTRY_SWM  0x28707864 // SWarM script file. particle and scene description.
 
 
 typedef struct PackageEntry {

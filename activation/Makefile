@@ -1,4 +1,4 @@
-# Generated using Helium v2.2.0 (https://github.com/tornadocookie/he)
+# Generated using Helium v2.2.1 (https://github.com/tornadocookie/he)
 
 PLATFORM?=linux64
 DISTDIR?=build
@@ -41,11 +41,11 @@ CFLAGS+=-D EXEC_EXTENSION=\"\"
 CFLAGS+=-D LIB_EXTENSION=\".so\"
 endif
 
-PROGRAMS=
-LIBRARIES=EAWebKit
+PROGRAMS=decryptdlf
+LIBRARIES=
 
-all: $(DISTDIR) $(DISTDIR)/src $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC))
-$(DISTDIR)/src:
+all: $(DISTDIR) $(DISTDIR)/src/decryptdlf $(foreach prog, $(PROGRAMS), $(DISTDIR)/$(prog)$(EXEC_EXTENSION)) $(foreach lib, $(LIBRARIES), $(DISTDIR)/$(lib)$(LIB_EXTENSION) $(DISTDIR)/$(lib)$(LIB_EXTENSION_STATIC))
+$(DISTDIR)/src/decryptdlf:
 	mkdir -p $@
 
 $(DISTDIR):
@@ -57,21 +57,15 @@ CFLAGS+=-D PLATFORM=\"$(PLATFORM)\"
 CFLAGS+=-I../lib/libEAWebKitd-win32/include
 
 
-LDFLAGS+=-lstdc++
-EAWebKit_CXX_SOURCES+=$(DISTDIR)/src/eawebkit_fake.o
+decryptdlf_SOURCES+=$(DISTDIR)/src/decryptdlf/decryptdlf.o
+decryptdlf_SOURCES+=$(DISTDIR)/src/decryptdlf/aes.o
+decryptdlf_SOURCES+=$(DISTDIR)/src/decryptdlf/base64.o
 
-$(DISTDIR)/EAWebKit$(LIB_EXTENSION): $(EAWebKit_SOURCES) $(EAWebKit_CXX_SOURCES)
-	$(CC) -o $@ $^ -fPIC -shared $(LDFLAGS)
-
-
-$(DISTDIR)/EAWebKit$(LIB_EXTENSION_STATIC): $(EAWebKit_SOURCES) $(EAWebKit_CXX_SOURCES)
-	$(AR) rcs $@ $^
+$(DISTDIR)/decryptdlf$(EXEC_EXTENSION): $(decryptdlf_SOURCES)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(DISTDIR)/%.o: %.c
 	$(CC) -c $^ $(CFLAGS) -o $@
-
-$(DISTDIR)/%.o: %.cpp
-	$(CXX) -c $^ $(CFLAGS) $(CXXFLAGS) -o $@
 
 clean:
 	rm -rf $(DISTDIR)/*

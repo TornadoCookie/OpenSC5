@@ -1,0 +1,11 @@
+Controlling Effects in Game
+---------------------------
+
+There is an effects cheat in the game and the content viewer,
+named, imaginatively, 'effect'. You can expand the cheat 
+console (control-shift-C to bring it up, backtick (`) to 
+expand it) and then type 'effect -help' to see its
+functionality. 
+
+For documentation on writing effects scripts, see the 
+Documentation folder.

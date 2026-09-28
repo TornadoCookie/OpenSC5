@@ -530,3 +530,8 @@ property WebkitDirtyRectangleUpdates (hash(WebkitDirtyRectangleUpdates)) bool
 property WebkitThrottleMouseMove (hash(WebkitThrottleMouseMove)) bool
 
 
+# our ones
+property folderMap 0xd9d7a391
+property version 0x10fe1d65
+property gameinfo1 0x8ea246b
+

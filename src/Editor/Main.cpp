@@ -211,6 +211,7 @@ static const char *PackageEntryTypeToString(unsigned int type)
         case PKGENTRY_MOV: return "MOV";
         case PKGENTRY_EXIF: return "EXIF";
         case PKGENTRY_SWB: return "SWB";
+        case PKGENTRY_SWM: return "SWM";
         case PKGENTRY_HTML: return "HTML";
         case PKGENTRY_ER2: return "ER2";
         case PKGENTRY_TTF: return "TTF";

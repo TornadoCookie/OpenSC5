@@ -1,0 +1,53 @@
+#################################################################
+# Swarm: Master Configuration File
+#
+
+
+include definitions.swm
+
+
+# Main collection, shared across all ecosystems
+
+collection ${MainGroup}!Base
+   # Useful for placeholders/effects that don't show up at some LOD
+   effect placeholder
+      model -name debug
+   end
+   export placeholder
+   effect null
+   end
+
+   include "transitions.swm"
+
+
+   ##############################################
+   # GlassBox Demo
+   #
+
+   sinclude "ecosystem_effects/config.swm"
+endCollection
+
+
+
+##############################################
+# Testing
+#
+
+trace "> testing"
+
+sinclude "Examples/config.swm"
+sinclude "Examples/beam.swm"
+sinclude "Swarmi/config.swm"
+
+# These ALWAYS come last. Don't put anything after here.
+collection ${MainGroup}!Test
+   # Include only the core suite of test effects in the test
+   # collection, so we can load it whereever.
+   include "Tests/config.swm"
+endCollection
+
+trace "> local"
+
+sinclude "localEffects.swm"
+
+trace "=== effects scripts parsed"

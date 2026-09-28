@@ -42,7 +42,7 @@ LDFLAGS+=-lgdi32
 LDFLAGS+=-lbcrypt
 endif
 
-PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash opensc5_editor test_dbpf
+PROGRAMS=test_package updater test_crcbin test_prop test_rast test_rw4 test_sdelta test_heightmap test_rules test_statefile test_hash test_swb opensc5_editor test_dbpf
 LIBRARIES=
 
 curl_NAME=libcurl-$(PLATFORM)
@@ -202,6 +202,12 @@ test_hash_SOURCES+=$(DISTDIR)/src/../tests/test_hash.o
 test_hash_SOURCES+=$(DISTDIR)/src/hash.o
 
 $(DISTDIR)/test_hash$(EXEC_EXTENSION): $(test_hash_SOURCES)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+test_swb_CXX_SOURCES+=$(DISTDIR)/src/../tests/test_swb.o
+test_swb_SOURCES+=$(DISTDIR)/src/memstream.o
+
+$(DISTDIR)/test_swb$(EXEC_EXTENSION): $(test_swb_SOURCES) $(test_swb_CXX_SOURCES)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 opensc5_editor_CXX_SOURCES+=$(DISTDIR)/src/Editor/Main.o

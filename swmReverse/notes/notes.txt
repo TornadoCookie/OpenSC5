@@ -1,0 +1,26 @@
+
+looks like 40450200, 40450201, 40450202 are groups.
+and then we have 2 scripts: 4cf9b596 and bc2c0be9.
+
+le16 4
+le16 1
+le16 1
+00 00 BD DE
+le32 106
+8 nulls
+
+3F 80 00 00
+3F 80 00 00
+3F 80 00 00
+BF 80 00 00
+BF 80 00 00
+BF 80 00 00
+BF 80 00 00
+BD CC CC CD
+BD CC CC CD
+3F 66 66 66
+3D CC CC CD
+3F 8C CC CD
+40 40 00 00
+40 40 00 00
+

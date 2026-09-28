@@ -40,6 +40,11 @@ bool GuiListRow(Rectangle bounds, ListRow row, bool selected, bool canSelect)
         GuiSetStyle(TEXTBOX, TEXT_READONLY, false);
         GuiLabel(buttonBounds, row.items[i].text.c_str());
         xOff += bounds.width * row.items[i].width;
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), buttonBounds))
+        {
+            SetClipboardText(row.items[i].text.c_str());
+        }
     }
 
     if (selected || focused || pressed)
@@ -66,12 +71,17 @@ void GuiScrollingListPanel(Rectangle bounds, const char *title, int count,
         ListRow row = callback(i, callbackArg);
         bool isSelected = i == data->selected;
 
-        bool pressed = GuiListRow((Rectangle){
+        Rectangle listRowBounds = (Rectangle){
             .x = bounds.x,
             .y = bounds.y + PADDING*2 + PADDING * i + data->scroll.y,
             .width = bounds.width,
             .height = PADDING
-        }, row, isSelected, true);
+        };
+
+        if (listRowBounds.y + listRowBounds.height < bounds.y || listRowBounds.y > bounds.y + bounds.height)
+            continue;
+
+        bool pressed = GuiListRow(listRowBounds, row, isSelected, true);
 
         if (pressed && CheckCollisionPointRec(GetMousePosition(), bounds))
         {

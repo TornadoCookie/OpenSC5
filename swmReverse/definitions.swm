@@ -1,0 +1,75 @@
+#################################################################
+# Global definitions for all GB effect scripts
+#
+
+
+#################################################################
+# Effect levels. You may if() on these.
+#
+seti kLevelLow     0
+seti kLevelMedium  1
+seti kLevelHigh    2
+
+
+#################################################################
+# App flags. See -flag in the effect docs.
+#
+
+seti kAppFlagTest 0
+
+seti kAppFlagSummer 1
+seti kAppFlagFall   2
+seti kAppFlagWinter 3
+seti kAppFlagSpring 4
+
+seti kAppFlagLayerElectric        5
+seti kAppFlagLayerFire            6
+seti kAppFlagLayerPolice          7
+seti kAppFlagLayerActive          8
+seti kAppFlagLayerPollution       9
+seti kAppFlagLayerCoal           14
+seti kAppFlagLayerWater          15
+seti kAppFlagLayerEducation      16
+seti kAppFlagLayerHealth         17
+seti kAppFlagLayerParks          18
+seti kAppFlagLayerDesirability   20
+
+seti kAppFlagBuildingEditor 19
+
+seti kAppFlagNightTime   10
+seti kAppFlagMorningTime 11
+seti kAppFlagDayTime     12
+seti kAppFlagEveningTime 13
+
+seti kMaxAppFlag 32
+
+if (not varExists(level))
+   seti level $kLevelMedium
+endif
+
+# Effects shipped with the core app should go in ${MainGroup}
+# For expansions, use the appropriate alternative group. See
+# below for which apps load which groups. Remember that effects
+# that use game-specific effect components can't be loaded by
+# the editor.
+set MainGroup        @effects_script_${level}
+set ExpansionGroup   @game_effects_${level}
+
+
+#################################################################
+# Physics setup
+#
+
+seti kPGDynamic              0
+seti kPGStatic               1
+seti kPGPlayerInteraction    2
+
+physicsWorld default -gravity 25 -defaultInteraction $kPGPlayerInteraction
+
+
+#################################################################
+# Materials setup
+#
+
+include "materialParams.swm"
+

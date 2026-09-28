@@ -1,0 +1,183 @@
+#
+# MaterialParams
+#
+# Contains mappings from parameter names to
+# material system shader registers.
+#
+
+# register 0
+resDef materialParam c0.x    lightIndex           
+resDef materialParam c0.y    depthOffset          
+resDef materialParam c0.w    aspectRatio
+resDef materialParam c0.x    shDiffuseAtten       
+resDef materialParam c0.z    shSpecularAtten      
+resDef materialParam c0.w    shSpecularExponent	
+
+# register 1
+resDef materialParam c1.xyzw alphaDistances
+
+# register 2
+resDef materialParam c2.xyzw alphaValues
+
+# register 3
+resDef materialParam c3.xyz  facetAttenSet
+resDef materialParam c3.w    facingNormalJitter
+
+# register 4
+resDef materialParam c4.xyz  vertexAttenSet
+resDef materialParam c4.w    vertexNormalJitter
+
+# register 5
+resDef materialParam c5.xyzw scaleDistances
+
+# register 6
+resDef materialParam c6.xyzw scaleValues
+
+# register 7
+resDef materialParam c7.x    reflectancePower
+resDef materialParam c7.yzw  alphaFacingAttenSet
+
+# register 8
+resDef materialParam c8.xy   texTiles
+resDef materialParam c8.z    texTileSpeed
+resDef materialParam c8.w    texTileOffset
+
+# register 9
+resDef materialParam c9.x    texTileLifespanFrames
+resDef materialParam c9.y    texTileLifespanClipPerRow
+resDef materialParam c9.z    texTileLifespanOffset
+resDef materialParam c9.w    texTileBias
+
+# register 10
+resDef materialParam c10.x    lightDesaturation
+resDef materialParam c10.y    fogRemoval
+resDef materialParam c10.z    shadowRemoval
+resDef materialParam c10.xyz  sunColor
+
+# register 11
+
+# register 12
+resDef materialParam c12.x    gasGiant_baseColorTiles
+resDef materialParam c12.y    gasGiant_baseDistortTiles
+resDef materialParam c12.z    gasGiant_cloudColorTiles
+resDef materialParam c12.w    gasGiant_cloudDistortTiles
+
+resDef materialParam c12.x    planetaryRings_shadowDensity
+resDef materialParam c12.y    planetaryRings_planetRadius
+
+resDef materialParam c12.xy   model_uvSpeed
+resDef materialParam c12.zw   model_uvScale
+
+resDef materialParam c12.x    column_beamVariance
+resDef materialParam c12.y    column_beamCount
+
+resDef materialParam c12.xyzw stretch_uTimes
+
+resDef materialParam c12.xyzw sunBlendDistances
+
+# register 13
+resDef materialParam c13.xy   sizeDistances
+resDef materialParam c13.zw   sizeValues
+
+resDef materialParam c13.x    gasGiant_baseColorSpeed
+resDef materialParam c13.y    gasGiant_baseDistortSpeed
+resDef materialParam c13.z    gasGiant_baseDistortAmt
+resDef materialParam c13.w    gasGiant_cloudColorSpeed
+
+resDef materialParam c13.xyz  model_scale   
+resDef materialParam c13.xyzw column_vPositions   
+resDef materialParam c13.xyzw stretch_uScales
+
+resDef materialParam c13.xyzw sunBlendValues
+resDef materialParam c13.xyzw thinRing_widthDistances
+
+# register 14
+resDef materialParam c14.xy   lumDistances
+resDef materialParam c14.zw   lumValues
+
+resDef materialParam c14.x    windTimeFreq
+resDef materialParam c14.y    windSpaceFreq
+resDef materialParam c14.z    windAmpVerticalScalar
+resDef materialParam c14.w    windWaveOffset
+
+resDef materialParam c14.x    gasGiant_cloudDistortSpeed
+resDef materialParam c14.y    gasGiant_cloudDistortAmt
+resDef materialParam c14.z    gasGiant_cloudColorAtten
+resDef materialParam c14.w    gasGiant_cloudDensity
+
+resDef materialParam c14.xyz  model_rgbIn
+resDef materialParam c14.xyzw column_vAlphas
+resDef materialParam c14.xyzw stretch_vTimes
+resDef materialParam c14.xyzw emissiveLerpDistances
+resDef materialParam c14.xyzw borderSpriteNudge
+resDef materialParam c14.xyzw thinRing_widthValues
+
+# register 15
+resDef materialParam c15.x    flickerFreq
+resDef materialParam c15.y    flickerLegato
+resDef materialParam c15.z    flickerLumMin
+
+resDef materialParam c15.x    ring0spin
+resDef materialParam c15.y    ring0alpha
+resDef materialParam c15.z    ring1spin
+resDef materialParam c15.w    ring1alpha
+
+resDef materialParam c15.xy   windAmpDistances
+resDef materialParam c15.zw   windAmpValues
+
+resDef materialParam c15.x    borderSpriteOffscreenPct
+resDef materialParam c15.y    borderSpriteAlwaysUp
+resDef materialParam c15.z    borderSpriteSnapRotation
+
+resDef materialParam c15.x    rotationSpeed   
+resDef materialParam c15.y    rotationVariance   
+resDef materialParam c15.z    tiltVariance
+
+resDef materialParam c15.x    gasGiant_scatterAtten
+
+resDef materialParam c15.xyz  model_rgbOut
+
+resDef materialParam c15.xyz  column_rgb
+resDef materialParam c15.w    column_rotateSpeed
+
+resDef materialParam c15.xyzw stretch_vScales
+resDef materialParam c15.xyzw emissiveLerpValues
+
+resDef materialParam c15.x    emissiveLerp
+
+resDef materialParam c15.x    thinRing_discOpacity
+resDef materialParam c15.y    thinRing_discRampScale
+resDef materialParam c15.z    thinRing_discRampOffset
+
+# cloudVanilla.smt/smokeVanilla.smt/effectVanilla.smt
+resDef materialParam c0.x     animBlendRate           
+resDef materialParam c0.y     stripLength
+resDef materialParam c0.z     topFade
+
+# grassVanilla.smt
+resDef materialParam c0.x     startFade
+resDef materialParam c0.y     endFade
+resDef materialParam c0.z     tilt
+resDef materialParam c0.w     startFadeIn       # only for cinematic grass
+
+resDef materialParam c1.x     startScale
+resDef materialParam c1.y     endScale
+resDef materialParam c1.z     scaleFactor  
+resDef materialParam c1.w     endFadeIn         # only for cinematic grass
+
+# effectVanilla.smt
+resDef materialParam c0.z       minScaleRatio   # for screen space clamping
+resDef materialParam c0.w       maxScaleRatio
+
+# effectVanilla.smt/effectPlanetRingMaterial
+resDef materialParam c0.x       ring0vel
+resDef materialParam c0.y       ring1vel
+resDef materialParam c0.z       ring0fade
+resDef materialParam c0.w       ring1fade
+
+# effectVanilla.smt/effectStarMaterial
+resDef materialParam c1.x       fadeStart
+resDef materialParam c1.y       fadeEnd
+#resDef.materialParam c1.z      scaleFactor      # same as grass
+resDef materialParam c1.w       depthBias
+

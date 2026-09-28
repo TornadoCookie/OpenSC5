@@ -1,0 +1,223 @@
+#
+# Transitions for scripted camera moves
+#
+
+screen crossFadeStandard
+   texture cameraSnapshot
+   length 2
+   strength 1 0 
+end
+
+screen crossFadeShort
+   texture cameraSnapshot
+   length 1
+   strength 1 0
+end
+
+screen crossFadeLong
+   texture cameraSnapshot
+   length 4
+   strength 1 0
+end
+
+screen letterbox
+   mode blend
+   length 0
+   strength 1
+   texture letterbox2
+end
+
+screen cameraFlash
+   mode additive
+   length .7
+   strength 1 .2 0
+   colour (1, 1, 1) (1, 1, 1)
+end
+
+effect cameraFlash
+   screen cameraFlash
+end
+
+
+effect crossFadeSnapStandard
+   camera -snapshot
+   screen crossFadeStandard
+end
+
+effect crossFadeSnapShort
+   camera -snapshot
+   screen crossFadeShort
+end
+
+effect crossFadeSnapLong
+   camera -snapshot
+   screen crossFadeLong
+end
+
+effect letterbox
+   screen letterbox
+end
+
+particles letterbox_fade_in  
+   inject 1 -hold .7
+   life 3
+   alpha 1 1 1 .5 .2 0
+   size 1 1 1 1.2 1.5 1.8 2
+   aspect 2
+   source -offset (0, 1.07, 0)
+   texture letterbox2 -sortOffset 1 -noFog -light -draw decalIgnoreDepth 
+end
+
+effect letterbox_fade_in   -rigid -cameraAttached
+  particles letterbox_fade_in 
+end
+export letterbox_fade_in
+
+particles letterbox_fade_in_UFO
+   inject 1 -hold .7
+   life 3
+   alpha 1 1 1 .5 .2 0
+   size 2 2 2 2.4 3 3.6 4 
+   aspect 2
+   source -offset (0, 2.07, 0)
+   texture letterbox2 -sortOffset 1 -noFog -light -draw decalIgnoreDepth 
+end
+
+effect letterbox_fade_in_UFO   -rigid -cameraAttached
+  particles letterbox_fade_in_UFO
+end
+
+export letterbox_fade_in_UFO
+
+# particles black_screen_fade_in  
+   # inject 1 -hold .3
+   # life 3
+   # alpha 1 1 1 0
+   # size 5
+   # aspect 1
+   # source -offset (0, 1.07, 2)
+   # texture letterbox2 -sortOffset 1 -noFog -light -draw decalIgnoreDepth 
+# end
+
+
+
+
+
+# Spore
+
+screen crossFadeGalaxy
+   texture cameraSnapshot
+   length 2
+   strength 1 0 
+end
+
+# Commenting out for demos -- we do it manually there.
+effect crossFadeGalaxy
+   camera -snapshot
+   screen crossFadeGalaxy
+end
+
+
+effect crossFadeSnapshot
+   camera -snapshot
+end
+
+screen showSnapshot
+   texture cameraSnapshot
+   length 1 -sustain 
+   strength 1
+end
+
+effect showSnapshot
+   screen showSnapshot
+end
+
+effect crossFadeFromSnapshot
+   screen crossFadeGalaxy
+end
+
+screen fadeInFromBlack
+   mode blend
+   color (0, 0, 0)
+   length 2
+   strength 1 0
+end
+
+effect fadeInFromBlack
+   screen fadeInFromBlack
+end
+
+screen screenBlack
+   mode blend
+   color (0, 0, 0)
+   length 2 -sustain
+end
+
+effect screenBlack
+   screen screenBlack
+end
+
+metaparticles black_screen_fade_in_black
+   inject 1 -hold .1
+   life .2
+   effect screenBlack
+end
+
+metaparticles black_screen_fade_in_fade
+   inject 1 -hold .5
+   life 2
+   effect fadeInFromBlack
+end
+
+effect black_screen_fade_in   -rigid -cameraAttached
+  particleSequence
+      metaparticles black_screen_fade_in_black
+       metaparticles black_screen_fade_in_fade
+  end
+end
+export black_screen_fade_in
+
+# Experimental
+
+screen exptAfterImage
+   mode additive
+   texture viewTarget
+   length 0.25
+   strength 0 0 0 1 1 0 0 0
+   colour (0.3, 0.6, 1)
+end
+
+effect exptAfterImage
+   camera -snapshot
+   screen exptAfterImage
+end
+
+sequence exptAfterImages -loop
+   play exptAfterImage
+end
+
+effect exptAfterImages
+   sequence exptAfterImages
+end
+
+
+
+
+
+
+
+
+
+
+timeline realTime
+   screen crossFadeStandardRealTime
+      texture cameraSnapshot
+      length 4
+      strength 1 0
+   end
+
+   effect crossFadeSnapStandardRealTime
+      camera -snapshot
+      screen crossFadeStandardRealTime
+   end
+end
